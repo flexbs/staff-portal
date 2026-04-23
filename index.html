@@ -143,7 +143,7 @@ input:disabled{background:#f5f4f0;color:#aaa;border-color:#e8e6e0}
         <img src="https://raw.githubusercontent.com/flexbs/staff-portal/main/flexlogo1.jpg" alt="FLEX BUSINESS SERVICE" style="width:160px;height:auto;display:inline-block">
       </div>
       <div style="text-align:center;font-size:13px;color:#888;margin-bottom:22px">スタッフポータル</div>
-      <div class="fg"><label class="fl">社員番号またはメールアドレス</label><input type="text" placeholder="社員番号（例：0001）またはメールアドレス" id="login-id"></div>
+      <div class="fg"><label class="fl">社員番号（4桁）</label><input type="text" placeholder="例：0001" id="login-id" maxlength="4" inputmode="numeric"></div>
       <div class="fg"><label class="fl">パスワード</label><input type="password" placeholder="パスワードを入力" id="login-pw"></div>
       <!-- 個人情報同意チェックボックス -->
       <div style="background:#f5f4f0;border-radius:10px;padding:12px;margin-bottom:14px">
@@ -924,7 +924,7 @@ input:disabled{background:#f5f4f0;color:#aaa;border-color:#e8e6e0}
 <script>
 const SUPABASE_URL='https://wafarcqisrwzlkectrdo.supabase.co';
 const SUPABASE_KEY='sb_publishable_zVSnu1pacttXMv9ArbW5hA_NJgP1yOJ';
-const ADMIN_EMAILS=['wakamatsu@flexbs.com'];
+const ADMIN_EMAILS=['9001@flexbs.com','9002@flexbs.com','9003@flexbs.com','9004@flexbs.com'];
 var supabaseClient=null;
 
 window.addEventListener('load',function(){
