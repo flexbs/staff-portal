@@ -174,6 +174,7 @@ input:disabled{background:#f5f4f0;color:#aaa;border-color:#e8e6e0}
     <button class="sub-tab active" onclick="showSub('admin','docs',this)">書類管理</button>
     <button class="sub-tab" onclick="showSub('admin','paid',this)">有給管理</button>
     <button class="sub-tab" onclick="showSub('admin','uploads',this)">書類授受管理</button>
+    <button class="sub-tab" onclick="showSub('admin','mynumber',this)">マイナンバー管理</button>
     <button class="sub-tab" onclick="showSub('admin','notice',this)">お知らせ</button>
   </div>
 
@@ -251,11 +252,35 @@ input:disabled{background:#f5f4f0;color:#aaa;border-color:#e8e6e0}
           <table class="tbl">
             <thead><tr><th>名前</th><th>手続き区分</th><th>書類種別</th><th>提出日</th><th>状態</th><th></th></tr></thead>
             <tbody>
-              <tr><td>田中 花子</td><td><span class="bdg bb">入社</span></td><td>マイナンバーカード</td><td>2025/04/01</td><td><span class="bdg bg">確認済</span></td><td><button class="btn btn-sm">表示</button></td></tr>
-              <tr><td>田中 花子</td><td><span class="bdg bb">入社</span></td><td>雇用保険番号</td><td>2025/04/01</td><td><span class="bdg bg">確認済</span></td><td><button class="btn btn-sm">表示</button></td></tr>
-              <tr><td>山田 太郎</td><td><span class="bdg bb">入社</span></td><td>年金手帳コピー</td><td>2025/04/02</td><td><span class="bdg ba">確認待ち</span></td><td><button class="btn btn-sm">表示</button></td></tr>
-              <tr><td>田中 花子</td><td><span class="bdg bg">稼働中</span></td><td>自動車保険証券</td><td>2025/04/10</td><td><span class="bdg bg">確認済</span></td><td><button class="btn btn-sm">表示</button></td></tr>
-              <tr><td>佐藤 美咲</td><td><span class="bdg bb">入社</span></td><td>マイナンバーカード</td><td>2025/04/05</td><td><span class="bdg ba">確認待ち</span></td><td><button class="btn btn-sm">表示</button></td></tr>
+              <tr style="background:#fff8f8">
+                <td>田中 花子</td>
+                <td><span class="bdg bb">入社</span></td>
+                <td>
+                  <span style="color:#991b1b;font-weight:600">🔒 マイナンバーカード</span>
+                  <div style="font-size:11px;color:#aaa;margin-top:2px">担当者のみ閲覧可</div>
+                </td>
+                <td>2025/04/01</td>
+                <td><span class="bdg bg">確認済</span></td>
+                <td>
+                  <button class="btn btn-sm" style="color:#991b1b;border-color:#fca5a5" onclick="showFileWithPassword('田中 花子','マイナンバーカード')">🔒 担当者確認</button>
+                </td>
+              </tr>
+              <tr><td>田中 花子</td><td><span class="bdg bb">入社</span></td><td>雇用保険番号</td><td>2025/04/01</td><td><span class="bdg bg">確認済</span></td><td><button class="btn btn-sm" onclick="openModal('view-file-normal')">表示</button></td></tr>
+              <tr><td>山田 太郎</td><td><span class="bdg bb">入社</span></td><td>年金手帳コピー</td><td>2025/04/02</td><td><span class="bdg ba">確認待ち</span></td><td><button class="btn btn-sm" onclick="openModal('view-file-normal')">表示</button></td></tr>
+              <tr><td>田中 花子</td><td><span class="bdg bg">稼働中</span></td><td>自動車保険証券</td><td>2025/04/10</td><td><span class="bdg bg">確認済</span></td><td><button class="btn btn-sm" onclick="openModal('view-file-normal')">表示</button></td></tr>
+              <tr style="background:#fff8f8">
+                <td>佐藤 美咲</td>
+                <td><span class="bdg bb">入社</span></td>
+                <td>
+                  <span style="color:#991b1b;font-weight:600">🔒 マイナンバーカード</span>
+                  <div style="font-size:11px;color:#aaa;margin-top:2px">担当者のみ閲覧可</div>
+                </td>
+                <td>2025/04/05</td>
+                <td><span class="bdg ba">確認待ち</span></td>
+                <td>
+                  <button class="btn btn-sm" style="color:#991b1b;border-color:#fca5a5" onclick="showFileWithPassword('佐藤 美咲','マイナンバーカード')">🔒 担当者確認</button>
+                </td>
+              </tr>
             </tbody>
           </table>
         </div>
@@ -276,6 +301,70 @@ input:disabled{background:#f5f4f0;color:#aaa;border-color:#e8e6e0}
             </tbody>
           </table>
         </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 管理者：マイナンバー管理 -->
+  <div id="admin-mynumber" class="sp">
+    <div style="background:#fee2e2;border-radius:10px;padding:12px 14px;font-size:12px;color:#991b1b;margin-bottom:14px;line-height:1.7">
+      マイナンバーは番号法により厳格な管理が必要です。閲覧は担当者のみ、提供記録を必ず残してください。
+    </div>
+
+    <div class="card">
+      <div class="ch">
+        <span class="ct">マイナンバー一覧</span>
+        <span style="font-size:11px;color:#888">担当者パスワードで閲覧可能</span>
+      </div>
+      <div class="tbl-scroll">
+        <table class="tbl">
+          <thead><tr><th>名前</th><th>社員番号</th><th>マイナンバー</th><th>登録日</th><th></th></tr></thead>
+          <tbody>
+            <tr>
+              <td>田中 花子</td><td>0001</td>
+              <td><span id="mn-0001" style="font-family:monospace;letter-spacing:1px">****-****-****</span></td>
+              <td style="font-size:12px;color:#888">2025/04/01</td>
+              <td><div style="display:flex;gap:4px">
+                <button class="btn btn-sm" style="color:#991b1b;border-color:#fca5a5" onclick="showMynumber('0001','田中 花子')">確認する</button>
+                <button class="btn btn-sm btn-p" onclick="openModal('provide-record');document.getElementById('provide-staff').value='田中 花子（0001）'">提供記録</button>
+              </div></td>
+            </tr>
+            <tr>
+              <td>山田 太郎</td><td>0002</td>
+              <td><span id="mn-0002" style="font-family:monospace;letter-spacing:1px">****-****-****</span></td>
+              <td style="font-size:12px;color:#888">2025/04/02</td>
+              <td><div style="display:flex;gap:4px">
+                <button class="btn btn-sm" style="color:#991b1b;border-color:#fca5a5" onclick="showMynumber('0002','山田 太郎')">確認する</button>
+                <button class="btn btn-sm btn-p" onclick="openModal('provide-record');document.getElementById('provide-staff').value='山田 太郎（0002）'">提供記録</button>
+              </div></td>
+            </tr>
+            <tr>
+              <td>佐藤 美咲</td><td>0003</td>
+              <td><span id="mn-0003" style="font-family:monospace;letter-spacing:1px">****-****-****</span></td>
+              <td style="font-size:12px;color:#888">2025/04/05</td>
+              <td><div style="display:flex;gap:4px">
+                <button class="btn btn-sm" style="color:#991b1b;border-color:#fca5a5" onclick="showMynumber('0003','佐藤 美咲')">確認する</button>
+                <button class="btn btn-sm btn-p" onclick="openModal('provide-record');document.getElementById('provide-staff').value='佐藤 美咲（0003）'">提供記録</button>
+              </div></td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="ch">
+        <span class="ct">提供記録一覧</span>
+        <button class="btn btn-sm btn-p" onclick="openModal('provide-record')">新規記録を追加</button>
+      </div>
+      <div class="tbl-scroll">
+        <table class="tbl">
+          <thead><tr><th>日時</th><th>スタッフ名</th><th>提供先</th><th>目的</th><th>担当者</th></tr></thead>
+          <tbody id="provide-log">
+            <tr><td style="font-size:12px;white-space:nowrap">2025/04/01 10:22</td><td>田中 花子</td><td>年金事務所</td><td>社会保険加入手続き</td><td>山本</td></tr>
+            <tr><td style="font-size:12px;white-space:nowrap">2025/04/02 14:05</td><td>山田 太郎</td><td>ハローワーク</td><td>雇用保険加入手続き</td><td>山本</td></tr>
+          </tbody>
+        </table>
       </div>
     </div>
   </div>
@@ -521,6 +610,105 @@ input:disabled{background:#f5f4f0;color:#aaa;border-color:#e8e6e0}
 
 </div><!-- /main -->
 
+<!-- モーダル: マイナンバー確認（担当者パスワード） -->
+<div class="mbg" id="modal-mynumber-confirm">
+  <div class="modal" style="max-width:400px">
+    <div class="mt">マイナンバー確認</div>
+    <div style="background:#fee2e2;border-radius:8px;padding:10px 12px;font-size:12px;color:#991b1b;margin-bottom:14px;line-height:1.7">
+      マイナンバーの閲覧は担当者のみ許可されています。専用パスワードを入力してください。閲覧後30秒で自動的に非表示になります。
+    </div>
+    <div id="mn-confirm-form">
+      <div class="fg"><label class="fl">担当者パスワード</label><input type="password" id="mn-password" placeholder="担当者専用パスワード"></div>
+      <div id="mn-error" style="display:none;color:#991b1b;font-size:12px;margin-bottom:8px">パスワードが違います</div>
+      <div class="fg"><label class="fl">確認するスタッフ</label><input type="text" id="mn-staff-name" readonly style="background:#f5f4f0"></div>
+      <button class="btn btn-p" style="width:100%;padding:10px;font-weight:700" onclick="confirmMynumber()">確認する</button>
+    </div>
+    <div id="mn-result" style="display:none">
+      <div style="background:#f5f4f0;border-radius:10px;padding:16px;text-align:center;margin-bottom:12px">
+        <div style="font-size:11px;color:#888;margin-bottom:6px">マイナンバー</div>
+        <div id="mn-display" style="font-size:20px;font-weight:700;font-family:monospace;letter-spacing:3px;color:#1a1a1a"></div>
+        <div id="mn-timer" style="font-size:12px;color:#991b1b;margin-top:8px">30秒後に自動非表示</div>
+      </div>
+      <div style="background:#fef3cd;border-radius:8px;padding:10px 12px;font-size:12px;color:#8a5a00">提供する場合は必ず「提供記録」ボタンから記録を残してください。</div>
+    </div>
+    <div class="ma"><button class="btn btn-sm" onclick="closeMynumberModal()">閉じる</button></div>
+  </div>
+</div>
+
+<!-- モーダル: 提供記録入力 -->
+<div class="mbg" id="modal-provide-record">
+  <div class="modal" style="max-width:480px">
+    <div class="mt">マイナンバー提供記録</div>
+    <div style="background:#fee2e2;border-radius:8px;padding:10px 12px;font-size:12px;color:#991b1b;margin-bottom:14px;line-height:1.7">
+      マイナンバーを第三者に提供した場合は必ず記録してください。（番号法 第29条の3）
+    </div>
+    <div class="fg"><label class="fl">対象スタッフ</label><input type="text" id="provide-staff" placeholder="スタッフ名（社員番号）"></div>
+    <div class="fg"><label class="fl">提供先</label><select id="provide-dest">
+      <option>年金事務所</option>
+      <option>ハローワーク</option>
+      <option>税務署</option>
+      <option>健康保険組合</option>
+      <option>市区町村役所</option>
+      <option>その他</option>
+    </select></div>
+    <div class="fg"><label class="fl">提供目的</label><select id="provide-purpose">
+      <option>社会保険加入手続き</option>
+      <option>雇用保険加入手続き</option>
+      <option>社会保険喪失手続き</option>
+      <option>雇用保険喪失手続き</option>
+      <option>年末調整</option>
+      <option>給与支払報告書</option>
+      <option>その他</option>
+    </select></div>
+    <div class="fg"><label class="fl">担当者名</label><input type="text" id="provide-person" placeholder="例：山本"></div>
+    <div class="fg"><label class="fl">備考（任意）</label><textarea rows="2" id="provide-note" placeholder="補足があれば記入してください"></textarea></div>
+    <div class="ma">
+      <button class="btn btn-sm" onclick="closeModal('provide-record')">キャンセル</button>
+      <button class="btn btn-sm btn-p" onclick="saveProvideRecord()">記録を保存する →</button>
+    </div>
+  </div>
+</div>
+
+<!-- モーダル: マイナンバーカード書類確認（担当者パスワード） -->
+<div class="mbg" id="modal-view-file">
+  <div class="modal" style="max-width:440px">
+    <div class="mt">🔒 マイナンバーカード書類確認</div>
+    <div style="background:#fee2e2;border-radius:8px;padding:10px 12px;font-size:12px;color:#991b1b;margin-bottom:14px;line-height:1.7">
+      マイナンバーカードの書類閲覧は担当者のみ許可されています。専用パスワードを入力してください。
+    </div>
+    <div id="file-confirm-form">
+      <div class="fg"><label class="fl">対象スタッフ</label><input type="text" id="file-staff-name" readonly style="background:#f5f4f0"></div>
+      <div class="fg"><label class="fl">担当者パスワード</label><input type="password" id="file-password" placeholder="担当者専用パスワード"></div>
+      <div id="file-error" style="display:none;color:#991b1b;font-size:12px;margin-bottom:8px">パスワードが違います</div>
+      <button class="btn btn-p" style="width:100%;padding:10px;font-weight:700" onclick="confirmFileView()">確認する</button>
+    </div>
+    <div id="file-result" style="display:none">
+      <div style="background:#f5f4f0;border-radius:10px;height:160px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px;border:1px solid #e8e6e0;margin-bottom:12px">
+        <div style="font-size:36px">🪪</div>
+        <div style="font-size:13px;font-weight:700" id="file-display-name">マイナンバーカード.jpg</div>
+        <button class="btn btn-sm">画像を開く →</button>
+      </div>
+      <div style="background:#fef3cd;border-radius:8px;padding:10px 12px;font-size:12px;color:#8a5a00;line-height:1.6">
+        閲覧履歴が記録されます。書類の複製・転送は禁止されています。
+      </div>
+    </div>
+    <div class="ma"><button class="btn btn-sm" onclick="closeFileModal()">閉じる</button></div>
+  </div>
+</div>
+
+<!-- モーダル: 通常書類表示（管理者用） -->
+<div class="mbg" id="modal-view-file-normal">
+  <div class="modal" style="max-width:400px">
+    <div class="mt">提出書類の表示</div>
+    <div style="background:#f5f4f0;border-radius:10px;height:160px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px;border:1px solid #e8e6e0">
+      <div style="font-size:36px">📄</div>
+      <div style="font-size:13px;font-weight:700">提出書類.jpg</div>
+      <button class="btn btn-sm">画像を開く →</button>
+    </div>
+    <div class="ma"><button class="btn btn-sm" onclick="closeModal('view-file-normal')">閉じる</button></div>
+  </div>
+</div>
+
 <!-- モーダル: 給与明細表示 -->
 <div class="mbg" id="modal-view-payslip">
   <div class="modal">
@@ -738,6 +926,87 @@ function toggleLoginBtn(){
   btn.disabled=!cb.checked;
   btn.style.opacity=cb.checked?'1':'0.4';
   btn.style.cursor=cb.checked?'pointer':'not-allowed';
+}
+var mnTimer=null;
+function showFileWithPassword(staffName, docType){
+  document.getElementById('file-staff-name').value=staffName+'（'+docType+'）';
+  document.getElementById('file-password').value='';
+  document.getElementById('file-error').style.display='none';
+  document.getElementById('file-confirm-form').style.display='block';
+  document.getElementById('file-result').style.display='none';
+  document.getElementById('file-display-name').textContent=docType+'_'+staffName.replace(' ','')+'.jpg';
+  openModal('view-file');
+}
+function confirmFileView(){
+  var pw=document.getElementById('file-password').value;
+  if(pw!==MN_PASSWORD){
+    document.getElementById('file-error').style.display='block';
+    return;
+  }
+  document.getElementById('file-error').style.display='none';
+  document.getElementById('file-confirm-form').style.display='none';
+  document.getElementById('file-result').style.display='block';
+}
+function closeFileModal(){
+  document.getElementById('file-result').style.display='none';
+  document.getElementById('file-confirm-form').style.display='block';
+  closeModal('view-file');
+}
+var mnNumbers={'0001':'1234-5678-9012','0002':'2345-6789-0123','0003':'3456-7890-1234'};
+var currentMnId='';
+var MN_PASSWORD='mynumber2025';
+
+function showMynumber(staffId, staffName){
+  currentMnId=staffId;
+  document.getElementById('mn-staff-name').value=staffName;
+  document.getElementById('mn-password').value='';
+  document.getElementById('mn-error').style.display='none';
+  document.getElementById('mn-confirm-form').style.display='block';
+  document.getElementById('mn-result').style.display='none';
+  openModal('mynumber-confirm');
+}
+function confirmMynumber(){
+  var pw=document.getElementById('mn-password').value;
+  if(pw!==MN_PASSWORD){
+    document.getElementById('mn-error').style.display='block';
+    return;
+  }
+  document.getElementById('mn-error').style.display='none';
+  document.getElementById('mn-confirm-form').style.display='none';
+  document.getElementById('mn-result').style.display='block';
+  document.getElementById('mn-display').textContent=mnNumbers[currentMnId]||'****-****-****';
+  var sec=30;
+  document.getElementById('mn-timer').textContent=sec+'秒後に自動非表示';
+  if(mnTimer)clearInterval(mnTimer);
+  mnTimer=setInterval(function(){
+    sec--;
+    if(sec<=0){
+      clearInterval(mnTimer);
+      closeMynumberModal();
+    } else {
+      document.getElementById('mn-timer').textContent=sec+'秒後に自動非表示';
+    }
+  },1000);
+}
+function closeMynumberModal(){
+  if(mnTimer)clearInterval(mnTimer);
+  document.getElementById('mn-display').textContent='';
+  closeModal('mynumber-confirm');
+}
+function saveProvideRecord(){
+  var staff=document.getElementById('provide-staff').value;
+  var dest=document.getElementById('provide-dest').value;
+  var purpose=document.getElementById('provide-purpose').value;
+  var person=document.getElementById('provide-person').value;
+  if(!staff||!person){alert('スタッフ名と担当者名を入力してください');return;}
+  var now=new Date();
+  var ts=now.getFullYear()+'/'+(now.getMonth()+1).toString().padStart(2,'0')+'/'+now.getDate().toString().padStart(2,'0')+' '+now.getHours().toString().padStart(2,'0')+':'+now.getMinutes().toString().padStart(2,'0');
+  var log=document.getElementById('provide-log');
+  var row=document.createElement('tr');
+  row.innerHTML='<td style="font-size:12px;white-space:nowrap">'+ts+'</td><td>'+staff.replace(/（.*）/,'')+'</td><td>'+dest+'</td><td>'+purpose+'</td><td>'+person+'</td>';
+  log.insertBefore(row,log.firstChild);
+  closeModal('provide-record');
+  alert('提供記録を保存しました。');
 }
 function doLogin(type){
   showPage(type,null);
