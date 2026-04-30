@@ -195,10 +195,10 @@ input:disabled{background:#f5f4f0;color:#aaa;border-color:#e8e6e0}
         <table class="tbl">
           <thead><tr><th>名前</th><th>社員番号</th><th>派遣先</th><th>4月給与明細</th><th>就業条件明示書</th><th>確認日時</th><th></th></tr></thead>
           <tbody>
-            <tr><td>田中 花子</td><td>0001</td><td>株式会社サンプル</td><td><span class="bdg bg">閲覧済</span></td><td><span class="bdg bg">署名済</span></td><td style="font-size:11px;color:#888;white-space:nowrap">04/03 09:22</td><td><button class="btn btn-sm" onclick="openModal('staff-profile')">詳細</button></td></tr>
+            <tbody id="admin-staff-tbody"><tr><td>田中 花子</td><td>0001</td><td>株式会社サンプル</td><td><span class="bdg bg">閲覧済</span></td><td><span class="bdg bg">署名済</span></td><td style="font-size:11px;color:#888;white-space:nowrap">04/03 09:22</td><td><button class="btn btn-sm" onclick="openModal('staff-profile')">詳細</button></td></tr>
             <tr><td>山田 太郎</td><td>0002</td><td>テスト株式会社</td><td><span class="bdg bg">閲覧済</span></td><td><span class="bdg bg">署名済</span></td><td style="font-size:11px;color:#888;white-space:nowrap">04/04 13:10</td><td><button class="btn btn-sm" onclick="openModal('staff-profile')">詳細</button></td></tr>
             <tr><td>佐藤 美咲</td><td>0003</td><td>ABC商事</td><td><span class="bdg bz">未閲覧</span></td><td><span class="bdg ba">署名待ち</span></td><td style="font-size:11px;color:#888">—</td><td><button class="btn btn-sm" onclick="openModal('staff-profile')">詳細</button></td></tr>
-            <tr><td>鈴木 一郎</td><td>0004</td><td>XYZ株式会社</td><td><span class="bdg bz">未閲覧</span></td><td><span class="bdg bz">未送付</span></td><td style="font-size:11px;color:#888">—</td><td><button class="btn btn-sm" onclick="openModal('staff-profile')">詳細</button></td></tr>
+            <tr><td>鈴木 一郎</td><td>0004</td><td>XYZ株式会社</td><td><span class="bdg bz">未閲覧</span></td><td><span class="bdg bz">未送付</span></td><td style="font-size:11px;color:#888">—</td><td><button class="btn btn-sm" onclick="openModal('staff-profile')">詳細</button></td></tr></tbody>
           </tbody>
         </table>
       </div>
@@ -386,8 +386,8 @@ input:disabled{background:#f5f4f0;color:#aaa;border-color:#e8e6e0}
   <div style="display:flex;align-items:center;gap:12px;margin-bottom:16px">
     <div style="width:48px;height:48px;border-radius:50%;background:#ede9fe;display:flex;align-items:center;justify-content:center;font-size:15px;font-weight:800;color:#5b21b6;flex-shrink:0">田中</div>
     <div>
-      <div style="font-size:17px;font-weight:800;letter-spacing:-0.3px">田中 花子 さん</div>
-      <div style="font-size:12px;color:#888;margin-top:2px">社員番号：0001 · 株式会社サンプル</div>
+      <div style="font-size:17px;font-weight:800;letter-spacing:-0.3px"><span class="staff-name-display">田中 花子 さん</span></div>
+      <div style="font-size:12px;color:#888;margin-top:2px"><span class="staff-workplace-display">社員番号：0001 · 株式会社サンプル</span></div>
     </div>
     <span class="bdg bg" style="margin-left:auto">稼働中</span>
   </div>
@@ -597,15 +597,15 @@ input:disabled{background:#f5f4f0;color:#aaa;border-color:#e8e6e0}
   <div id="staff-sprofile" class="sp">
     <div class="card">
       <div class="ch"><span class="ct">就業情報</span></div>
-      <div class="profile-row"><span class="profile-label">社員番号</span><span class="profile-val">0001</span></div>
-      <div class="profile-row"><span class="profile-label">氏名</span><span class="profile-val">田中 花子</span></div>
-      <div class="profile-row"><span class="profile-label">派遣先</span><span class="profile-val">株式会社サンプル</span></div>
-      <div class="profile-row"><span class="profile-label">派遣開始日</span><span class="profile-val">2025年4月1日</span></div>
-      <div class="profile-row"><span class="profile-label">現契約期間</span><span class="profile-val">2025/04/01 〜 2025/09/30</span></div>
-      <div class="profile-row"><span class="profile-label">個人抵触日</span><span class="profile-val">2028年4月1日</span></div>
+      <div class="profile-row"><span class="profile-label">社員番号</span><span class="profile-val" id="profile-employee-id">0001</span></div>
+      <div class="profile-row"><span class="profile-label">氏名</span><span class="profile-val" id="profile-name">田中 花子</span></div>
+      <div class="profile-row"><span class="profile-label">派遣先</span><span class="profile-val" id="profile-workplace">株式会社サンプル</span></div>
+      <div class="profile-row"><span class="profile-label">派遣開始日</span><span class="profile-val" id="profile-dispatch-start">2025年4月1日</span></div>
+      <div class="profile-row"><span class="profile-label">現契約期間</span><span class="profile-val" id="profile-contract">2025/04/01 〜 2025/09/30</span></div>
+      <div class="profile-row"><span class="profile-label">個人抵触日</span><span class="profile-val" id="profile-restriction">2028年4月1日</span></div>
       <div style="height:1px;background:#f0efe9;margin:8px 0"></div>
-      <div class="profile-row"><span class="profile-label">基礎年金番号</span><span class="profile-val">1234-567890</span></div>
-      <div class="profile-row"><span class="profile-label">雇用保険番号</span><span class="profile-val">1234-567890-1</span></div>
+      <div class="profile-row"><span class="profile-label">基礎年金番号</span><span class="profile-val" id="profile-pension">1234-567890</span></div>
+      <div class="profile-row"><span class="profile-label">雇用保険番号</span><span class="profile-val" id="profile-insurance">1234-567890-1</span></div>
     </div>
   </div>
 </div>
@@ -1067,12 +1067,54 @@ function saveProvideRecord(){
   closeModal('provide-record');
   alert('提供記録を保存しました。');
 }
-function doLogin(type){
+async function doLogin(type){
   showPage(type,null);
   var tabs=document.querySelectorAll('.nav-tab');
   tabs.forEach(t=>t.classList.remove('active'));
-  if(type==='admin')tabs[1].classList.add('active');
-  else tabs[2].classList.add('active');
+  if(type==='admin'){
+    tabs[1].classList.add('active');
+    loadAdminStaffList();
+  } else {
+    tabs[2].classList.add('active');
+    loadStaffProfile();
+  }
+}
+
+async function loadStaffProfile(){
+  if(!supabaseClient) return;
+  var session=await supabaseClient.auth.getSession();
+  if(!session.data.session) return;
+  var email=session.data.session.user.email;
+  var empId=email.replace('@flexbs.com','');
+  var {data,error}=await supabaseClient.from('staffs').select('*').eq('employee_id',empId).single();
+  if(error||!data) return;
+  document.querySelectorAll('.staff-name-display').forEach(el=>el.textContent=data.name+' さん');
+  document.querySelectorAll('.staff-workplace-display').forEach(el=>el.textContent='社員番号：'+data.employee_id+' · '+(data.workplace||''));
+  document.querySelectorAll('.staff-av').forEach(el=>el.textContent=data.name?data.name.replace(' ','').slice(0,2):'');
+  var el=document.getElementById('profile-employee-id');if(el)el.textContent=data.employee_id;
+  el=document.getElementById('profile-name');if(el)el.textContent=data.name||'';
+  el=document.getElementById('profile-workplace');if(el)el.textContent=data.workplace||'';
+  el=document.getElementById('profile-dispatch-start');if(el)el.textContent=data.dispatch_start_date?data.dispatch_start_date.replace(/-/g,'/'):'';
+  el=document.getElementById('profile-contract');if(el)el.textContent=(data.contract_start_date?data.contract_start_date.replace(/-/g,'/'):'')+(data.contract_end_date?' 〜 '+data.contract_end_date.replace(/-/g,'/'):'');
+  el=document.getElementById('profile-restriction');if(el)el.textContent=data.restriction_date||'';
+  el=document.getElementById('profile-pension');if(el)el.textContent=data.pension_number||'';
+  el=document.getElementById('profile-insurance');if(el)el.textContent=data.insurance_number||'';
+}
+
+async function loadAdminStaffList(){
+  console.log('loadAdminStaffList called');
+  if(!supabaseClient){ console.log('no supabase client'); return; }
+  var {data,error}=await supabaseClient.from('staffs').select('*').order('employee_id');
+  console.log('staffs data:', data, 'error:', error);
+  if(error||!data){ console.log('error or no data'); return; }
+  var tbody=document.getElementById('admin-staff-tbody');
+  if(!tbody) return;
+  tbody.innerHTML='';
+  data.forEach(function(s){
+    var tr=document.createElement('tr');
+    tr.innerHTML='<td>'+s.name+'</td><td>'+s.employee_id+'</td><td>'+(s.workplace||'')+'</td><td><span class="bdg bz">未閲覧</span></td><td><span class="bdg bz">未送付</span></td><td style="font-size:11px;color:#888">—</td><td><button class="btn btn-sm">詳細</button></td>';
+    tbody.appendChild(tr);
+  });
 }
 function showPage(id,tabEl){
   document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
