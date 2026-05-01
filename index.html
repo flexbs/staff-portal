@@ -166,7 +166,7 @@ input:disabled{background:#f5f4f0;color:#aaa;border-color:#e8e6e0}
 <!-- 管理者 -->
 <div id="page-admin" class="page">
   <div class="g4">
-    <div class="met"><div class="met-l">登録スタッフ数</div><div class="met-v">24名</div></div>
+    <div class="met"><div class="met-l">登録スタッフ数</div><div class="met-v"　id="staff-count">24名</div></div>
     <div class="met"><div class="met-l">今月の送付件数</div><div class="met-v">18件</div></div>
     <div class="met"><div class="met-l">受取・署名済み</div><div class="met-v">14件</div></div>
     <div class="met"><div class="met-l">有給申請（未対応）</div><div class="met-v" style="color:#991b1b" id="adminReqCount">2件</div></div>
@@ -1113,7 +1113,7 @@ async function loadAdminStaffList(){
   data.forEach(function(s){
     var tr=document.createElement('tr');
     tr.innerHTML='<td>'+s.name+'</td><td>'+s.employee_id+'</td><td>'+(s.workplace||'')+'</td><td><span class="bdg bz">未閲覧</span></td><td><span class="bdg bz">未送付</span></td><td style="font-size:11px;color:#888">—</td><td><button class="btn btn-sm">詳細</button></td>';
-    tbody.appendChild(tr);
+    tbody.appendChild(tr);var countEl=document.getElementById('staff-count');if(countEl)countEl.textContent=data.length+'名';
   });
 }
 function showPage(id,tabEl){
