@@ -606,6 +606,7 @@ input:disabled{background:#f5f4f0;color:#aaa;border-color:#e8e6e0}
       <div style="height:1px;background:#f0efe9;margin:8px 0"></div>
       <div class="profile-row"><span class="profile-label">基礎年金番号</span><span class="profile-val" id="profile-pension">1234-567890</span></div>
       <div class="profile-row"><span class="profile-label">雇用保険番号</span><span class="profile-val" id="profile-insurance">1234-567890-1</span></div>
+      <div class="profile-row" style="display:flex;justify-content:space-between;padding:12px 0;border-bottom:1px solid #eee;margin:8px 0"><span class="profile-label">備考</span><span class="profile-val" id="profile-note">-</span></div>
     </div>
   </div>
 </div>
@@ -1099,6 +1100,7 @@ async function loadStaffProfile(){
   el=document.getElementById('profile-restriction');if(el)el.textContent=data.restriction_date||'';
   el=document.getElementById('profile-pension');if(el)el.textContent=data.pension_number||'';
   el=document.getElementById('profile-insurance');if(el)el.textContent=data.insurance_number||'';
+  el=document.getElementById('profile-note');if(el)el.textContent=data.note||'-';
 }
 
 async function loadAdminStaffList(){
