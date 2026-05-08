@@ -1109,6 +1109,7 @@ async function loadAdminStaffList(){
   var {data,error}=await supabaseClient.from('staffs').select('*').order('employee_id');
   console.log('staffs data:', data, 'error:', error);
   if(error||!data){ console.log('error or no data'); return; }
+  var sc=document.getElementById('staff-count');if(sc)sc.textContent=data.length+'名';
   var tbody=document.getElementById('admin-staff-tbody');
   if(!tbody) return;
   tbody.innerHTML='';
