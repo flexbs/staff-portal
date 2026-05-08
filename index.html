@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="ja">
+<html lang="ja">　　　
 <head>　　　　　　　　
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
@@ -1109,14 +1109,14 @@ async function loadAdminStaffList(){
   var {data,error}=await supabaseClient.from('staffs').select('*').order('employee_id');
   console.log('staffs data:', data, 'error:', error);
   if(error||!data){ console.log('error or no data'); return; }
-  var sc=document.getElementById('staff-count');if(sc)sc.textContent=data.length+'名';
+  var sc=document.getElementById('staff-count');if(sc)sc.textContent=data.filter(s=>s.employee_id<9000).length+'名';
   var tbody=document.getElementById('admin-staff-tbody');
   if(!tbody) return;
   tbody.innerHTML='';
   data.forEach(function(s){
     var tr=document.createElement('tr');
     tr.innerHTML='<td>'+s.name+'</td><td>'+s.employee_id+'</td><td>'+(s.workplace||'')+'</td><td><span class="bdg bz">未閲覧</span></td><td><span class="bdg bz">未送付</span></td><td style="font-size:11px;color:#888">—</td><td><button class="btn btn-sm">詳細</button></td>';
-    tbody.appendChild(tr);var countEl=document.getElementById('staff-count');if(countEl)countEl.textContent=data.length+'名';
+    tbody.appendChild(tr);var countEl=document.getElementById('staff-count');if(countEl)countEl.textContent=data.filter(s=>s.employee_id<9000).length+'名';
   });
 }
 function showPage(id,tabEl){
