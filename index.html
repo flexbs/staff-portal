@@ -1162,8 +1162,8 @@ async function openStaffDetail(empId){
     if(!data){alert('スタッフが見つかりませんでした');return;}
     document.getElementById('modal-name').textContent=data.name||'';
     document.getElementById('modal-workplace').textContent=data.workplace||'';
-    document.getElementById('modal-dispatch-start').textContent=data.dispatch_start||'';
-    document.getElementById('modal-contract').value=data.contract_period||'';
+    document.getElementById('modal-dispatch-start').textContent=data.dispatch_start_date||'';
+    document.getElementById('modal-contract').value=data.contract_start_date||'';
     document.getElementById('modal-restriction').value=data.restriction_date||'';
     document.getElementById('modal-pension').textContent=data.pension_number||'';
     document.getElementById('modal-insurance').textContent=data.insurance_number||'';
