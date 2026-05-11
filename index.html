@@ -809,8 +809,8 @@ input:disabled{background:#f5f4f0;color:#aaa;border-color:#e8e6e0}
   <div class="modal">
     <div class="mt">スタッフ詳細情報</div>
     <div style="display:flex;align-items:center;gap:12px;margin-bottom:16px">
-      <div style="width:44px;height:44px;border-radius:50%;background:#ede9fe;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:700;color:#5b21b6">田中</div>
-      <div><div style="font-size:15px;font-weight:700" id="modal-name">田中 花子</div><div style="font-size:12px;color:#888;margin-top:2px">社員番号：0001</div></div>
+      <div style="width:44px;height:44px;border-radius:50%;background:#ede9fe;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:700;color:#5b21b6" id="modal-avatar">田中</div>
+      <div><div style="font-size:15px;font-weight:700" id="modal-name">田中 花子</div><div style="font-size:12px;color:#888;margin-top:2px" id="modal-empid">社員番号：0001</div></div>
       <span class="bdg bg" style="margin-left:auto">稼働中</span>
     </div>
     <div class="profile-row"><span class="profile-label">派遣先</span><span class="profile-val" id="modal-workplace">株式会社サンプル</span></div>
@@ -1161,6 +1161,8 @@ async function openStaffDetail(empId){
     if(error){alert('スタッフ情報の取得に失敗しました：'+error.message);return;}
     if(!data){alert('スタッフが見つかりませんでした');return;}
     document.getElementById('modal-name').textContent=data.name||'';
+    document.getElementById('modal-empid').textContent='社員番号：'+(data.employee_id||'');
+    document.getElementById('modal-avatar').textContent=data.name?data.name.replace(' ','').slice(0,2):'';
     document.getElementById('modal-workplace').textContent=data.workplace||'';
     document.getElementById('modal-dispatch-start').textContent=data.dispatch_start_date||'';
     document.getElementById('modal-contract').value=data.contract_start_date||'';
