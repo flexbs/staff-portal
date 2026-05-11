@@ -830,7 +830,7 @@ input:disabled{background:#f5f4f0;color:#aaa;border-color:#e8e6e0}
   <div class="modal">
     <div class="mt">給与明細PDFを送付する</div>
     <div class="fg"><label class="fl">対象月</label><select><option>2025年4月分</option><option>2025年3月分</option></select></div>
-    <div class="fg"><label class="fl">送付先</label><select><option>全スタッフ（18名）</option><option>田中 花子（0001）</option><option>山田 太郎（0002）</option></select></div>
+    <div class="fg"><label class="fl">送付先</label><select id="payslip-target"><option>全スタッフ（18名）</option><option>田中 花子（0001）</option><option>山田 太郎（0002）</option></select></div>
     <div class="fg"><label class="fl">PDFファイル</label><div class="ua" onclick="simUp(this,'payslipFile')">📎 タップしてPDFを選択</div><div id="payslipFile" style="display:none" class="pv"><span style="font-size:18px">📄</span><div style="flex:1"><div style="font-size:13px;font-weight:600">2025年4月_給与明細.pdf</div><div style="font-size:11px;color:#888">245 KB</div></div></div></div>
     <div class="ma"><button class="btn btn-sm" onclick="closeModal('send-payslip')">キャンセル</button><button class="btn btn-sm btn-p" onclick="closeModal('send-payslip')">送付する →</button></div>
   </div>
@@ -840,7 +840,7 @@ input:disabled{background:#f5f4f0;color:#aaa;border-color:#e8e6e0}
 <div class="mbg" id="modal-send-contract">
   <div class="modal">
     <div class="mt">書類PDFを送付する</div>
-    <div class="fg"><label class="fl">送付先</label><select><option>全スタッフ</option><option>田中 花子（0001）</option><option>佐藤 美咲（0003）</option></select></div>
+    <div class="fg"><label class="fl">送付先</label><select id="contract-target"><option>全スタッフ</option><option>田中 花子（0001）</option><option>佐藤 美咲（0003）</option></select></div>
     <div class="fg"><label class="fl">手続き区分</label><select><option>稼働中</option><option>入社手続き</option><option>退社手続き</option></select></div>
     <div class="fg"><label class="fl">書類の種類</label><select id="doc-type-select" onchange="toggleDocType(this)">
       <option value="meiji">就業条件明示書（署名あり）</option>
@@ -1112,6 +1112,10 @@ async function loadAdminStaffList(){
   console.log('staffs data:', data, 'error:', error);
   if(error||!data){ console.log('error or no data'); return; }
   var sc=document.getElementById('staff-count');if(sc)sc.textContent=data.filter(s=>s.employee_id<9000).length+'名';
+ var staffOnly=data.filter(s=>s.employee_id<9000);
+    var optionsHtml='<option>全スタッフ（'+staffOnly.length+'名）</option>';
+    staffOnly.forEach(s=>{optionsHtml+='<option>'+s.name+'（'+String(s.employee_id).padStart(4,'0')+'）</option>';});
+    ['payslip-target','contract-target'].forEach(id=>{var sel=document.getElementById(id);if(sel)sel.innerHTML=optionsHtml;}); 
   var tbody=document.getElementById('admin-staff-tbody');
   if(!tbody) return;
   tbody.innerHTML='';
