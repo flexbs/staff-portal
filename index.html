@@ -1157,7 +1157,7 @@ function openModal(id){document.getElementById('modal-'+id).classList.add('open'
 function closeModal(id){document.getElementById('modal-'+id).classList.remove('open');}
 async function openStaffDetail(empId){
   try{
-    const {data,error}=await sb.from('staff').select('*').eq('employee_id',empId).single();
+    const {data,error}=await supabaseClient.from('staff').select('*').eq('employee_id',empId).single();
     if(error){alert('スタッフ情報の取得に失敗しました：'+error.message);return;}
     if(!data){alert('スタッフが見つかりませんでした');return;}
     document.getElementById('modal-name').textContent=data.name||'';
