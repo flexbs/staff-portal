@@ -1093,6 +1093,7 @@ async function loadStaffProfile(){
   document.querySelectorAll('.staff-name-display').forEach(el=>el.textContent=data.name+' さん');
   document.querySelectorAll('.staff-workplace-display').forEach(el=>el.textContent='社員番号：'+data.employee_id+' · '+(data.workplace||''));
   document.querySelectorAll('.staff-av').forEach(el=>el.textContent=data.name?data.name.replace(' ','').slice(0,2):'');
+  document.querySelectorAll('.av').forEach(el=>el.textContent=data.name?data.name.replace(' ','').slice(0,2):'');
   var el=document.getElementById('profile-employee-id');if(el)el.textContent=data.employee_id;
   el=document.getElementById('profile-name');if(el)el.textContent=data.name||'';
   el=document.getElementById('profile-workplace');if(el)el.textContent=data.workplace||'';
