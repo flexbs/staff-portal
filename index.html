@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="ja">　　　
   <head>　　　　　　　　
-<meta charset="UTF-8">
+  <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <title>派遣スタッフポータル</title>
@@ -1165,7 +1165,7 @@ async function openStaffDetail(empId){
     document.getElementById('modal-avatar').textContent=data.name?data.name.replace(' ','').slice(0,2):'';
     document.getElementById('modal-workplace').textContent=data.workplace||'';
     document.getElementById('modal-dispatch-start').textContent=data.dispatch_start_date||'';
-    document.getElementById('modal-contract').value=data.contract_start_date||'';
+    document.getElementById('modal-contract').value=data.contract_end_date||'';
     document.getElementById('modal-restriction').value=data.restriction_date||'';
     document.getElementById('modal-pension').textContent=data.pension_number||'';
     document.getElementById('modal-insurance').textContent=data.insurance_number||'';
