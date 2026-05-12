@@ -926,7 +926,7 @@ input:disabled{background:#f5f4f0;color:#aaa;border-color:#e8e6e0}
 <script>
 const SUPABASE_URL='https://wafarcqisrwzlkectrdo.supabase.co';
 const SUPABASE_KEY='sb_publishable_zVSnu1pacttXMv9ArbW5hA_NJgP1yOJ';
-const ADMIN_EMAILS=['9001@flexbs.com','9002@flexbs.com','9003@flexbs.com','9004@flexbs.com'];
+const ADMIN_EMAILS=['0001@flexbs.com','0002@flexbs.com','0003@flexbs.com','0004@flexbs.com'];
 var supabaseClient=null;
 
 window.addEventListener('load',function(){
@@ -1111,8 +1111,8 @@ async function loadAdminStaffList(){
   var {data,error}=await supabaseClient.from('staffs').select('*').order('employee_id');
   console.log('staffs data:', data, 'error:', error);
   if(error||!data){ console.log('error or no data'); return; }
-  var sc=document.getElementById('staff-count');if(sc)sc.textContent=data.filter(s=>s.employee_id<9000).length+'名';
- var staffOnly=data.filter(s=>s.employee_id<9000);
+  var sc=document.getElementById('staff-count');if(sc)sc.textContent=data.filter(s=>s.employee_id>='1000').length+'名';
+ var staffOnly=data.filter(s=>s.employee_id>='1000');
     var optionsHtml='<option>全スタッフ（'+staffOnly.length+'名）</option>';
     staffOnly.forEach(s=>{optionsHtml+='<option>'+s.name+'（'+String(s.employee_id).padStart(4,'0')+'）</option>';});
     ['payslip-target','contract-target'].forEach(id=>{var sel=document.getElementById(id);if(sel)sel.innerHTML=optionsHtml;}); 
@@ -1122,7 +1122,7 @@ async function loadAdminStaffList(){
   data.forEach(function(s){
     var tr=document.createElement('tr');
     tr.innerHTML='<td>'+s.name+'</td><td>'+s.employee_id+'</td><td>'+(s.workplace||'')+'</td><td><span class="bdg bz">未閲覧</span></td><td><span class="bdg bz">未送付</span></td><td style="font-size:11px;color:#888">—</td><td><button class="btn btn-sm" onclick="openStaffDetail('+s.employee_id+')">詳細</button></td>';
-    tbody.appendChild(tr);var countEl=document.getElementById('staff-count');if(countEl)countEl.textContent=data.filter(s=>s.employee_id<9000).length+'名';
+    tbody.appendChild(tr);var countEl=document.getElementById('staff-count');if(countEl)countEl.textContent=data.filter(s=>s.employee_id>='1000').length+'名';
   });
 }
 function showPage(id,tabEl){
