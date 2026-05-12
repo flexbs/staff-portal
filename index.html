@@ -880,7 +880,7 @@ input:disabled{background:#f5f4f0;color:#aaa;border-color:#e8e6e0}
     <div class="mt">お知らせを送信する</div>
     <div class="fg"><label class="fl">タイトル</label><input type="text" placeholder="例：健康診断のご案内"></div>
     <div class="fg"><label class="fl">内容</label><textarea rows="4" placeholder="本文を入力してください"></textarea></div>
-    <div class="fg"><label class="fl">送付先</label><select><option>全スタッフ</option><option>特定のスタッフ</option></select></div>
+    <div class="fg"><label class="fl">送付先</label><select id="notice-target"><option>全スタッフ</option><option>特定のスタッフ</option></select></div>
     <div class="fg"><label class="fl">添付ファイル（任意）</label><div class="ua" style="padding:10px" onclick="simUp(this,'noticeFile')">📎 PDFを添付（任意）</div><div id="noticeFile" style="display:none" class="pv"><span>📄</span><div style="flex:1;font-size:13px">添付資料.pdf</div></div></div>
     <div class="ma"><button class="btn btn-sm" onclick="closeModal('send-notice')">キャンセル</button><button class="btn btn-sm btn-p" onclick="closeModal('send-notice')">送信する →</button></div>
   </div>
@@ -1118,7 +1118,7 @@ async function loadAdminStaffList(){
  var staffOnly=data.filter(s=>s.employee_id>='1000');
     var optionsHtml='<option>全スタッフ（'+staffOnly.length+'名）</option>';
     staffOnly.forEach(s=>{optionsHtml+='<option>'+s.name+'（'+String(s.employee_id).padStart(4,'0')+'）</option>';});
-    ['payslip-target','contract-target'].forEach(id=>{var sel=document.getElementById(id);if(sel)sel.innerHTML=optionsHtml;}); 
+    ['payslip-target','contract-target','notice-target'].forEach(id=>{var sel=document.getElementById(id);if(sel)sel.innerHTML=optionsHtml;}); 
   var tbody=document.getElementById('admin-staff-tbody');
   if(!tbody) return;
   tbody.innerHTML='';
