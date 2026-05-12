@@ -171,7 +171,10 @@ input:disabled{background:#f5f4f0;color:#aaa;border-color:#e8e6e0}
     <div class="met"><div class="met-l">受取・署名済み</div><div class="met-v">14件</div></div>
     <div class="met"><div class="met-l">有給申請（未対応）</div><div class="met-v" style="color:#991b1b" id="adminReqCount">2件</div></div>
   </div>
-
+<div style="background:#fff;border:1px solid #e8e6e0;border-radius:10px;padding:10px 14px;margin-bottom:12px;display:flex;align-items:center;gap:10px">
+    <input type="checkbox" id="include-admins" onchange="loadAdminStaffList()" style="width:18px;height:18px;accent-color:#534AB7;cursor:pointer">
+    <label for="include-admins" style="font-size:13px;color:#666;cursor:pointer">管理者を一覧に含める（テスト用）</label>
+  </div>
   <div class="sub-tabs">
     <button class="sub-tab active" onclick="showSub('admin','docs',this)">書類管理</button>
     <button class="sub-tab" onclick="showSub('admin','paid',this)">有給管理</button>
@@ -1119,7 +1122,7 @@ async function loadAdminStaffList(){
   var tbody=document.getElementById('admin-staff-tbody');
   if(!tbody) return;
   tbody.innerHTML='';
-  data.forEach(function(s){
+  var includeAdmins=document.getElementById('include-admins')&&document.getElementById('include-admins').checked;var displayList=includeAdmins?data:data.filter(s=>s.employee_id>='1000');displayList.forEach(function(s){
     var tr=document.createElement('tr');
     tr.innerHTML='<td>'+s.name+'</td><td>'+s.employee_id+'</td><td>'+(s.workplace||'')+'</td><td><span class="bdg bz">未閲覧</span></td><td><span class="bdg bz">未送付</span></td><td style="font-size:11px;color:#888">—</td><td><button class="btn btn-sm" onclick="openStaffDetail('+s.employee_id+')">詳細</button></td>';
     tbody.appendChild(tr);var countEl=document.getElementById('staff-count');if(countEl)countEl.textContent=data.filter(s=>s.employee_id>='1000').length+'名';
