@@ -1091,7 +1091,7 @@ function getStaffBucket(t){return t==='payslip'?'payslips':'contracts';} var myS
   if(!session.data.session) return;
   var email=session.data.session.user.email;
   var empId=email.replace('@flexbs.com','');
-  var {data,error}=await supabaseClient.from('staffs').select('*').eq('employee_id',empId).single();
+  var {data,error}=await supabaseClient.from('staffs').select('*').eq('employee_id',empId).single();myStaffData=data;if(data)loadMyDocuments();
   if(error||!data) return;
   document.querySelectorAll('.staff-name-display').forEach(el=>el.textContent=data.name+' さん');
   document.querySelectorAll('.staff-workplace-display').forEach(el=>el.textContent='社員番号：'+data.employee_id+' · '+(data.workplace||''));
