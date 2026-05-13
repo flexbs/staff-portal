@@ -1,6 +1,6 @@
 <!DOCTYPE html>
-<html lang="ja">　　　
-  <head>　　　　　　　　
+<html lang="ja">
+  <head>
   <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
@@ -103,7 +103,6 @@ input:disabled{background:#f5f4f0;color:#aaa;border-color:#e8e6e0}
 .check-row-label{font-size:13px;color:#1a1a1a;cursor:pointer}
 .no-num-msg{background:#fef3cd;border-radius:8px;padding:10px 12px;font-size:12px;color:#8a5a00;margin-top:8px;display:none;line-height:1.6}
 .section-divider{font-size:11px;font-weight:700;color:#888;text-transform:uppercase;letter-spacing:0.5px;margin:16px 0 10px;padding-bottom:6px;border-bottom:1px solid #f0efe9}
-/* 手続きステップ */
 .step-box{background:#f5f4f0;border-radius:10px;padding:12px 14px;margin-bottom:10px;border-left:3px solid #534AB7}
 .step-box.green{border-left-color:#2d6a10;background:#e6f4d7}
 .step-box.red{border-left-color:#991b1b;background:#fee2e2}
@@ -138,14 +137,12 @@ input:disabled{background:#f5f4f0;color:#aaa;border-color:#e8e6e0}
 <div id="page-login" class="page active">
   <div class="lw">
     <div class="lb">
-      <!-- ロゴ -->
       <div style="text-align:center;margin-bottom:20px">
         <img src="https://raw.githubusercontent.com/flexbs/staff-portal/main/flexlogo1.jpg" alt="FLEX BUSINESS SERVICE" style="width:160px;height:auto;display:inline-block">
       </div>
       <div style="text-align:center;font-size:13px;color:#888;margin-bottom:22px">スタッフポータル</div>
       <div class="fg"><label class="fl">社員番号（4桁）</label><input type="text" placeholder="例：0001" id="login-id" maxlength="4" inputmode="numeric"></div>
       <div class="fg"><label class="fl">パスワード</label><input type="password" placeholder="パスワードを入力" id="login-pw"></div>
-      <!-- 個人情報同意チェックボックス -->
       <div style="background:#f5f4f0;border-radius:10px;padding:12px;margin-bottom:14px">
         <div style="font-size:12px;color:#666;margin-bottom:8px;line-height:1.6">
           <a href="#" onclick="openModal('privacy-modal');return false;" style="color:#534AB7;font-weight:600">個人情報の取り扱いについて</a>をお読みいただき、同意の上ログインしてください。
@@ -166,15 +163,12 @@ input:disabled{background:#f5f4f0;color:#aaa;border-color:#e8e6e0}
 <!-- 管理者 -->
 <div id="page-admin" class="page">
   <div class="g4">
-    <div class="met"><div class="met-l">稼働スタッフ数</div><div class="met-v" id="staff-count">67名</div></div>
+    <div class="met"><div class="met-l">登録スタッフ数</div><div class="met-v" id="staff-count">67名</div></div>
     <div class="met"><div class="met-l">今月の送付件数</div><div class="met-v">18件</div></div>
     <div class="met"><div class="met-l">受取・署名済み</div><div class="met-v">14件</div></div>
     <div class="met"><div class="met-l">有給申請（未対応）</div><div class="met-v" style="color:#991b1b" id="adminReqCount">2件</div></div>
   </div>
-<div style="background:#fff;border:1px solid #e8e6e0;border-radius:10px;padding:10px 14px;margin-bottom:12px;display:flex;align-items:center;gap:10px">
-    <input type="checkbox" id="include-admins" onchange="loadAdminStaffList()" style="width:18px;height:18px;accent-color:#534AB7;cursor:pointer">
-    <label for="include-admins" style="font-size:13px;color:#666;cursor:pointer">管理者を一覧に含める（テスト用）</label>
-  </div>
+
   <div class="sub-tabs">
     <button class="sub-tab active" onclick="showSub('admin','docs',this)">書類管理</button>
     <button class="sub-tab" onclick="showSub('admin','paid',this)">有給管理</button>
@@ -183,7 +177,6 @@ input:disabled{background:#f5f4f0;color:#aaa;border-color:#e8e6e0}
     <button class="sub-tab" onclick="showSub('admin','notice',this)">お知らせ</button>
   </div>
 
-  <!-- 管理者：書類管理 -->
   <div id="admin-docs" class="sp active">
     <div class="card">
       <div class="ch">
@@ -197,18 +190,14 @@ input:disabled{background:#f5f4f0;color:#aaa;border-color:#e8e6e0}
       <div class="tbl-scroll">
         <table class="tbl">
           <thead><tr><th>名前</th><th>社員番号</th><th>派遣先</th><th>4月給与明細</th><th>就業条件明示書</th><th>確認日時</th><th></th></tr></thead>
-          <tbody>
-            <tbody id="admin-staff-tbody"><tr><td>田中 花子</td><td>0001</td><td>株式会社サンプル</td><td><span class="bdg bg">閲覧済</span></td><td><span class="bdg bg">署名済</span></td><td style="font-size:11px;color:#888;white-space:nowrap">04/03 09:22</td><td><button class="btn btn-sm" onclick="openModal('staff-profile')">詳細</button></td></tr>
-            <tr><td>山田 太郎</td><td>0002</td><td>テスト株式会社</td><td><span class="bdg bg">閲覧済</span></td><td><span class="bdg bg">署名済</span></td><td style="font-size:11px;color:#888;white-space:nowrap">04/04 13:10</td><td><button class="btn btn-sm" onclick="openModal('staff-profile')">詳細</button></td></tr>
-            <tr><td>佐藤 美咲</td><td>0003</td><td>ABC商事</td><td><span class="bdg bz">未閲覧</span></td><td><span class="bdg ba">署名待ち</span></td><td style="font-size:11px;color:#888">—</td><td><button class="btn btn-sm" onclick="openModal('staff-profile')">詳細</button></td></tr>
-            <tr><td>鈴木 一郎</td><td>0004</td><td>XYZ株式会社</td><td><span class="bdg bz">未閲覧</span></td><td><span class="bdg bz">未送付</span></td><td style="font-size:11px;color:#888">—</td><td><button class="btn btn-sm" onclick="openModal('staff-profile')">詳細</button></td></tr></tbody>
+          <tbody id="admin-staff-tbody">
+            <tr><td>読み込み中...</td><td></td><td></td><td></td><td></td><td></td><td></td></tr>
           </tbody>
         </table>
       </div>
     </div>
   </div>
 
-  <!-- 管理者：有給管理 -->
   <div id="admin-paid" class="sp">
     <div class="card">
       <div class="ch">
@@ -224,8 +213,6 @@ input:disabled{background:#f5f4f0;color:#aaa;border-color:#e8e6e0}
           <tbody>
             <tr><td>田中 花子</td><td>3日</td><td><span class="bdg ba">未達成</span></td><td><span class="bdg bg">通知済</span></td><td><button class="btn btn-sm" onclick="openModal('send-paid')">再通知</button></td></tr>
             <tr><td>山田 太郎</td><td>5日</td><td><span class="bdg bg">達成</span></td><td><span class="bdg bg">通知済</span></td><td><button class="btn btn-sm" onclick="openModal('send-paid')">再通知</button></td></tr>
-            <tr><td>佐藤 美咲</td><td>0日</td><td><span class="bdg br">未達成</span></td><td><span class="bdg bz">未通知</span></td><td><button class="btn btn-sm btn-p" onclick="openModal('send-paid')">通知する</button></td></tr>
-            <tr><td>鈴木 一郎</td><td>4日</td><td><span class="bdg ba">未達成</span></td><td><span class="bdg bz">未通知</span></td><td><button class="btn btn-sm btn-p" onclick="openModal('send-paid')">通知する</button></td></tr>
           </tbody>
         </table>
       </div>
@@ -237,14 +224,12 @@ input:disabled{background:#f5f4f0;color:#aaa;border-color:#e8e6e0}
           <thead><tr><th>名前</th><th>希望日</th><th>理由</th><th>状態</th><th></th></tr></thead>
           <tbody>
             <tr><td>田中 花子</td><td style="white-space:nowrap">05/09（1日）</td><td>私用</td><td><span class="bdg ba">承認待ち</span></td><td><div class="btn-row"><button class="btn btn-sm btn-g" onclick="approveLeave(this)">承認</button><button class="btn btn-sm" style="color:#991b1b;border-color:#fca5a5" onclick="rejectLeave(this)">否認</button></div></td></tr>
-            <tr><td>山田 太郎</td><td style="white-space:nowrap">05/14〜15</td><td>家族行事</td><td><span class="bdg ba">承認待ち</span></td><td><div class="btn-row"><button class="btn btn-sm btn-g" onclick="approveLeave(this)">承認</button><button class="btn btn-sm" style="color:#991b1b;border-color:#fca5a5" onclick="rejectLeave(this)">否認</button></div></td></tr>
           </tbody>
         </table>
       </div>
     </div>
   </div>
 
-  <!-- 管理者：書類授受管理 -->
   <div id="admin-uploads" class="sp">
     <div class="sub-tabs">
       <button class="sub-tab active" onclick="showSub2('recv',this)">スタッフからの提出書類</button>
@@ -256,36 +241,8 @@ input:disabled{background:#f5f4f0;color:#aaa;border-color:#e8e6e0}
         <div class="tbl-scroll">
           <table class="tbl">
             <thead><tr><th>名前</th><th>手続き区分</th><th>書類種別</th><th>提出日</th><th>状態</th><th></th></tr></thead>
-            <tbody>
-              <tr style="background:#fff8f8">
-                <td>田中 花子</td>
-                <td><span class="bdg bb">入社</span></td>
-                <td>
-                  <span style="color:#991b1b;font-weight:600">🔒 マイナンバーカード</span>
-                  <div style="font-size:11px;color:#aaa;margin-top:2px">担当者のみ閲覧可</div>
-                </td>
-                <td>2025/04/01</td>
-                <td><span class="bdg bg">確認済</span></td>
-                <td>
-                  <button class="btn btn-sm" style="color:#991b1b;border-color:#fca5a5" onclick="showFileWithPassword('田中 花子','マイナンバーカード')">🔒 担当者確認</button>
-                </td>
-              </tr>
-              <tr><td>田中 花子</td><td><span class="bdg bb">入社</span></td><td>雇用保険番号</td><td>2025/04/01</td><td><span class="bdg bg">確認済</span></td><td><button class="btn btn-sm" onclick="openModal('view-file-normal')">表示</button></td></tr>
-              <tr><td>山田 太郎</td><td><span class="bdg bb">入社</span></td><td>年金手帳コピー</td><td>2025/04/02</td><td><span class="bdg ba">確認待ち</span></td><td><button class="btn btn-sm" onclick="openModal('view-file-normal')">表示</button></td></tr>
-              <tr><td>田中 花子</td><td><span class="bdg bg">稼働中</span></td><td>自動車保険証券</td><td>2025/04/10</td><td><span class="bdg bg">確認済</span></td><td><button class="btn btn-sm" onclick="openModal('view-file-normal')">表示</button></td></tr>
-              <tr style="background:#fff8f8">
-                <td>佐藤 美咲</td>
-                <td><span class="bdg bb">入社</span></td>
-                <td>
-                  <span style="color:#991b1b;font-weight:600">🔒 マイナンバーカード</span>
-                  <div style="font-size:11px;color:#aaa;margin-top:2px">担当者のみ閲覧可</div>
-                </td>
-                <td>2025/04/05</td>
-                <td><span class="bdg ba">確認待ち</span></td>
-                <td>
-                  <button class="btn btn-sm" style="color:#991b1b;border-color:#fca5a5" onclick="showFileWithPassword('佐藤 美咲','マイナンバーカード')">🔒 担当者確認</button>
-                </td>
-              </tr>
+            <tbody id="admin-uploads-tbody">
+              <tr><td colspan="6" style="text-align:center;color:#888;padding:20px">読み込み中...</td></tr>
             </tbody>
           </table>
         </div>
@@ -296,13 +253,9 @@ input:disabled{background:#f5f4f0;color:#aaa;border-color:#e8e6e0}
         <div class="ch"><span class="ct">派遣元からスタッフへの送付書類</span></div>
         <div class="tbl-scroll">
           <table class="tbl">
-            <thead><tr><th>名前</th><th>手続き区分</th><th>書類種別</th><th>送付日</th><th>署名・確認</th><th></th></tr></thead>
-            <tbody>
-              <tr><td>田中 花子</td><td><span class="bdg bb">入社</span></td><td>入社案内書類</td><td>2025/04/01</td><td><span class="bdg bg">閲覧済</span></td><td><button class="btn btn-sm">確認</button></td></tr>
-              <tr><td>田中 花子</td><td><span class="bdg bp">稼働中</span></td><td>就業条件明示書</td><td>2025/04/01</td><td><span class="bdg bg">署名済</span></td><td><button class="btn btn-sm">確認</button></td></tr>
-              <tr><td>田中 花子</td><td><span class="bdg bp">稼働中</span></td><td>4月分 給与明細</td><td>2025/05/01</td><td><span class="bdg bg">閲覧済</span></td><td><button class="btn btn-sm">確認</button></td></tr>
-              <tr><td>山田 太郎</td><td><span class="bdg bp">稼働中</span></td><td>就業条件明示書</td><td>2025/04/01</td><td><span class="bdg bg">署名済</span></td><td><button class="btn btn-sm">確認</button></td></tr>
-              <tr><td>佐藤 美咲</td><td><span class="bdg bp">稼働中</span></td><td>就業条件明示書</td><td>2025/04/28</td><td><span class="bdg ba">署名待ち</span></td><td><button class="btn btn-sm">確認</button></td></tr>
+            <thead><tr><th>名前</th><th>書類種別</th><th>送付日</th><th>署名・確認</th><th></th></tr></thead>
+            <tbody id="admin-sent-tbody">
+              <tr><td colspan="5" style="text-align:center;color:#888;padding:20px">読み込み中...</td></tr>
             </tbody>
           </table>
         </div>
@@ -310,12 +263,10 @@ input:disabled{background:#f5f4f0;color:#aaa;border-color:#e8e6e0}
     </div>
   </div>
 
-  <!-- 管理者：マイナンバー管理 -->
   <div id="admin-mynumber" class="sp">
     <div style="background:#fee2e2;border-radius:10px;padding:12px 14px;font-size:12px;color:#991b1b;margin-bottom:14px;line-height:1.7">
       マイナンバーは番号法により厳格な管理が必要です。閲覧は担当者のみ、提供記録を必ず残してください。
     </div>
-
     <div class="card">
       <div class="ch">
         <span class="ct">マイナンバー一覧</span>
@@ -334,29 +285,10 @@ input:disabled{background:#f5f4f0;color:#aaa;border-color:#e8e6e0}
                 <button class="btn btn-sm btn-p" onclick="openModal('provide-record');document.getElementById('provide-staff').value='田中 花子（0001）'">提供記録</button>
               </div></td>
             </tr>
-            <tr>
-              <td>山田 太郎</td><td>0002</td>
-              <td><span id="mn-0002" style="font-family:monospace;letter-spacing:1px">****-****-****</span></td>
-              <td style="font-size:12px;color:#888">2025/04/02</td>
-              <td><div style="display:flex;gap:4px">
-                <button class="btn btn-sm" style="color:#991b1b;border-color:#fca5a5" onclick="showMynumber('0002','山田 太郎')">確認する</button>
-                <button class="btn btn-sm btn-p" onclick="openModal('provide-record');document.getElementById('provide-staff').value='山田 太郎（0002）'">提供記録</button>
-              </div></td>
-            </tr>
-            <tr>
-              <td>佐藤 美咲</td><td>0003</td>
-              <td><span id="mn-0003" style="font-family:monospace;letter-spacing:1px">****-****-****</span></td>
-              <td style="font-size:12px;color:#888">2025/04/05</td>
-              <td><div style="display:flex;gap:4px">
-                <button class="btn btn-sm" style="color:#991b1b;border-color:#fca5a5" onclick="showMynumber('0003','佐藤 美咲')">確認する</button>
-                <button class="btn btn-sm btn-p" onclick="openModal('provide-record');document.getElementById('provide-staff').value='佐藤 美咲（0003）'">提供記録</button>
-              </div></td>
-            </tr>
           </tbody>
         </table>
       </div>
     </div>
-
     <div class="card">
       <div class="ch">
         <span class="ct">提供記録一覧</span>
@@ -367,19 +299,16 @@ input:disabled{background:#f5f4f0;color:#aaa;border-color:#e8e6e0}
           <thead><tr><th>日時</th><th>スタッフ名</th><th>提供先</th><th>目的</th><th>担当者</th></tr></thead>
           <tbody id="provide-log">
             <tr><td style="font-size:12px;white-space:nowrap">2025/04/01 10:22</td><td>田中 花子</td><td>年金事務所</td><td>社会保険加入手続き</td><td>山本</td></tr>
-            <tr><td style="font-size:12px;white-space:nowrap">2025/04/02 14:05</td><td>山田 太郎</td><td>ハローワーク</td><td>雇用保険加入手続き</td><td>山本</td></tr>
           </tbody>
         </table>
       </div>
     </div>
   </div>
 
-  <!-- 管理者：お知らせ -->
   <div id="admin-notice" class="sp">
     <div class="card">
       <div class="ch"><span class="ct">送信済みお知らせ</span><button class="btn btn-sm btn-p" onclick="openModal('send-notice')">新規送信</button></div>
       <div class="ntc ntc-new"><div class="ntc-t">GW期間中の勤怠入力について</div><div class="ntc-b">5/3〜5/6は休業。勤怠は4/30までに入力ください。</div><div class="ntc-d">2025/04/25 · 全スタッフ</div></div>
-      <div class="ntc ntc-read"><div class="ntc-t">健康診断のご案内</div><div class="ntc-b">5月中旬に健康診断を実施します。</div><div class="ntc-d">2025/04/20 · 全スタッフ</div></div>
     </div>
   </div>
 </div>
@@ -387,11 +316,10 @@ input:disabled{background:#f5f4f0;color:#aaa;border-color:#e8e6e0}
 <!-- スタッフ画面 -->
 <div id="page-staff" class="page">
   <div style="display:flex;align-items:center;gap:12px;margin-bottom:16px">
-    <div class="staff-av" 
-      style="width:48px;height:48px;border-radius:50%;background:#ede9fe;display:flex;align-items:center;justify-content:center;font-size:15px;font-weight:800;color:#5b21b6;flex-shrink:0"></div>
+    <div class="staff-av" style="width:48px;height:48px;border-radius:50%;background:#ede9fe;display:flex;align-items:center;justify-content:center;font-size:15px;font-weight:800;color:#5b21b6;flex-shrink:0"></div>
     <div>
-      <div style="font-size:17px;font-weight:800;letter-spacing:-0.3px"><span class="staff-name-display">田中 花子 さん</span></div>
-      <div style="font-size:12px;color:#888;margin-top:2px"><span class="staff-workplace-display">社員番号：0001 · 株式会社サンプル</span></div>
+      <div style="font-size:17px;font-weight:800;letter-spacing:-0.3px"><span class="staff-name-display">スタッフ さん</span></div>
+      <div style="font-size:12px;color:#888;margin-top:2px"><span class="staff-workplace-display">社員番号：---</span></div>
     </div>
     <span class="bdg bg" style="margin-left:auto">稼働中</span>
   </div>
@@ -404,68 +332,32 @@ input:disabled{background:#f5f4f0;color:#aaa;border-color:#e8e6e0}
     <button class="sub-tab" onclick="showSub('staff','sprofile',this)">プロフィール</button>
   </div>
 
-  <!-- スタッフ：書類 -->
   <div id="staff-sdocs" class="sp active">
     <div class="g2">
-      <div class="met"><div class="met-l">未署名の書類</div><div class="met-v" style="color:#8a5a00" id="s-pending-docs">1件</div></div>
-      <div class="met"><div class="met-l">有給申請</div><div class="met-v" style="font-size:14px;margin-top:4px" id="s-req-status">承認待ち</div></div>
+      <div class="met"><div class="met-l">未署名の書類</div><div class="met-v" style="color:#8a5a00" id="s-pending-docs">0件</div></div>
+      <div class="met"><div class="met-l">有給申請</div><div class="met-v" style="font-size:14px;margin-top:4px" id="s-req-status">-</div></div>
     </div>
-    <div class="card">
+    <div class="card" id="staff-docs-container">
       <div class="ch"><span class="ct">受け取った書類</span></div>
-      <div class="row">
-        <div class="ri" style="background:#e6f4d7">📄</div>
-        <div class="rb"><div class="rt">4月分 給与明細.pdf</div><div class="rs">2025/05/01 送付 · 表示のみ</div></div>
-        <button class="btn btn-sm" onclick="openModal('view-payslip')">表示</button>
-      </div>
-      <div class="row">
-        <div class="ri" style="background:#e6f4d7">📄</div>
-        <div class="rb"><div class="rt">3月分 給与明細.pdf</div><div class="rs">2025/04/01 送付 · 表示のみ</div></div>
-        <button class="btn btn-sm" onclick="openModal('view-payslip')">表示</button>
-      </div>
-      <div class="row" id="contract-row">
-        <div class="ri" style="background:#fef3cd">📝</div>
-        <div class="rb"><div class="rt">就業条件明示書（2025年4月）.pdf</div><div class="rs" id="contract-sub">署名が必要です</div></div>
-        <span class="bdg ba" id="contract-badge">署名待ち</span>
-        <button class="btn btn-sm btn-p" id="contract-btn" onclick="openModal('view-contract')">署名する</button>
-      </div>
-      <div class="row">
-        <div class="ri" style="background:#e6f4d7">📝</div>
-        <div class="rb"><div class="rt">就業条件明示書（2025年1月）.pdf</div><div class="rs">署名済：2025/01/05 10:12</div></div>
-        <span class="bdg bg">署名済</span>
-        <button class="btn btn-sm">表示</button>
-      </div>
+      <div style="padding:20px;text-align:center;color:#888;font-size:13px">読み込み中...</div>
     </div>
   </div>
 
-  <!-- スタッフ：有給 -->
   <div id="staff-spaid" class="sp">
     <div class="card">
       <div class="ch"><span class="ct">有給取得履歴</span><button class="btn btn-sm btn-p" onclick="openModal('apply-leave')">新規申請</button></div>
-      <div style="border-bottom:1px solid #f0efe9;padding-bottom:12px;margin-bottom:12px">
-        <div style="font-size:12px;color:#888;margin-bottom:8px;font-weight:600">申請中</div>
-        <div class="row" style="border:none;padding:0">
-          <div class="rb"><div class="rt">2025/05/09（1日）</div><div class="rs">申請日：2025/04/28 · 私用</div></div>
-          <span class="bdg ba" id="leave-badge">承認待ち</span>
-        </div>
-      </div>
       <div style="font-size:12px;color:#888;margin-bottom:8px;font-weight:600">取得履歴</div>
-      <div class="row"><div class="rb"><div class="rt">2025/03/07（1日）</div><div class="rs">私用</div></div><span class="bdg bg">取得済</span></div>
-      <div class="row"><div class="rb"><div class="rt">2025/02/14（1日）</div><div class="rs">通院</div></div><span class="bdg bg">取得済</span></div>
-      <div class="row"><div class="rb"><div class="rt">2025/01/10（1日）</div><div class="rs">私用</div></div><span class="bdg bg">取得済</span></div>
+      <div style="padding:20px;text-align:center;color:#888;font-size:13px">有給機能は準備中です</div>
     </div>
   </div>
 
-  <!-- スタッフ：お知らせ -->
   <div id="staff-snotice" class="sp">
     <div class="card">
       <div class="ch"><span class="ct">お知らせ</span></div>
       <div class="ntc ntc-new"><div class="ntc-t">GW期間中の勤怠入力について</div><div class="ntc-b">5/3〜5/6は休業。勤怠は4/30までに入力ください。</div><div class="ntc-d">2025/04/25</div></div>
-      <div class="ntc ntc-green"><div class="ntc-t">【有給取得のご案内】年5日取得義務のご確認</div><div class="ntc-b">お世話になっております。現在、今年度の有給取得日数が年5日に達していない状況です。法令により年5日の取得が義務付けられておりますので、ぜひ計画的な取得をご検討ください。ご不明な点は担当者までお気軽にご連絡ください。</div><div class="ntc-d">2025/04/15 · 派遣元より</div></div>
-      <div class="ntc ntc-read"><div class="ntc-t">健康診断のご案内</div><div class="ntc-b">5月中旬に健康診断を実施します。</div><div class="ntc-d">2025/04/20</div></div>
     </div>
   </div>
 
-  <!-- スタッフ：アップロード -->
   <div id="staff-supload" class="sp">
     <div class="sub-tabs">
       <button class="sub-tab active" onclick="showSub3('nyusha',this)">入社手続き</button>
@@ -473,39 +365,31 @@ input:disabled{background:#f5f4f0;color:#aaa;border-color:#e8e6e0}
       <button class="sub-tab" onclick="showSub3('taisha',this)">退社手続き</button>
     </div>
 
-    <!-- 入社手続き -->
     <div id="upload-nyusha" class="sp3 active">
       <div style="background:#ede9fe;border-radius:10px;padding:11px 14px;font-size:12px;color:#534AB7;margin-bottom:14px;line-height:1.7">
         入社手続きに必要な書類です。派遣元からの書類を確認・署名し、必要書類をアップロードしてください。
       </div>
-      <div class="section-divider">派遣元からの書類（確認してください）</div>
-      <div class="step-box">
-        <div class="step-title">📝 入社案内・誓約書.pdf</div>
-        <div class="step-desc">2025/04/01 送付 · <span style="color:#2d6a10;font-weight:600">閲覧済</span></div>
-      </div>
-
-      <div class="section-divider" style="margin-top:16px">提出書類（アップロードしてください）</div>
       <div class="upload-item">
         <div class="upload-item-head">
           <div class="upload-item-title">① マイナンバーカードのコピー</div>
           <span class="upload-item-req">＊必須</span>
         </div>
         <div class="upload-item-desc">マイナンバーカードまたは通知カードのコピーを提出してください。</div>
-        <div class="pv">
-          <span style="font-size:18px">🪪</span>
-          <div style="flex:1"><div style="font-size:13px;font-weight:600">マイナンバー_田中花子.jpg</div><div style="font-size:11px;color:#888">2025/04/01 提出 · 確認済</div></div>
-          <span class="bdg bg">確認済</span>
+        <div class="ua" onclick="simUpload(this,'mn-file')">
+          <div style="font-size:22px;margin-bottom:6px">📎</div>
+          <div>タップしてファイルを選択</div>
         </div>
+        <div id="mn-file" style="display:none" class="pv"><span>📄</span><div style="flex:1;font-size:13px">マイナンバー.jpg</div><button class="btn btn-sm btn-p">提出する</button></div>
       </div>
       <div class="upload-item">
         <div class="upload-item-head">
           <div class="upload-item-title">② 雇用保険被保険者番号</div>
           <span class="upload-item-req">＊必須</span>
         </div>
-        <div class="upload-item-desc">被保険者番号を入力、または書類のコピーを添付してください。</div>
+        <div class="upload-item-desc">被保険者番号を入力してください。</div>
         <div class="num-input-area">
           <div class="num-input-label">被保険者番号（4桁－6桁－1桁）</div>
-          <input type="text" id="emp-num" placeholder="例：1234-567890-1" maxlength="14" value="1234-567890-1">
+          <input type="text" id="emp-num" placeholder="例：1234-567890-1" maxlength="14">
         </div>
         <label class="check-row" onclick="toggleNoNum('emp')">
           <input type="checkbox" id="emp-nonum">
@@ -513,116 +397,59 @@ input:disabled{background:#f5f4f0;color:#aaa;border-color:#e8e6e0}
         </label>
         <div class="no-num-msg" id="emp-nomsg">書類がない場合や初回加入の方は番号の入力は不要です。担当者がサポートします。</div>
       </div>
-      <div class="upload-item">
-        <div class="upload-item-head">
-          <div class="upload-item-title">③ 基礎年金番号</div>
-          <span class="upload-item-req">＊必須</span>
-        </div>
-        <div class="upload-item-desc">年金手帳または基礎年金番号通知書に記載の番号を入力してください。</div>
-        <div class="num-input-area">
-          <div class="num-input-label">基礎年金番号（4桁－6桁）</div>
-          <input type="text" id="nen-num" placeholder="例：1234-567890" maxlength="11">
-        </div>
-        <label class="check-row" onclick="toggleNoNum('nen')">
-          <input type="checkbox" id="nen-nonum">
-          <span class="check-row-label">書類がない・初めて年金に加入する</span>
-        </label>
-        <div class="no-num-msg" id="nen-nomsg">書類がない場合や初回加入の方は番号の入力は不要です。担当者がサポートします。</div>
-      </div>
       <button class="btn btn-p" style="width:100%;padding:12px;font-size:14px;font-weight:700;margin-top:4px">保存・提出する →</button>
     </div>
 
-    <!-- 稼働中 -->
     <div id="upload-kadochu" class="sp3" style="display:none">
       <div style="background:#e6f4d7;border-radius:10px;padding:11px 14px;font-size:12px;color:#2d6a10;margin-bottom:14px;line-height:1.7">
-        稼働中に必要な書類をアップロードしてください。自動車通勤の方は保険証券コピーが必要です。
+        稼働中に必要な書類をアップロードしてください。
       </div>
       <div class="upload-item">
         <div class="upload-item-head">
           <div class="upload-item-title">自動車保険証券のコピー</div>
           <span class="upload-item-opt">自動車通勤の方</span>
         </div>
-        <div class="upload-item-desc">自動車通勤の方は任意保険の証券コピーを提出してください。更新のたびに再提出が必要です。</div>
-        <div class="pv">
-          <span style="font-size:18px">🚗</span>
-          <div style="flex:1"><div style="font-size:13px;font-weight:600">自動車保険証券_田中花子.jpg</div><div style="font-size:11px;color:#888">2025/04/10 提出 · 確認済 · 有効期限：2026/04/01</div></div>
-          <button class="btn btn-sm">再提出</button>
-        </div>
-      </div>
-      <div class="upload-item">
-        <div class="upload-item-head">
-          <div class="upload-item-title">その他書類</div>
-          <span class="upload-item-opt">任意</span>
-        </div>
-        <div class="upload-item-desc">その他、派遣元から求められた書類があればアップロードしてください。</div>
-        <div class="ua" onclick="simUpload(this,'kado-file')">
+        <div class="upload-item-desc">自動車通勤の方は任意保険の証券コピーを提出してください。</div>
+        <div class="ua" onclick="simUpload(this,'car-file')">
           <div style="font-size:22px;margin-bottom:6px">📎</div>
           <div>タップしてファイルを選択</div>
-          <div style="font-size:11px;margin-top:4px;color:#aaa">JPG・PNG・PDF（5MBまで）</div>
         </div>
-        <div id="kado-file" style="display:none" class="pv"><span>📄</span><div style="flex:1;font-size:13px;font-weight:600">書類.pdf</div><button class="btn btn-sm btn-p">提出する</button></div>
+        <div id="car-file" style="display:none" class="pv"><span>🚗</span><div style="flex:1;font-size:13px">自動車保険証券.jpg</div><button class="btn btn-sm btn-p">提出する</button></div>
       </div>
     </div>
 
-    <!-- 退社手続き -->
     <div id="upload-taisha" class="sp3" style="display:none">
       <div style="background:#fee2e2;border-radius:10px;padding:11px 14px;font-size:12px;color:#991b1b;margin-bottom:14px;line-height:1.7">
-        退社手続きに必要な書類です。派遣元からの書類を確認・署名してください。
-      </div>
-      <div class="section-divider">派遣元からの書類（署名が必要です）</div>
-      <div class="upload-item" id="taisha-doc1">
-        <div class="upload-item-head">
-          <div class="upload-item-title">退職証明書①.pdf</div>
-          <span class="bdg ba" id="taisha1-badge">署名待ち</span>
-        </div>
-        <div class="upload-item-desc">内容を確認の上、署名してください。</div>
-        <button class="btn btn-p btn-sm" onclick="openModal('view-taisha1')">確認・署名する</button>
-      </div>
-      <div class="upload-item" id="taisha-doc2">
-        <div class="upload-item-head">
-          <div class="upload-item-title">退職証明書②.pdf</div>
-          <span class="bdg ba" id="taisha2-badge">署名待ち</span>
-        </div>
-        <div class="upload-item-desc">内容を確認の上、署名してください。</div>
-        <button class="btn btn-p btn-sm" onclick="openModal('view-taisha2')">確認・署名する</button>
-      </div>
-      <div class="upload-item">
-        <div class="upload-item-head">
-          <div class="upload-item-title">その他退社書類.pdf</div>
-          <span class="bdg bz">閲覧のみ</span>
-        </div>
-        <div class="upload-item-desc">確認してください。署名は不要です。</div>
-        <button class="btn btn-sm" onclick="openModal('view-payslip')">表示する</button>
+        退社手続きの書類は派遣元から送付されます。
       </div>
     </div>
   </div>
 
-  <!-- スタッフ：プロフィール -->
   <div id="staff-sprofile" class="sp">
     <div class="card">
       <div class="ch"><span class="ct">就業情報</span></div>
-      <div class="profile-row"><span class="profile-label">社員番号</span><span class="profile-val" id="profile-employee-id">0001</span></div>
-      <div class="profile-row"><span class="profile-label">氏名</span><span class="profile-val" id="profile-name">田中 花子</span></div>
-      <div class="profile-row"><span class="profile-label">派遣先</span><span class="profile-val" id="profile-workplace">株式会社サンプル</span></div>
-      <div class="profile-row"><span class="profile-label">派遣開始日</span><span class="profile-val" id="profile-dispatch-start">2025年4月1日</span></div>
-      <div class="profile-row"><span class="profile-label">現契約期間</span><span class="profile-val" id="profile-contract">2025/04/01 〜 2025/09/30</span></div>
-      <div class="profile-row"><span class="profile-label">個人抵触日</span><span class="profile-val" id="profile-restriction">2028年4月1日</span></div>
+      <div class="profile-row"><span class="profile-label">社員番号</span><span class="profile-val" id="profile-employee-id">-</span></div>
+      <div class="profile-row"><span class="profile-label">氏名</span><span class="profile-val" id="profile-name">-</span></div>
+      <div class="profile-row"><span class="profile-label">派遣先</span><span class="profile-val" id="profile-workplace">-</span></div>
+      <div class="profile-row"><span class="profile-label">派遣開始日</span><span class="profile-val" id="profile-dispatch-start">-</span></div>
+      <div class="profile-row"><span class="profile-label">現契約期間</span><span class="profile-val" id="profile-contract">-</span></div>
+      <div class="profile-row"><span class="profile-label">個人抵触日</span><span class="profile-val" id="profile-restriction">-</span></div>
       <div style="height:1px;background:#f0efe9;margin:8px 0"></div>
-      <div class="profile-row"><span class="profile-label">基礎年金番号</span><span class="profile-val" id="profile-pension">1234-567890</span></div>
-      <div class="profile-row"><span class="profile-label">雇用保険番号</span><span class="profile-val" id="profile-insurance">1234-567890-1</span></div>
-      <div class="profile-row" style="display:flex;justify-content:space-between;padding:12px 0;border-bottom:1px solid #eee;margin:8px 0"><span class="profile-label">備考</span><span class="profile-val" id="profile-note">-</span></div>
+      <div class="profile-row"><span class="profile-label">基礎年金番号</span><span class="profile-val" id="profile-pension">-</span></div>
+      <div class="profile-row"><span class="profile-label">雇用保険番号</span><span class="profile-val" id="profile-insurance">-</span></div>
+      <div class="profile-row"><span class="profile-label">備考</span><span class="profile-val" id="profile-note">-</span></div>
     </div>
   </div>
 </div>
 
-</div><!-- /main -->
+</div>
 
-<!-- モーダル: マイナンバー確認（担当者パスワード） -->
+<!-- モーダル各種 -->
 <div class="mbg" id="modal-mynumber-confirm">
   <div class="modal" style="max-width:400px">
     <div class="mt">マイナンバー確認</div>
     <div style="background:#fee2e2;border-radius:8px;padding:10px 12px;font-size:12px;color:#991b1b;margin-bottom:14px;line-height:1.7">
-      マイナンバーの閲覧は担当者のみ許可されています。専用パスワードを入力してください。閲覧後30秒で自動的に非表示になります。
+      マイナンバーの閲覧は担当者のみ許可されています。専用パスワードを入力してください。
     </div>
     <div id="mn-confirm-form">
       <div class="fg"><label class="fl">担当者パスワード</label><input type="password" id="mn-password" placeholder="担当者専用パスワード"></div>
@@ -636,39 +463,22 @@ input:disabled{background:#f5f4f0;color:#aaa;border-color:#e8e6e0}
         <div id="mn-display" style="font-size:20px;font-weight:700;font-family:monospace;letter-spacing:3px;color:#1a1a1a"></div>
         <div id="mn-timer" style="font-size:12px;color:#991b1b;margin-top:8px">30秒後に自動非表示</div>
       </div>
-      <div style="background:#fef3cd;border-radius:8px;padding:10px 12px;font-size:12px;color:#8a5a00">提供する場合は必ず「提供記録」ボタンから記録を残してください。</div>
     </div>
     <div class="ma"><button class="btn btn-sm" onclick="closeMynumberModal()">閉じる</button></div>
   </div>
 </div>
 
-<!-- モーダル: 提供記録入力 -->
 <div class="mbg" id="modal-provide-record">
   <div class="modal" style="max-width:480px">
     <div class="mt">マイナンバー提供記録</div>
-    <div style="background:#fee2e2;border-radius:8px;padding:10px 12px;font-size:12px;color:#991b1b;margin-bottom:14px;line-height:1.7">
-      マイナンバーを第三者に提供した場合は必ず記録してください。（番号法 第29条の3）
-    </div>
     <div class="fg"><label class="fl">対象スタッフ</label><input type="text" id="provide-staff" placeholder="スタッフ名（社員番号）"></div>
     <div class="fg"><label class="fl">提供先</label><select id="provide-dest">
-      <option>年金事務所</option>
-      <option>ハローワーク</option>
-      <option>税務署</option>
-      <option>健康保険組合</option>
-      <option>市区町村役所</option>
-      <option>その他</option>
+      <option>年金事務所</option><option>ハローワーク</option><option>税務署</option><option>その他</option>
     </select></div>
     <div class="fg"><label class="fl">提供目的</label><select id="provide-purpose">
-      <option>社会保険加入手続き</option>
-      <option>雇用保険加入手続き</option>
-      <option>社会保険喪失手続き</option>
-      <option>雇用保険喪失手続き</option>
-      <option>年末調整</option>
-      <option>給与支払報告書</option>
-      <option>その他</option>
+      <option>社会保険加入手続き</option><option>雇用保険加入手続き</option><option>年末調整</option><option>その他</option>
     </select></div>
     <div class="fg"><label class="fl">担当者名</label><input type="text" id="provide-person" placeholder="例：山本"></div>
-    <div class="fg"><label class="fl">備考（任意）</label><textarea rows="2" id="provide-note" placeholder="補足があれば記入してください"></textarea></div>
     <div class="ma">
       <button class="btn btn-sm" onclick="closeModal('provide-record')">キャンセル</button>
       <button class="btn btn-sm btn-p" onclick="saveProvideRecord()">記録を保存する →</button>
@@ -676,261 +486,100 @@ input:disabled{background:#f5f4f0;color:#aaa;border-color:#e8e6e0}
   </div>
 </div>
 
-<!-- モーダル: マイナンバーカード書類確認（担当者パスワード） -->
-<div class="mbg" id="modal-view-file">
-  <div class="modal" style="max-width:440px">
-    <div class="mt">🔒 マイナンバーカード書類確認</div>
-    <div style="background:#fee2e2;border-radius:8px;padding:10px 12px;font-size:12px;color:#991b1b;margin-bottom:14px;line-height:1.7">
-      マイナンバーカードの書類閲覧は担当者のみ許可されています。専用パスワードを入力してください。
-    </div>
-    <div id="file-confirm-form">
-      <div class="fg"><label class="fl">対象スタッフ</label><input type="text" id="file-staff-name" readonly style="background:#f5f4f0"></div>
-      <div class="fg"><label class="fl">担当者パスワード</label><input type="password" id="file-password" placeholder="担当者専用パスワード"></div>
-      <div id="file-error" style="display:none;color:#991b1b;font-size:12px;margin-bottom:8px">パスワードが違います</div>
-      <button class="btn btn-p" style="width:100%;padding:10px;font-weight:700" onclick="confirmFileView()">確認する</button>
-    </div>
-    <div id="file-result" style="display:none">
-      <div style="background:#f5f4f0;border-radius:10px;height:160px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px;border:1px solid #e8e6e0;margin-bottom:12px">
-        <div style="font-size:36px">🪪</div>
-        <div style="font-size:13px;font-weight:700" id="file-display-name">マイナンバーカード.jpg</div>
-        <button class="btn btn-sm">画像を開く →</button>
-      </div>
-      <div style="background:#fef3cd;border-radius:8px;padding:10px 12px;font-size:12px;color:#8a5a00;line-height:1.6">
-        閲覧履歴が記録されます。書類の複製・転送は禁止されています。
-      </div>
-    </div>
-    <div class="ma"><button class="btn btn-sm" onclick="closeFileModal()">閉じる</button></div>
-  </div>
-</div>
-
-<!-- モーダル: 通常書類表示（管理者用） -->
-<div class="mbg" id="modal-view-file-normal">
-  <div class="modal" style="max-width:400px">
-    <div class="mt">提出書類の表示</div>
-    <div style="background:#f5f4f0;border-radius:10px;height:160px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px;border:1px solid #e8e6e0">
-      <div style="font-size:36px">📄</div>
-      <div style="font-size:13px;font-weight:700">提出書類.jpg</div>
-      <button class="btn btn-sm">画像を開く →</button>
-    </div>
-    <div class="ma"><button class="btn btn-sm" onclick="closeModal('view-file-normal')">閉じる</button></div>
-  </div>
-</div>
-
-<!-- モーダル: 給与明細表示 -->
-<div class="mbg" id="modal-view-payslip">
-  <div class="modal">
-    <div class="mt">給与明細を表示</div>
-    <div style="background:#f5f4f0;border-radius:10px;height:160px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px;border:1px solid #e8e6e0">
-      <div style="font-size:36px">📄</div>
-      <div style="font-size:13px;font-weight:700">2025年4月_給与明細.pdf</div>
-      <button class="btn btn-sm">PDFを開く →</button>
-    </div>
-    <div style="background:#f0efe9;border-radius:8px;padding:10px 12px;font-size:12px;color:#888;margin-top:12px">給与明細は表示のみです。確認後は閉じてください。</div>
-    <div class="ma"><button class="btn btn-sm" onclick="closeModal('view-payslip')">閉じる</button></div>
-  </div>
-</div>
-
-<!-- モーダル: 就業条件明示書署名 -->
-<div class="mbg" id="modal-view-contract">
-  <div class="modal">
-    <div class="mt">就業条件明示書 確認・署名</div>
-    <div style="background:#f5f4f0;border-radius:10px;height:130px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px;border:1px solid #e8e6e0">
-      <div style="font-size:34px">📝</div>
-      <div style="font-size:13px;font-weight:700">就業条件明示書（2025年4月）.pdf</div>
-      <button class="btn btn-sm">PDFを開く →</button>
-    </div>
-    <div id="sig-section">
-      <div class="sig-box">
-        <div style="font-size:14px;font-weight:800;color:#1e4a0a;margin-bottom:8px">電子署名</div>
-        <div style="font-size:12px;color:#2d6a10;line-height:1.8;margin-bottom:12px">上記の書類を確認しました。「署名して同意する」を押すことで内容に同意・署名したものとみなします。<br><span style="font-size:11px;color:#4a8a20">署名日時・社員番号・氏名が自動で記録されます。</span></div>
-        <button class="btn btn-g" style="width:100%;padding:10px;font-size:14px;font-weight:700" onclick="signContract('main')">署名して同意する ✓</button>
-      </div>
-    </div>
-    <div id="sig-done" style="display:none;background:#f5f4f0;border:1px solid #e8e6e0;border-radius:12px;padding:14px;margin-top:12px">
-      <div style="display:flex;align-items:center;gap:10px">
-        <div style="width:30px;height:30px;border-radius:50%;background:#e6f4d7;display:flex;align-items:center;justify-content:center;font-size:14px">✓</div>
-        <div><div style="font-size:13px;font-weight:700">署名・同意済み</div><div style="font-size:12px;color:#888;margin-top:2px" id="sig-time"></div></div>
-      </div>
-    </div>
-    <div class="ma"><button class="btn btn-sm" onclick="closeModal('view-contract')">閉じる</button></div>
-  </div>
-</div>
-
-<!-- モーダル: 退職証明書①署名 -->
-<div class="mbg" id="modal-view-taisha1">
-  <div class="modal">
-    <div class="mt">退職証明書① 確認・署名</div>
-    <div style="background:#f5f4f0;border-radius:10px;height:120px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px;border:1px solid #e8e6e0">
-      <div style="font-size:34px">📋</div>
-      <div style="font-size:13px;font-weight:700">退職証明書①.pdf</div>
-      <button class="btn btn-sm">PDFを開く →</button>
-    </div>
-    <div id="taisha1-sig-section">
-      <div class="sig-box">
-        <div style="font-size:14px;font-weight:800;color:#1e4a0a;margin-bottom:8px">電子署名</div>
-        <div style="font-size:12px;color:#2d6a10;line-height:1.8;margin-bottom:12px">上記の書類を確認しました。「署名して同意する」を押すことで内容に同意・署名したものとみなします。</div>
-        <button class="btn btn-g" style="width:100%;padding:10px;font-size:14px;font-weight:700" onclick="signTaisha('taisha1')">署名して同意する ✓</button>
-      </div>
-    </div>
-    <div id="taisha1-sig-done" style="display:none;background:#f5f4f0;border:1px solid #e8e6e0;border-radius:12px;padding:14px;margin-top:12px">
-      <div style="display:flex;align-items:center;gap:10px">
-        <div style="width:30px;height:30px;border-radius:50%;background:#e6f4d7;display:flex;align-items:center;justify-content:center;font-size:14px">✓</div>
-        <div><div style="font-size:13px;font-weight:700">署名・同意済み</div><div style="font-size:12px;color:#888;margin-top:2px" id="taisha1-sig-time"></div></div>
-      </div>
-    </div>
-    <div class="ma"><button class="btn btn-sm" onclick="closeModal('view-taisha1')">閉じる</button></div>
-  </div>
-</div>
-
-<!-- モーダル: 退職証明書②署名 -->
-<div class="mbg" id="modal-view-taisha2">
-  <div class="modal">
-    <div class="mt">退職証明書② 確認・署名</div>
-    <div style="background:#f5f4f0;border-radius:10px;height:120px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px;border:1px solid #e8e6e0">
-      <div style="font-size:34px">📋</div>
-      <div style="font-size:13px;font-weight:700">退職証明書②.pdf</div>
-      <button class="btn btn-sm">PDFを開く →</button>
-    </div>
-    <div id="taisha2-sig-section">
-      <div class="sig-box">
-        <div style="font-size:14px;font-weight:800;color:#1e4a0a;margin-bottom:8px">電子署名</div>
-        <div style="font-size:12px;color:#2d6a10;line-height:1.8;margin-bottom:12px">上記の書類を確認しました。「署名して同意する」を押すことで内容に同意・署名したものとみなします。</div>
-        <button class="btn btn-g" style="width:100%;padding:10px;font-size:14px;font-weight:700" onclick="signTaisha('taisha2')">署名して同意する ✓</button>
-      </div>
-    </div>
-    <div id="taisha2-sig-done" style="display:none;background:#f5f4f0;border:1px solid #e8e6e0;border-radius:12px;padding:14px;margin-top:12px">
-      <div style="display:flex;align-items:center;gap:10px">
-        <div style="width:30px;height:30px;border-radius:50%;background:#e6f4d7;display:flex;align-items:center;justify-content:center;font-size:14px">✓</div>
-        <div><div style="font-size:13px;font-weight:700">署名・同意済み</div><div style="font-size:12px;color:#888;margin-top:2px" id="taisha2-sig-time"></div></div>
-      </div>
-    </div>
-    <div class="ma"><button class="btn btn-sm" onclick="closeModal('view-taisha2')">閉じる</button></div>
-  </div>
-</div>
-
-<!-- モーダル: スタッフ詳細（管理者用） -->
 <div class="mbg" id="modal-staff-profile">
   <div class="modal">
     <div class="mt">スタッフ詳細情報</div>
     <div style="display:flex;align-items:center;gap:12px;margin-bottom:16px">
-      <div style="width:44px;height:44px;border-radius:50%;background:#ede9fe;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:700;color:#5b21b6" id="modal-avatar">田中</div>
-      <div><div style="font-size:15px;font-weight:700" id="modal-name">田中 花子</div><div style="font-size:12px;color:#888;margin-top:2px" id="modal-empid">社員番号：0001</div></div>
-      <span class="bdg bg" style="margin-left:auto">稼働中</span>
+      <div style="width:44px;height:44px;border-radius:50%;background:#ede9fe;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:700;color:#5b21b6" id="modal-avatar"></div>
+      <div><div style="font-size:15px;font-weight:700" id="modal-name"></div><div style="font-size:12px;color:#888;margin-top:2px" id="modal-empid"></div></div>
     </div>
-    <div class="profile-row"><span class="profile-label">派遣先</span><span class="profile-val" id="modal-workplace">株式会社サンプル</span></div>
-    <div class="profile-row"><span class="profile-label">派遣開始日</span><span class="profile-val" id="modal-dispatch-start">2025年4月1日</span></div>
-    <div class="profile-row"><span class="profile-label">現契約期間</span><input type="text" id="modal-contract" value="2025/04/01〜2025/09/30" style="width:auto;font-size:12px;padding:4px 8px;text-align:right"></div>
-    <div class="profile-row"><span class="profile-label">個人抵触日</span><input type="date" id="modal-restriction" value="2028-04-01" style="width:auto;font-size:12px;padding:4px 8px"></div>
-    <div style="height:1px;background:#f0efe9;margin:8px 0"></div>
-    <div class="profile-row"><span class="profile-label">基礎年金番号</span><span class="profile-val" id="modal-pension">1234-567890</span></div>
-    <div class="profile-row"><span class="profile-label">雇用保険番号</span><span class="profile-val" id="modal-insurance">1234-567890-1</span></div><div class="profile-row"><span class="profile-label">備考</span><span class="profile-val" id="modal-note">-</span></div>
+    <div class="profile-row"><span class="profile-label">派遣先</span><span class="profile-val" id="modal-workplace"></span></div>
+    <div class="profile-row"><span class="profile-label">派遣開始日</span><span class="profile-val" id="modal-dispatch-start"></span></div>
+    <div class="profile-row"><span class="profile-label">現契約期間</span><input type="text" id="modal-contract" style="width:auto;font-size:12px;padding:4px 8px;text-align:right"></div>
+    <div class="profile-row"><span class="profile-label">個人抵触日</span><input type="date" id="modal-restriction" style="width:auto;font-size:12px;padding:4px 8px"></div>
+    <div class="profile-row"><span class="profile-label">基礎年金番号</span><span class="profile-val" id="modal-pension"></span></div>
+    <div class="profile-row"><span class="profile-label">雇用保険番号</span><span class="profile-val" id="modal-insurance"></span></div>
+    <div class="profile-row"><span class="profile-label">備考</span><span class="profile-val" id="modal-note"></span></div>
     <div class="ma"><button class="btn btn-sm" onclick="closeModal('staff-profile')">閉じる</button><button class="btn btn-sm btn-p" onclick="closeModal('staff-profile')">保存する →</button></div>
   </div>
 </div>
 
-<!-- モーダル: 給与明細送付 -->
+<!-- 給与明細送付モーダル -->
 <div class="mbg" id="modal-send-payslip">
   <div class="modal">
     <div class="mt">給与明細PDFを送付する</div>
-    <div class="fg"><label class="fl">対象月</label><select id="payslip-month"></select></div>
-    <div class="fg"><label class="fl">送付先</label><select id="payslip-target"><option>全スタッフ（18名）</option><option>田中 花子（0001）</option><option>山田 太郎（0002）</option></select></div>
-    <div class="fg"><label class="fl">PDFファイル</label><input type="file" id="payslipFileInput" accept="application/pdf" onchange="showPayslipFileName()" style="width:100%;padding:9px;border:1px solid #d8d6d0;border-radius:8px;font-size:13px;background:#fafaf8"><div id="payslipFileName" style="display:none;margin-top:8px" class="pv"><span style="font-size:18px">📄</span><div style="flex:1"><div id="payslipFileNameText" style="font-size:13px;font-weight:600"></div><div id="payslipFileSize" style="font-size:11px;color:#888"></div></div></div></div><div id="payslipStatus" style="display:none;margin-top:8px;padding:10px 12px;border-radius:8px;font-size:12px"></div>
-    <div class="ma"><button class="btn btn-sm" onclick="closeModal('send-payslip')">キャンセル</button><button class="btn btn-sm btn-p" id="payslipSendBtn" onclick="sendPayslip()">送付する →</button></div>
+    <div class="fg"><label class="fl">対象月</label><select id="payslip-month"><option value="2025-04">2025年4月分</option><option value="2025-03">2025年3月分</option><option value="2025-05">2025年5月分</option></select></div>
+    <div class="fg"><label class="fl">送付先</label><select id="payslip-target"><option>読み込み中...</option></select></div>
+    <div class="fg"><label class="fl">PDFファイル</label><input type="file" id="payslip-file" accept=".pdf"></div>
+    <div id="payslip-status" style="display:none;font-size:12px;margin-top:8px"></div>
+    <div class="ma"><button class="btn btn-sm" onclick="closeModal('send-payslip')">キャンセル</button><button class="btn btn-sm btn-p" onclick="sendPayslip()">送付する →</button></div>
   </div>
 </div>
 
-<!-- モーダル: 契約書送付 -->
+<!-- 契約書送付モーダル -->
 <div class="mbg" id="modal-send-contract">
   <div class="modal">
     <div class="mt">書類PDFを送付する</div>
-    <div class="fg"><label class="fl">送付先</label><select id="contract-target"><option>全スタッフ</option><option>田中 花子（0001）</option><option>佐藤 美咲（0003）</option></select></div>
-    <div class="fg"><label class="fl">手続き区分</label><select><option>稼働中</option><option>入社手続き</option><option>退社手続き</option></select></div>
-    <div class="fg"><label class="fl">書類の種類</label><select id="doc-type-select" onchange="toggleDocType(this)">
+    <div class="fg"><label class="fl">送付先</label><select id="contract-target"><option>読み込み中...</option></select></div>
+    <div class="fg"><label class="fl">書類の種類</label><select id="doc-type-select">
       <option value="meiji">就業条件明示書（署名あり）</option>
-      <option value="taisha1">退職証明書①（署名あり）</option>
-      <option value="taisha2">退職証明書②（署名あり）</option>
+      <option value="taisha1">退職証明書（署名あり）</option>
       <option value="other-sign">その他書類（署名あり）</option>
       <option value="other-nosign">その他書類（署名なし）</option>
     </select></div>
-    <div id="doc-type-note" style="background:#e6f4d7;border-radius:8px;padding:10px 12px;font-size:12px;color:#2d6a10;margin-bottom:12px">就業条件明示書は署名必須です。スタッフが確認後に署名でき、日時・社員番号が自動記録されます。</div>
-    <div class="fg"><label class="fl">契約期間（就業条件明示書の場合）</label><div style="display:flex;gap:8px;align-items:center"><input type="date" value="2025-10-01" style="flex:1"><span style="color:#888;font-size:12px">〜</span><input type="date" value="2026-03-31" style="flex:1"></div></div>
-    <div class="fg"><label class="fl">PDFファイル</label><input type="file" id="contractFileInput" accept="application/pdf" onchange="showContractFileName()" style="width:100%;padding:9px;border:1px solid #d8d6d0;border-radius:8px;font-size:13px;background:#fafaf8"><div id="contractFileName" style="display:none;margin-top:8px" class="pv"><span style="font-size:18px">📝</span><div style="flex:1"><div id="contractFileNameText" style="font-size:13px;font-weight:600"></div><div id="contractFileSize" style="font-size:11px;color:#888"></div></div></div></div><div id="contractStatus" style="display:none;margin-top:8px;padding:10px 12px;border-radius:8px;font-size:12px"></div>
-    <div class="ma"><button class="btn btn-sm" onclick="closeModal('send-contract')">キャンセル</button><button class="btn btn-sm btn-p" id="contractSendBtn" onclick="sendContract()">送付する →</button></div>
+    <div class="fg"><label class="fl">書類タイトル</label><input type="text" id="contract-title" placeholder="例：就業条件明示書（2025年10月）"></div>
+    <div class="fg"><label class="fl">PDFファイル</label><input type="file" id="contract-file" accept=".pdf"></div>
+    <div id="contract-status" style="display:none;font-size:12px;margin-top:8px"></div>
+    <div class="ma"><button class="btn btn-sm" onclick="closeModal('send-contract')">キャンセル</button><button class="btn btn-sm btn-p" onclick="sendContract()">送付する →</button></div>
   </div>
 </div>
 
-<!-- モーダル: 有給通知 -->
 <div class="mbg" id="modal-send-paid">
   <div class="modal">
     <div class="mt">年5日未達成者に通知する</div>
-    <div class="fg"><label class="fl">対象</label><select><option>未達成者全員（2名）</option><option>佐藤 美咲（0003）</option><option>鈴木 一郎（0004）</option></select></div>
-    <div style="background:#f5f4f0;border-radius:8px;padding:12px;margin-bottom:12px;font-size:12px;color:#666;line-height:1.8">
-      <strong style="color:#1a1a1a">通知内容プレビュー</strong><br><br>
-      【有給取得のご案内】<br>
-      お世話になっております。現在、今年度の有給取得日数が年5日に達していない状況です。労働基準法の規定により年5日の取得が義務付けられておりますので、ぜひ計画的な取得をご検討ください。ご不明な点は担当者までお気軽にご連絡ください。
-    </div>
-    <div class="fg"><label class="fl">補足メッセージ（任意）</label><textarea rows="2" placeholder="例：有給取得希望日が決まりましたらお知らせください"></textarea></div>
     <div class="ma"><button class="btn btn-sm" onclick="closeModal('send-paid')">キャンセル</button><button class="btn btn-sm btn-p" onclick="closeModal('send-paid')">通知する →</button></div>
   </div>
 </div>
 
-<!-- モーダル: お知らせ送信 -->
 <div class="mbg" id="modal-send-notice">
   <div class="modal">
     <div class="mt">お知らせを送信する</div>
     <div class="fg"><label class="fl">タイトル</label><input type="text" placeholder="例：健康診断のご案内"></div>
     <div class="fg"><label class="fl">内容</label><textarea rows="4" placeholder="本文を入力してください"></textarea></div>
-    <div class="fg"><label class="fl">送付タイプ</label><div style="display:flex;gap:14px;padding:8px 0"><label style="display:flex;align-items:center;gap:6px;cursor:pointer"><input type="radio" name="notice-mode" value="all" checked onchange="toggleNoticeMode()" style="accent-color:#534AB7;cursor:pointer"><span style="font-size:13px">全スタッフ（<span id="notice-all-count">66</span>名）</span></label><label style="display:flex;align-items:center;gap:6px;cursor:pointer"><input type="radio" name="notice-mode" value="individual" onchange="toggleNoticeMode()" style="accent-color:#534AB7;cursor:pointer"><span style="font-size:13px">個別に選択</span></label></div></div><div id="notice-individual-area" style="display:none"><div style="background:#f5f4f0;border-radius:8px;padding:10px;margin-bottom:12px"><div style="font-size:12px;color:#666;margin-bottom:8px">選択中：<span id="notice-selected-count" style="font-weight:700;color:#534AB7">0</span>名</div><div id="notice-staff-checklist" style="max-height:200px;overflow-y:auto;background:#fff;border:1px solid #e8e6e0;border-radius:6px;padding:8px"></div></div></div>
-    <div class="fg"><label class="fl">添付ファイル（任意）</label><div class="ua" style="padding:10px" onclick="simUp(this,'noticeFile')">📎 PDFを添付（任意）</div><div id="noticeFile" style="display:none" class="pv"><span>📄</span><div style="flex:1;font-size:13px">添付資料.pdf</div></div></div>
     <div class="ma"><button class="btn btn-sm" onclick="closeModal('send-notice')">キャンセル</button><button class="btn btn-sm btn-p" onclick="closeModal('send-notice')">送信する →</button></div>
   </div>
 </div>
 
-<!-- モーダル: 有給申請 -->
 <div class="mbg" id="modal-apply-leave">
   <div class="modal">
     <div class="mt">有給申請</div>
-    <div class="fg"><label class="fl">取得希望日</label><input type="date" value="2025-05-16"></div>
-    <div class="fg"><label class="fl">日数</label><select><option>1日</option><option>0.5日（午前）</option><option>0.5日（午後）</option><option>複数日</option></select></div>
-    <div class="fg"><label class="fl">理由</label><select><option>私用</option><option>通院・医療</option><option>家族の事情</option><option>その他</option></select></div>
-    <div class="fg"><label class="fl">備考（任意）</label><textarea rows="2" placeholder="補足があれば記入してください"></textarea></div>
-    <div style="background:#ede9fe;border-radius:8px;padding:10px 12px;font-size:12px;color:#534AB7">申請後、派遣元が確認・承認します。結果はお知らせ欄でご確認ください。</div>
+    <div class="fg"><label class="fl">取得希望日</label><input type="date"></div>
     <div class="ma"><button class="btn btn-sm" onclick="closeModal('apply-leave')">キャンセル</button><button class="btn btn-sm btn-p" onclick="closeModal('apply-leave')">申請する →</button></div>
   </div>
 </div>
 
-<!-- モーダル: 個人情報取り扱い -->
 <div class="mbg" id="modal-privacy-modal">
   <div class="modal" style="max-width:500px">
     <div class="mt">個人情報の取り扱いについて</div>
     <div style="background:#f5f4f0;border-radius:10px;padding:14px;height:280px;overflow-y:auto;font-size:12px;color:#444;line-height:1.8;margin-bottom:14px;border:1px solid #e8e6e0">
       <strong>個人情報の取り扱いに関する同意書</strong><br><br>
-      フレックスビジネスサービス株式会社（以下「当社」）は、スタッフポータルを通じて取得する個人情報について、以下の通り取り扱います。<br><br>
-      <strong>1. 取得する個人情報</strong><br>
-      氏名、住所、電話番号、メールアドレス、生年月日、マイナンバー、雇用保険被保険者番号、基礎年金番号、給与情報、勤務情報、その他業務上必要な情報<br><br>
-      <strong>2. 利用目的</strong><br>
-      ・給与計算・支払い業務<br>
-      ・社会保険・雇用保険の手続き<br>
-      ・就業管理・契約管理<br>
-      ・法令に基づく各種手続き<br><br>
-      <strong>3. 第三者への提供</strong><br>
-      法令に基づく場合を除き、ご本人の同意なしに第三者に提供しません。ただし、業務上必要な範囲で派遣先企業へ提供する場合があります。<br><br>
-      <strong>4. 安全管理</strong><br>
-      個人情報の漏洩、滅失、毀損を防ぐため、適切な安全管理措置を講じます。<br><br>
-      <strong>5. 同意の撤回・開示請求</strong><br>
-      個人情報の開示・訂正・削除・利用停止については、担当者までお申し出ください。
+      フレックスビジネスサービス株式会社は、スタッフポータルを通じて取得する個人情報について、適切に取り扱います。<br><br>
+      <strong>利用目的</strong>：給与計算、社会保険手続き、就業管理、法令に基づく各種手続き<br><br>
+      <strong>第三者への提供</strong>：法令に基づく場合を除き、ご本人の同意なしに第三者に提供しません。<br><br>
+      <strong>安全管理</strong>：個人情報の漏洩、滅失、毀損を防ぐため、適切な安全管理措置を講じます。
     </div>
     <div class="ma"><button class="btn btn-sm btn-p" onclick="closeModal('privacy-modal')">閉じる</button></div>
   </div>
 </div>
 
-</div><!-- /appRoot -->
+</div>
 
 <script>
 const SUPABASE_URL='https://wafarcqisrwzlkectrdo.supabase.co';
 const SUPABASE_KEY='sb_publishable_zVSnu1pacttXMv9ArbW5hA_NJgP1yOJ';
-const ADMIN_EMAILS=['0001@flexbs.com','0002@flexbs.com','0003@flexbs.com','0004@flexbs.com'];
+const ADMIN_EMAILS=['9001@flexbs.com','9002@flexbs.com','9003@flexbs.com','9004@flexbs.com'];
 var supabaseClient=null;
+var myStaffData=null;
 
 window.addEventListener('load',function(){
   try{
@@ -970,16 +619,11 @@ async function doLoginSupabase(){
       } else {
         doLogin('staff');
       }
-    } else {
-      document.getElementById('login-loading').style.display='none';
-      document.getElementById('login-error').style.display='block';
-      document.getElementById('login-error').textContent='接続エラー。再度お試しください。';
-      document.getElementById('login-btn').disabled=false;
     }
   } catch(e){
     document.getElementById('login-loading').style.display='none';
     document.getElementById('login-error').style.display='block';
-    document.getElementById('login-error').textContent='エラーが発生しました。再度お試しください。';
+    document.getElementById('login-error').textContent='エラーが発生しました';
     document.getElementById('login-btn').disabled=false;
   }
 }
@@ -991,36 +635,13 @@ function toggleLoginBtn(){
   btn.style.opacity=cb.checked?'1':'0.4';
   btn.style.cursor=cb.checked?'pointer':'not-allowed';
 }
+
 var mnTimer=null;
-function showFileWithPassword(staffName, docType){
-  document.getElementById('file-staff-name').value=staffName+'（'+docType+'）';
-  document.getElementById('file-password').value='';
-  document.getElementById('file-error').style.display='none';
-  document.getElementById('file-confirm-form').style.display='block';
-  document.getElementById('file-result').style.display='none';
-  document.getElementById('file-display-name').textContent=docType+'_'+staffName.replace(' ','')+'.jpg';
-  openModal('view-file');
-}
-function confirmFileView(){
-  var pw=document.getElementById('file-password').value;
-  if(pw!==MN_PASSWORD){
-    document.getElementById('file-error').style.display='block';
-    return;
-  }
-  document.getElementById('file-error').style.display='none';
-  document.getElementById('file-confirm-form').style.display='none';
-  document.getElementById('file-result').style.display='block';
-}
-function closeFileModal(){
-  document.getElementById('file-result').style.display='none';
-  document.getElementById('file-confirm-form').style.display='block';
-  closeModal('view-file');
-}
-var mnNumbers={'0001':'1234-5678-9012','0002':'2345-6789-0123','0003':'3456-7890-1234'};
+var mnNumbers={'0001':'1234-5678-9012'};
 var currentMnId='';
 var MN_PASSWORD='mynumber2025';
 
-function showMynumber(staffId, staffName){
+function showMynumber(staffId,staffName){
   currentMnId=staffId;
   document.getElementById('mn-staff-name').value=staffName;
   document.getElementById('mn-password').value='';
@@ -1029,6 +650,7 @@ function showMynumber(staffId, staffName){
   document.getElementById('mn-result').style.display='none';
   openModal('mynumber-confirm');
 }
+
 function confirmMynumber(){
   var pw=document.getElementById('mn-password').value;
   if(pw!==MN_PASSWORD){
@@ -1044,34 +666,25 @@ function confirmMynumber(){
   if(mnTimer)clearInterval(mnTimer);
   mnTimer=setInterval(function(){
     sec--;
-    if(sec<=0){
-      clearInterval(mnTimer);
-      closeMynumberModal();
-    } else {
-      document.getElementById('mn-timer').textContent=sec+'秒後に自動非表示';
-    }
+    if(sec<=0){clearInterval(mnTimer);closeMynumberModal();}
+    else{document.getElementById('mn-timer').textContent=sec+'秒後に自動非表示';}
   },1000);
 }
+
 function closeMynumberModal(){
   if(mnTimer)clearInterval(mnTimer);
   document.getElementById('mn-display').textContent='';
   closeModal('mynumber-confirm');
 }
+
 function saveProvideRecord(){
   var staff=document.getElementById('provide-staff').value;
-  var dest=document.getElementById('provide-dest').value;
-  var purpose=document.getElementById('provide-purpose').value;
   var person=document.getElementById('provide-person').value;
   if(!staff||!person){alert('スタッフ名と担当者名を入力してください');return;}
-  var now=new Date();
-  var ts=now.getFullYear()+'/'+(now.getMonth()+1).toString().padStart(2,'0')+'/'+now.getDate().toString().padStart(2,'0')+' '+now.getHours().toString().padStart(2,'0')+':'+now.getMinutes().toString().padStart(2,'0');
-  var log=document.getElementById('provide-log');
-  var row=document.createElement('tr');
-  row.innerHTML='<td style="font-size:12px;white-space:nowrap">'+ts+'</td><td>'+staff.replace(/（.*）/,'')+'</td><td>'+dest+'</td><td>'+purpose+'</td><td>'+person+'</td>';
-  log.insertBefore(row,log.firstChild);
   closeModal('provide-record');
-  alert('提供記録を保存しました。');
+  alert('提供記録を保存しました');
 }
+
 async function doLogin(type){
   showPage(type,null);
   var tabs=document.querySelectorAll('.nav-tab');
@@ -1079,22 +692,24 @@ async function doLogin(type){
   if(type==='admin'){
     tabs[1].classList.add('active');
     loadAdminStaffList();
+    loadAdminUploads();
   } else {
     tabs[2].classList.add('active');
     loadStaffProfile();
   }
 }
 
-function getStaffBucket(t){return t==='payslip'?'payslips':'contracts';} var myStaffData=null; async function openStaffPdf(filePath,bucket){var r=await supabaseClient.storage.from(bucket).createSignedUrl(filePath,3600);if(r.error||!r.data){alert('PDFを開けませんでした');return;}window.open(r.data.signedUrl,'_blank');} async function signMyDocument(docId){if(!myStaffData){alert('ログイン情報が取得できません');return;}var ok=window.confirm('この書類に署名・同意しますか?');if(!ok)return;var r=await supabaseClient.from('documents').update({confirmed_at:new Date().toISOString(),confirmed_by:myStaffData.name+' ('+myStaffData.employee_id+')'}).eq('id',docId);if(r.error){alert('署名失敗:'+r.error.message);return;}alert('署名が完了しました');loadMyDocuments();} async function loadMyDocuments(){if(!supabaseClient||!myStaffData)return;var r=await supabaseClient.from('documents').select('*').eq('staff_id',myStaffData.id).order('created_at',{ascending:false});if(r.error||!r.data)return;var container=document.querySelector('#staff-sdocs .card');if(!container)return;var html='<div class="ch"><span class="ct">受け取った書類</span></div>';if(r.data.length===0){container.innerHTML=html+'<div style="text-align:center;color:#888;padding:20px">まだ受け取った書類はありません</div>';return;}var pending=0;r.data.forEach(function(d){var isPay=d.type==='payslip';var needSig=d.requires_signature;var done=!!d.confirmed_at;var dt=d.created_at?new Date(d.created_at):null;var dateStr=dt?dt.getFullYear()+'/'+String(dt.getMonth()+1).padStart(2,'0')+'/'+String(dt.getDate()).padStart(2,'0'):'';var icon=isPay?'📄':'📝';var bg=isPay?'#e6f4d7':(done?'#e6f4d7':'#fef3cd');var sub='';var btn='';var bucket=getStaffBucket(d.type);var fp=d.file_url;if(isPay){sub=dateStr+' 送付 · 表示のみ';btn='<button class="btn btn-sm" onclick="openStaffPdf(\''+fp+'\',\''+bucket+'\')">表示</button>';}else if(needSig){if(done){var sd=new Date(d.confirmed_at);var sdStr=sd.getFullYear()+'/'+String(sd.getMonth()+1).padStart(2,'0')+'/'+String(sd.getDate()).padStart(2,'0');sub='署名済:'+sdStr;btn='<span class="bdg bg">署名済</span> <button class="btn btn-sm" onclick="openStaffPdf(\''+fp+'\',\''+bucket+'\')">表示</button>';}else{sub='署名が必要です';pending++;btn='<span class="bdg ba">署名待ち</span> <button class="btn btn-sm" onclick="openStaffPdf(\''+fp+'\',\''+bucket+'\')">表示</button> <button class="btn btn-sm btn-g" onclick="signMyDocument(\''+d.id+'\')">署名する</button>';}}else{sub=dateStr+' 送付 · 閲覧のみ';btn='<button class="btn btn-sm" onclick="openStaffPdf(\''+fp+'\',\''+bucket+'\')">表示</button>';}html+='<div class="row"><div class="ri" style="background:'+bg+'">'+icon+'</div><div class="rb"><div class="rt">'+(d.title||'書類')+'</div><div class="rs">'+sub+'</div></div>'+btn+'</div>';});container.innerHTML=html;var pEl=document.getElementById('s-pending-docs');if(pEl){pEl.textContent=pending+'件';pEl.style.color=pending>0?'#8a5a00':'#1a1a1a';}} async function loadStaffProfile(){
+async function loadStaffProfile(){
   if(!supabaseClient) return;
   var session=await supabaseClient.auth.getSession();
   if(!session.data.session) return;
   var email=session.data.session.user.email;
   var empId=email.replace('@flexbs.com','');
-  var {data,error}=await supabaseClient.from('staffs').select('*').eq('employee_id',empId).single();myStaffData=data;if(data)loadMyDocuments();
+  var {data,error}=await supabaseClient.from('staffs').select('*').eq('employee_id',empId).single();
   if(error||!data) return;
+  myStaffData=data;
   document.querySelectorAll('.staff-name-display').forEach(el=>el.textContent=data.name+' さん');
-  document.querySelectorAll('.staff-workplace-display').forEach(el=>el.textContent='社員番号：'+data.employee_id+' · '+(data.workplace||''));
+  document.querySelectorAll('.staff-workplace-display').forEach(el=>el.textContent='社員番号:'+data.employee_id+' · '+(data.workplace||''));
   document.querySelectorAll('.staff-av').forEach(el=>el.textContent=data.name?data.name.replace(' ','').slice(0,2):'');
   document.querySelectorAll('.av').forEach(el=>el.textContent=data.name?data.name.replace(' ','').slice(0,2):'');
   var el=document.getElementById('profile-employee-id');if(el)el.textContent=data.employee_id;
@@ -1106,28 +721,168 @@ function getStaffBucket(t){return t==='payslip'?'payslips':'contracts';} var myS
   el=document.getElementById('profile-pension');if(el)el.textContent=data.pension_number||'';
   el=document.getElementById('profile-insurance');if(el)el.textContent=data.insurance_number||'';
   el=document.getElementById('profile-note');if(el)el.textContent=data.note||'-';
+  loadMyDocuments();
 }
 
-async function loadAdminDocuments(){if(!supabaseClient)return{byStaff:{},all:[]};var result=await supabaseClient.from('documents').select('*').order('created_at',{ascending:false});if(result.error||!result.data)return{byStaff:{},all:[]};var byStaff={};result.data.forEach(function(d){if(!byStaff[d.staff_id])byStaff[d.staff_id]={payslip:null,contract:null};if(d.type==='payslip'&&!byStaff[d.staff_id].payslip){byStaff[d.staff_id].payslip=d;}else if((d.type==='meiji'||d.type==='taisha1'||d.type==='taisha2'||d.type==='other-sign'||d.type==='other-nosign')&&!byStaff[d.staff_id].contract){byStaff[d.staff_id].contract=d;}});return{byStaff:byStaff,all:result.data};} function formatDateShort(dateStr){if(!dateStr)return'—';var d=new Date(dateStr);return(d.getMonth()+1)+'/'+d.getDate();} function getDocTypeLabel(type){var labels={'payslip':'給与明細','meiji':'就業条件明示書','taisha1':'退職証明書①','taisha2':'退職証明書②','other-sign':'その他書類','other-nosign':'その他書類'};return labels[type]||type;} function getKubunLabel(type){if(type==='taisha1'||type==='taisha2')return'<span class="bdg br">退社</span>';if(type==='payslip'||type==='meiji')return'<span class="bdg bp">稼働中</span>';return'<span class="bdg bp">稼働中</span>';} async function loadAdminSentDocuments(allDocs){var tbody=document.querySelector('#uploads-sent .tbl tbody');if(!tbody)return;if(!allDocs||allDocs.length===0){tbody.innerHTML='<tr><td colspan="6" style="text-align:center;color:#888;padding:20px">まだ送付済みの書類がありません</td></tr>';return;}var staffMap={};var staffResult=await supabaseClient.from('staffs').select('id,name,employee_id');if(staffResult.data)staffResult.data.forEach(function(s){staffMap[s.id]=s;});tbody.innerHTML='';allDocs.forEach(function(d){var staff=staffMap[d.staff_id];if(!staff)return;var sentDate=d.created_at?new Date(d.created_at).getFullYear()+'/'+String(new Date(d.created_at).getMonth()+1).padStart(2,'0')+'/'+String(new Date(d.created_at).getDate()).padStart(2,'0'):'—';var statusBdg=d.requires_signature?(d.confirmed_at?'<span class="bdg bg">署名済</span>':'<span class="bdg ba">署名待ち</span>'):(d.confirmed_at?'<span class="bdg bg">閲覧済</span>':'<span class="bdg bz">未閲覧</span>');var tr=document.createElement('tr');tr.innerHTML='<td>'+staff.name+'</td><td>'+getKubunLabel(d.type)+'</td><td>'+(d.title||getDocTypeLabel(d.type))+'</td><td style="white-space:nowrap">'+sentDate+'</td><td>'+statusBdg+'</td><td><button class="btn btn-sm" onclick="alert(\'閲覧機能は実装予定\')">確認</button></td>';tbody.appendChild(tr);});} async function loadAdminStaffList(){
-  console.log('loadAdminStaffList called');
-  if(!supabaseClient){ console.log('no supabase client'); return; }
+async function loadMyDocuments(){
+  if(!supabaseClient||!myStaffData) return;
+  var {data:docs,error}=await supabaseClient.from('documents').select('*').eq('employee_id',myStaffData.employee_id).order('sent_at',{ascending:false});
+  var container=document.getElementById('staff-docs-container');
+  if(!container)return;
+  if(error){
+    container.innerHTML='<div class="ch"><span class="ct">受け取った書類</span></div><div style="padding:20px;text-align:center;color:#991b1b;font-size:13px">書類の読み込みに失敗しました</div>';
+    console.log('documents error:',error);
+    return;
+  }
+  if(!docs||docs.length===0){
+    container.innerHTML='<div class="ch"><span class="ct">受け取った書類</span></div><div style="padding:20px;text-align:center;color:#888;font-size:13px">まだ書類が届いていません</div>';
+    return;
+  }
+  var html='<div class="ch"><span class="ct">受け取った書類</span></div>';
+  var pendingCount=0;
+  docs.forEach(function(d){
+    var isPayslip=d.doc_type==='payslip';
+    var bucket=isPayslip?'payslips':'contracts';
+    var icon=isPayslip?'📄':'📝';
+    var bgColor=isPayslip?'#e6f4d7':(d.signed_at?'#e6f4d7':'#fef3cd');
+    var dateStr=d.sent_at?d.sent_at.substring(0,10).replace(/-/g,'/'):'';
+    var title=d.title||(isPayslip?'給与明細.pdf':'書類.pdf');
+    var sub='';
+    var badge='';
+    var btn='';
+    if(isPayslip){
+      sub=dateStr+' 送付 · 表示のみ';
+      btn='<button class="btn btn-sm" onclick="openStaffPdf(\''+d.file_path+'\',\''+bucket+'\')">表示</button>';
+    } else {
+      if(d.signed_at){
+        var signDate=d.signed_at.substring(0,16).replace('T',' ').replace(/-/g,'/');
+        sub='署名済:'+signDate;
+        badge='<span class="bdg bg">署名済</span>';
+        btn='<button class="btn btn-sm" onclick="openStaffPdf(\''+d.file_path+'\',\''+bucket+'\')">表示</button>';
+      } else {
+        sub='署名が必要です';
+        badge='<span class="bdg ba">署名待ち</span>';
+        btn='<button class="btn btn-sm" onclick="openStaffPdf(\''+d.file_path+'\',\''+bucket+'\')">表示</button> <button class="btn btn-sm btn-g" onclick="signMyDocument(\''+d.id+'\')">署名する</button>';
+        pendingCount++;
+      }
+    }
+    html+='<div class="row"><div class="ri" style="background:'+bgColor+'">'+icon+'</div><div class="rb"><div class="rt">'+title+'</div><div class="rs">'+sub+'</div></div>'+badge+btn+'</div>';
+  });
+  container.innerHTML=html;
+  var pe=document.getElementById('s-pending-docs');
+  if(pe){pe.textContent=pendingCount+'件';pe.style.color=pendingCount>0?'#8a5a00':'#1a1a1a';}
+}
+
+async function openStaffPdf(filePath,bucket){
+  if(!supabaseClient){alert('接続エラー');return;}
+  var r=await supabaseClient.storage.from(bucket).createSignedUrl(filePath,3600);
+  if(r.error||!r.data){alert('PDFを開けませんでした');return;}
+  window.open(r.data.signedUrl,'_blank');
+}
+
+async function signMyDocument(docId){
+  if(!myStaffData){alert('ログイン情報が取得できません');return;}
+  var ok=window.confirm('この書類に署名・同意しますか?');
+  if(!ok)return;
+  var now=new Date().toISOString();
+  var r=await supabaseClient.from('documents').update({signed_at:now}).eq('id',docId);
+  if(r.error){alert('署名に失敗しました:'+r.error.message);return;}
+  alert('署名しました');
+  loadMyDocuments();
+}
+
+async function loadAdminStaffList(){
+  if(!supabaseClient) return;
   var {data,error}=await supabaseClient.from('staffs').select('*').order('employee_id');
-  console.log('staffs data:', data, 'error:', error);
-  if(error||!data){ console.log('error or no data'); return; }
-  var sc=document.getElementById('staff-count');if(sc)sc.textContent=data.filter(s=>s.employee_id>='1000').length+'名';
- var docsResult=await loadAdminDocuments();var docsByStaff=docsResult.byStaff;await loadAdminSentDocuments(docsResult.all);var staffOnly=data.filter(s=>s.employee_id>='1000');
-    var optionsHtml='';
-    staffOnly.forEach(s=>{optionsHtml+='<option>'+s.name+'（'+String(s.employee_id).padStart(4,'0')+'）</option>';});
-    ['payslip-target','contract-target'].forEach(id=>{var sel=document.getElementById(id);if(sel)sel.innerHTML=optionsHtml;});var noticeCheckEl=document.getElementById('notice-staff-checklist');if(noticeCheckEl){var checkHtml='';staffOnly.forEach(s=>{var empIdPadded=String(s.employee_id).padStart(4,'0');checkHtml+='<label style="display:flex;align-items:center;gap:8px;padding:5px 4px;cursor:pointer;font-size:13px;border-bottom:1px solid #f5f4f0"><input type="checkbox" class="notice-staff-check" value="'+empIdPadded+'" onchange="updateNoticeCount()" style="accent-color:#534AB7;cursor:pointer"><span>'+s.name+'（'+empIdPadded+'）</span></label>';});noticeCheckEl.innerHTML=checkHtml;}var nc=document.getElementById('notice-all-count');if(nc)nc.textContent=staffOnly.length; 
-  var payslipMonthEl=document.getElementById('payslip-month');if(payslipMonthEl){var monthsHtml='';var today=new Date();var earliest=new Date(today.getFullYear(),today.getMonth()-23,1);var earlyY=earliest.getFullYear();var earlyM=earliest.getMonth()+1;var startY=2026;var startM=5;if(earlyY>startY||(earlyY===startY&&earlyM>startM)){startY=earlyY;startM=earlyM;}var curY=today.getFullYear();var curM=today.getMonth()+1;var lastY=curY;var lastM=curM-1;if(lastM===0){lastM=12;lastY--;}if(lastY<startY||(lastY===startY&&lastM<startM)){lastY=startY;lastM=startM;}var months=[];var y=startY;var m=startM;while(y<lastY||(y===lastY&&m<=lastM)){months.push({y:y,m:m});m++;if(m>12){m=1;y++;}}if(!months.some(mo=>mo.y===curY&&mo.m===curM))months.push({y:curY,m:curM});months.sort((a,b)=>b.y!==a.y?b.y-a.y:b.m-a.m);var defaultMonth=lastY+'年'+lastM+'月分';months.forEach(mo=>{var label=mo.y+'年'+mo.m+'月分';var sel=label===defaultMonth?' selected':'';monthsHtml+='<option'+sel+'>'+label+'</option>';});payslipMonthEl.innerHTML=monthsHtml;}var payslipMonthEl=document.getElementById('payslip-month');if(payslipMonthEl){var monthsHtml='';var today=new Date();var earliest=new Date(today.getFullYear(),today.getMonth()-23,1);var earlyY=earliest.getFullYear();var earlyM=earliest.getMonth()+1;var startY=2026;var startM=5;if(earlyY>startY||(earlyY===startY&&earlyM>startM)){startY=earlyY;startM=earlyM;}var curY=today.getFullYear();var curM=today.getMonth()+1;var lastY=curY;var lastM=curM-1;if(lastM===0){lastM=12;lastY--;}if(lastY<startY||(lastY===startY&&lastM<startM)){lastY=startY;lastM=startM;}var months=[];var y=startY;var m=startM;while(y<lastY||(y===lastY&&m<=lastM)){months.push({y:y,m:m});m++;if(m>12){m=1;y++;}}if(!months.some(mo=>mo.y===curY&&mo.m===curM))months.push({y:curY,m:curM});months.sort((a,b)=>b.y!==a.y?b.y-a.y:b.m-a.m);var defaultMonth=lastY+'年'+lastM+'月分';months.forEach(mo=>{var label=mo.y+'年'+mo.m+'月分';var sel=label===defaultMonth?' selected':'';monthsHtml+='<option'+sel+'>'+label+'</option>';});payslipMonthEl.innerHTML=monthsHtml;}var payslipMonthEl=document.getElementById('payslip-month');if(payslipMonthEl){var monthsHtml='';var today=new Date();var earliest=new Date(today.getFullYear(),today.getMonth()-23,1);var earlyY=earliest.getFullYear();var earlyM=earliest.getMonth()+1;var startY=2026;var startM=5;if(earlyY>startY||(earlyY===startY&&earlyM>startM)){startY=earlyY;startM=earlyM;}var curY=today.getFullYear();var curM=today.getMonth()+1;var lastY=curY;var lastM=curM-1;if(lastM===0){lastM=12;lastY--;}if(lastY<startY||(lastY===startY&&lastM<startM)){lastY=startY;lastM=startM;}var months=[];var y=startY;var m=startM;while(y<lastY||(y===lastY&&m<=lastM)){months.push({y:y,m:m});m++;if(m>12){m=1;y++;}}if(!months.some(mo=>mo.y===curY&&mo.m===curM))months.push({y:curY,m:curM});months.sort((a,b)=>b.y!==a.y?b.y-a.y:b.m-a.m);var defaultMonth=lastY+'年'+lastM+'月分';months.forEach(mo=>{var label=mo.y+'年'+mo.m+'月分';var sel=label===defaultMonth?' selected':'';monthsHtml+='<option'+sel+'>'+label+'</option>';});payslipMonthEl.innerHTML=monthsHtml;}var payslipMonthEl=document.getElementById('payslip-month');if(payslipMonthEl){var monthsHtml='';var today=new Date();var earliest=new Date(today.getFullYear(),today.getMonth()-23,1);var earlyY=earliest.getFullYear();var earlyM=earliest.getMonth()+1;var startY=2026;var startM=5;if(earlyY>startY||(earlyY===startY&&earlyM>startM)){startY=earlyY;startM=earlyM;}var curY=today.getFullYear();var curM=today.getMonth()+1;var lastY=curY;var lastM=curM-1;if(lastM===0){lastM=12;lastY--;}if(lastY<startY||(lastY===startY&&lastM<startM)){lastY=startY;lastM=startM;}var months=[];var y=startY;var m=startM;while(y<lastY||(y===lastY&&m<=lastM)){months.push({y:y,m:m});m++;if(m>12){m=1;y++;}}if(!months.some(mo=>mo.y===curY&&mo.m===curM))months.push({y:curY,m:curM});months.sort((a,b)=>b.y!==a.y?b.y-a.y:b.m-a.m);var defaultMonth=lastY+'年'+lastM+'月分';months.forEach(mo=>{var label=mo.y+'年'+mo.m+'月分';var sel=label===defaultMonth?' selected':'';monthsHtml+='<option'+sel+'>'+label+'</option>';});payslipMonthEl.innerHTML=monthsHtml;}var payslipMonthEl=document.getElementById('payslip-month');if(payslipMonthEl){var monthsHtml='';var today=new Date();var earliest=new Date(today.getFullYear(),today.getMonth()-23,1);var earlyY=earliest.getFullYear();var earlyM=earliest.getMonth()+1;var startY=2026;var startM=5;if(earlyY>startY||(earlyY===startY&&earlyM>startM)){startY=earlyY;startM=earlyM;}var curY=today.getFullYear();var curM=today.getMonth()+1;var lastY=curY;var lastM=curM-1;if(lastM===0){lastM=12;lastY--;}if(lastY<startY||(lastY===startY&&lastM<startM)){lastY=startY;lastM=startM;}var months=[];var y=startY;var m=startM;while(y<lastY||(y===lastY&&m<=lastM)){months.push({y:y,m:m});m++;if(m>12){m=1;y++;}}if(!months.some(mo=>mo.y===curY&&mo.m===curM))months.push({y:curY,m:curM});months.sort((a,b)=>b.y!==a.y?b.y-a.y:b.m-a.m);var defaultMonth=lastY+'年'+lastM+'月分';months.forEach(mo=>{var label=mo.y+'年'+mo.m+'月分';var sel=label===defaultMonth?' selected':'';monthsHtml+='<option'+sel+'>'+label+'</option>';});payslipMonthEl.innerHTML=monthsHtml;}var payslipMonthEl=document.getElementById('payslip-month');if(payslipMonthEl){var monthsHtml='';var today=new Date();var earliest=new Date(today.getFullYear(),today.getMonth()-23,1);var earlyY=earliest.getFullYear();var earlyM=earliest.getMonth()+1;var startY=2026;var startM=5;if(earlyY>startY||(earlyY===startY&&earlyM>startM)){startY=earlyY;startM=earlyM;}var curY=today.getFullYear();var curM=today.getMonth()+1;var lastY=curY;var lastM=curM-1;if(lastM===0){lastM=12;lastY--;}if(lastY<startY||(lastY===startY&&lastM<startM)){lastY=startY;lastM=startM;}var months=[];var y=startY;var m=startM;while(y<lastY||(y===lastY&&m<=lastM)){months.push({y:y,m:m});m++;if(m>12){m=1;y++;}}if(!months.some(mo=>mo.y===curY&&mo.m===curM))months.push({y:curY,m:curM});months.sort((a,b)=>b.y!==a.y?b.y-a.y:b.m-a.m);var defaultMonth=lastY+'年'+lastM+'月分';months.forEach(mo=>{var label=mo.y+'年'+mo.m+'月分';var sel=label===defaultMonth?' selected':'';monthsHtml+='<option'+sel+'>'+label+'</option>';});payslipMonthEl.innerHTML=monthsHtml;}var payslipMonthEl=document.getElementById('payslip-month');if(payslipMonthEl){var monthsHtml='';var today=new Date();var earliest=new Date(today.getFullYear(),today.getMonth()-23,1);var earlyY=earliest.getFullYear();var earlyM=earliest.getMonth()+1;var startY=2026;var startM=5;if(earlyY>startY||(earlyY===startY&&earlyM>startM)){startY=earlyY;startM=earlyM;}var curY=today.getFullYear();var curM=today.getMonth()+1;var lastY=curY;var lastM=curM-1;if(lastM===0){lastM=12;lastY--;}if(lastY<startY||(lastY===startY&&lastM<startM)){lastY=startY;lastM=startM;}var months=[];var y=startY;var m=startM;while(y<lastY||(y===lastY&&m<=lastM)){months.push({y:y,m:m});m++;if(m>12){m=1;y++;}}if(!months.some(mo=>mo.y===curY&&mo.m===curM))months.push({y:curY,m:curM});months.sort((a,b)=>b.y!==a.y?b.y-a.y:b.m-a.m);var defaultMonth=lastY+'年'+lastM+'月分';months.forEach(mo=>{var label=mo.y+'年'+mo.m+'月分';var sel=label===defaultMonth?' selected':'';monthsHtml+='<option'+sel+'>'+label+'</option>';});payslipMonthEl.innerHTML=monthsHtml;}var payslipMonthEl=document.getElementById('payslip-month');if(payslipMonthEl){var monthsHtml='';var today=new Date();var earliest=new Date(today.getFullYear(),today.getMonth()-23,1);var earlyY=earliest.getFullYear();var earlyM=earliest.getMonth()+1;var startY=2026;var startM=5;if(earlyY>startY||(earlyY===startY&&earlyM>startM)){startY=earlyY;startM=earlyM;}var curY=today.getFullYear();var curM=today.getMonth()+1;var lastY=curY;var lastM=curM-1;if(lastM===0){lastM=12;lastY--;}if(lastY<startY||(lastY===startY&&lastM<startM)){lastY=startY;lastM=startM;}var months=[];var y=startY;var m=startM;while(y<lastY||(y===lastY&&m<=lastM)){months.push({y:y,m:m});m++;if(m>12){m=1;y++;}}if(!months.some(mo=>mo.y===curY&&mo.m===curM))months.push({y:curY,m:curM});months.sort((a,b)=>b.y!==a.y?b.y-a.y:b.m-a.m);var defaultMonth=lastY+'年'+lastM+'月分';months.forEach(mo=>{var label=mo.y+'年'+mo.m+'月分';var sel=label===defaultMonth?' selected':'';monthsHtml+='<option'+sel+'>'+label+'</option>';});payslipMonthEl.innerHTML=monthsHtml;}var payslipMonthEl=document.getElementById('payslip-month');if(payslipMonthEl){var monthsHtml='';var today=new Date();var earliest=new Date(today.getFullYear(),today.getMonth()-23,1);var earlyY=earliest.getFullYear();var earlyM=earliest.getMonth()+1;var startY=2026;var startM=5;if(earlyY>startY||(earlyY===startY&&earlyM>startM)){startY=earlyY;startM=earlyM;}var curY=today.getFullYear();var curM=today.getMonth()+1;var lastY=curY;var lastM=curM-1;if(lastM===0){lastM=12;lastY--;}if(lastY<startY||(lastY===startY&&lastM<startM)){lastY=startY;lastM=startM;}var months=[];var y=startY;var m=startM;while(y<lastY||(y===lastY&&m<=lastM)){months.push({y:y,m:m});m++;if(m>12){m=1;y++;}}if(!months.some(mo=>mo.y===curY&&mo.m===curM))months.push({y:curY,m:curM});months.sort((a,b)=>b.y!==a.y?b.y-a.y:b.m-a.m);var defaultMonth=lastY+'年'+lastM+'月分';months.forEach(mo=>{var label=mo.y+'年'+mo.m+'月分';var sel=label===defaultMonth?' selected':'';monthsHtml+='<option'+sel+'>'+label+'</option>';});payslipMonthEl.innerHTML=monthsHtml;}var tbody=document.getElementById('admin-staff-tbody');
+  if(error||!data) return;
+  var staffOnly=data.filter(s=>s.employee_id<9000);
+  var sc=document.getElementById('staff-count');if(sc)sc.textContent=staffOnly.length+'名';
+  var optionsHtml='';
+  staffOnly.forEach(s=>{optionsHtml+='<option value="'+s.employee_id+'">'+s.name+'('+String(s.employee_id).padStart(4,'0')+')</option>';});
+  ['payslip-target','contract-target'].forEach(id=>{var sel=document.getElementById(id);if(sel)sel.innerHTML=optionsHtml;});
+  var tbody=document.getElementById('admin-staff-tbody');
   if(!tbody) return;
   tbody.innerHTML='';
-  var includeAdmins=document.getElementById('include-admins')&&document.getElementById('include-admins').checked;var displayList=includeAdmins?data:data.filter(s=>s.employee_id>='1000');displayList.forEach(function(s){
+  staffOnly.forEach(function(s){
     var tr=document.createElement('tr');
-    var docs=docsByStaff[s.id]||{};var payslipCell='<span class="bdg bz">未送付</span>';var payslipDate='—';if(docs.payslip){payslipCell='<span class="bdg bg">'+(docs.payslip.title||'送付済')+'</span>';payslipDate=formatDateShort(docs.payslip.created_at);}var contractCell='<span class="bdg bz">未送付</span>';if(docs.contract){if(docs.contract.requires_signature){contractCell=docs.contract.confirmed_at?'<span class="bdg bg">署名済</span>':'<span class="bdg ba">署名待ち</span>';}else{contractCell='<span class="bdg bg">送付済</span>';}}tr.innerHTML='<td>'+s.name+'</td><td>'+s.employee_id+'</td><td>'+(s.workplace||'')+'</td><td>'+payslipCell+'</td><td>'+contractCell+'</td><td style="font-size:11px;color:#888;white-space:nowrap">'+payslipDate+'</td><td><button class="btn btn-sm" onclick="openStaffDetail('+s.employee_id+')">詳細</button></td>';
-    tbody.appendChild(tr);var countEl=document.getElementById('staff-count');if(countEl)countEl.textContent=data.filter(s=>s.employee_id>='1000').length+'名';
+    tr.innerHTML='<td>'+s.name+'</td><td>'+s.employee_id+'</td><td>'+(s.workplace||'')+'</td><td><span class="bdg bz">未閲覧</span></td><td><span class="bdg bz">未送付</span></td><td style="font-size:11px;color:#888">—</td><td><button class="btn btn-sm" onclick="openStaffDetail('+s.employee_id+')">詳細</button></td>';
+    tbody.appendChild(tr);
   });
 }
+
+async function loadAdminUploads(){
+  if(!supabaseClient) return;
+  var {data:docs}=await supabaseClient.from('documents').select('*').order('sent_at',{ascending:false}).limit(50);
+  if(!docs) return;
+  var {data:staffs}=await supabaseClient.from('staffs').select('employee_id,name');
+  var staffMap={};
+  if(staffs){staffs.forEach(s=>{staffMap[s.employee_id]=s.name;});}
+  var sentTbody=document.getElementById('admin-sent-tbody');
+  if(!sentTbody) return;
+  if(docs.length===0){
+    sentTbody.innerHTML='<tr><td colspan="5" style="text-align:center;color:#888;padding:20px">送付済み書類はまだありません</td></tr>';
+    return;
+  }
+  sentTbody.innerHTML='';
+  docs.forEach(function(d){
+    var name=staffMap[d.employee_id]||d.employee_id;
+    var typeStr=d.doc_type==='payslip'?'給与明細':'契約書';
+    var dateStr=d.sent_at?d.sent_at.substring(0,10).replace(/-/g,'/'):'';
+    var status=d.signed_at?'<span class="bdg bg">署名済</span>':(d.doc_type==='payslip'?'<span class="bdg bz">表示のみ</span>':'<span class="bdg ba">署名待ち</span>');
+    var bucket=d.doc_type==='payslip'?'payslips':'contracts';
+    var tr=document.createElement('tr');
+    tr.innerHTML='<td>'+name+'</td><td>'+(d.title||typeStr)+'</td><td style="white-space:nowrap">'+dateStr+'</td><td>'+status+'</td><td><button class="btn btn-sm" onclick="openStaffPdf(\''+d.file_path+'\',\''+bucket+'\')">表示</button></td>';
+    sentTbody.appendChild(tr);
+  });
+}
+
+async function sendPayslip(){
+  var target=document.getElementById('payslip-target').value;
+  var month=document.getElementById('payslip-month').value;
+  var fileInput=document.getElementById('payslip-file');
+  var status=document.getElementById('payslip-status');
+  if(!fileInput.files||!fileInput.files[0]){alert('PDFファイルを選択してください');return;}
+  var file=fileInput.files[0];
+  status.style.display='block';status.style.color='#666';status.textContent='アップロード中...';
+  var filePath=target+'/'+month+'_payslip_'+Date.now()+'.pdf';
+  var up=await supabaseClient.storage.from('payslips').upload(filePath,file);
+  if(up.error){status.style.color='#991b1b';status.textContent='アップロード失敗:'+up.error.message;return;}
+  var ins=await supabaseClient.from('documents').insert({
+    employee_id:parseInt(target),
+    doc_type:'payslip',
+    title:month+'分 給与明細.pdf',
+    file_path:filePath,
+    sent_at:new Date().toISOString()
+  });
+  if(ins.error){status.style.color='#991b1b';status.textContent='登録失敗:'+ins.error.message;return;}
+  status.style.color='#2d6a10';status.textContent='送付完了!';
+  setTimeout(()=>{closeModal('send-payslip');loadAdminUploads();},1000);
+}
+
+async function sendContract(){
+  var target=document.getElementById('contract-target').value;
+  var docType=document.getElementById('doc-type-select').value;
+  var title=document.getElementById('contract-title').value||'契約書.pdf';
+  var fileInput=document.getElementById('contract-file');
+  var status=document.getElementById('contract-status');
+  if(!fileInput.files||!fileInput.files[0]){alert('PDFファイルを選択してください');return;}
+  var file=fileInput.files[0];
+  status.style.display='block';status.style.color='#666';status.textContent='アップロード中...';
+  var filePath=target+'/'+docType+'_'+Date.now()+'.pdf';
+  var up=await supabaseClient.storage.from('contracts').upload(filePath,file);
+  if(up.error){status.style.color='#991b1b';status.textContent='アップロード失敗:'+up.error.message;return;}
+  var ins=await supabaseClient.from('documents').insert({
+    employee_id:parseInt(target),
+    doc_type:'contract',
+    title:title,
+    file_path:filePath,
+    sent_at:new Date().toISOString()
+  });
+  if(ins.error){status.style.color='#991b1b';status.textContent='登録失敗:'+ins.error.message;return;}
+  status.style.color='#2d6a10';status.textContent='送付完了!';
+  setTimeout(()=>{closeModal('send-contract');loadAdminUploads();},1000);
+}
+
 function showPage(id,tabEl){
   document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
   document.getElementById('page-'+id).classList.add('active');
@@ -1135,6 +890,7 @@ function showPage(id,tabEl){
   if(tabEl)tabEl.classList.add('active');
   document.getElementById('navRight').style.display=(id==='staff')?'flex':'none';
 }
+
 function showSub(pg,id,btn){
   var prefix=pg==='admin'?'admin-':'staff-';
   document.querySelectorAll('#page-'+pg+' .sp').forEach(s=>s.classList.remove('active'));
@@ -1142,6 +898,7 @@ function showSub(pg,id,btn){
   btn.parentElement.querySelectorAll('.sub-tab').forEach(t=>t.classList.remove('active'));
   btn.classList.add('active');
 }
+
 function showSub2(id,btn){
   ['recv','sent'].forEach(function(k){
     var el=document.getElementById('uploads-'+k);
@@ -1152,6 +909,7 @@ function showSub2(id,btn){
   btn.parentElement.querySelectorAll('.sub-tab').forEach(t=>t.classList.remove('active'));
   btn.classList.add('active');
 }
+
 function showSub3(id,btn){
   ['nyusha','kadochu','taisha'].forEach(function(k){
     var el=document.getElementById('upload-'+k);
@@ -1162,15 +920,17 @@ function showSub3(id,btn){
   btn.parentElement.querySelectorAll('.sub-tab').forEach(t=>t.classList.remove('active'));
   btn.classList.add('active');
 }
+
 function openModal(id){document.getElementById('modal-'+id).classList.add('open');}
 function closeModal(id){document.getElementById('modal-'+id).classList.remove('open');}
+
 async function openStaffDetail(empId){
   try{
     const {data,error}=await supabaseClient.from('staffs').select('*').eq('employee_id',empId).single();
-    if(error){alert('スタッフ情報の取得に失敗しました：'+error.message);return;}
-    if(!data){alert('スタッフが見つかりませんでした');return;}
+    if(error){alert('取得失敗:'+error.message);return;}
+    if(!data){alert('スタッフが見つかりません');return;}
     document.getElementById('modal-name').textContent=data.name||'';
-    document.getElementById('modal-empid').textContent='社員番号：'+(data.employee_id||'');
+    document.getElementById('modal-empid').textContent='社員番号:'+(data.employee_id||'');
     document.getElementById('modal-avatar').textContent=data.name?data.name.replace(' ','').slice(0,2):'';
     document.getElementById('modal-workplace').textContent=data.workplace||'';
     document.getElementById('modal-dispatch-start').textContent=data.dispatch_start_date||'';
@@ -1180,13 +940,14 @@ async function openStaffDetail(empId){
     document.getElementById('modal-insurance').textContent=data.insurance_number||'';
     document.getElementById('modal-note').textContent=data.note||'';
     openModal('staff-profile');
-  }catch(e){
-    alert('エラーが発生しました：'+e.message);
-  }
-}  
+  }catch(e){alert('エラー:'+e.message);}
+}
+
 document.querySelectorAll('.mbg').forEach(m=>m.addEventListener('click',function(e){if(e.target===this)this.classList.remove('open');}));
-function showContractFileName(){var input=document.getElementById('contractFileInput');var file=input.files[0];if(!file)return;if(file.type!=='application/pdf'){alert('PDFファイルを選択してください');input.value='';return;}if(file.size>10*1024*1024){alert('ファイルサイズは10MB以下にしてください');input.value='';return;}document.getElementById('contractFileNameText').textContent=file.name;document.getElementById('contractFileSize').textContent=(file.size/1024).toFixed(0)+' KB';document.getElementById('contractFileName').style.display='flex';} async function sendContract(){var input=document.getElementById('contractFileInput');var file=input.files[0];if(!file){alert('PDFファイルを選択してください');return;}var targetSel=document.getElementById('contract-target');var target=targetSel?targetSel.value:'';var empMatch=target.match(/(\d{4})/);if(!empMatch){alert('送付先のスタッフを選択してください');return;}var employeeId=empMatch[1];var docTypeSel=document.getElementById('doc-type-select');var docType=docTypeSel?docTypeSel.value:'meiji';var docTypeLabels={'meiji':'就業条件明示書','taisha1':'退職証明書①','taisha2':'退職証明書②','other-sign':'書類','other-nosign':'書類'};var docTypeName=docTypeLabels[docType]||'書類';var requiresSignature=(docType==='meiji'||docType==='taisha1'||docType==='taisha2'||docType==='other-sign');var statusEl=document.getElementById('contractStatus');var btn=document.getElementById('contractSendBtn');btn.disabled=true;btn.textContent='送付中...';statusEl.style.display='block';statusEl.style.background='#ede9fe';statusEl.style.color='#534AB7';statusEl.textContent='アップロード中です...';try{var staffResult=await supabaseClient.from('staffs').select('id,name').eq('employee_id',employeeId).single();if(staffResult.error||!staffResult.data){throw new Error('スタッフが見つかりません');}var staffId=staffResult.data.id;var staffName=staffResult.data.name;var now=new Date();var timestamp=now.getFullYear()+(now.getMonth()+1).toString().padStart(2,'0')+now.getDate().toString().padStart(2,'0')+'_'+now.getHours().toString().padStart(2,'0')+now.getMinutes().toString().padStart(2,'0')+now.getSeconds().toString().padStart(2,'0');var filePath=employeeId+'/'+timestamp+'_'+docType+'.pdf';var uploadResult=await supabaseClient.storage.from('contracts').upload(filePath,file,{contentType:'application/pdf',upsert:false});if(uploadResult.error){throw new Error('アップロード失敗:'+uploadResult.error.message);}var insertResult=await supabaseClient.from('documents').insert({staff_id:staffId,title:docTypeName,type:docType,file_url:filePath,requires_signature:requiresSignature});if(insertResult.error){throw new Error('記録保存失敗:'+insertResult.error.message);}statusEl.style.background='#e6f4d7';statusEl.style.color='#2d6a10';statusEl.textContent='✓ '+staffName+'さんに送付完了しました';btn.textContent='完了 ✓';setTimeout(function(){closeModal('send-contract');input.value='';document.getElementById('contractFileName').style.display='none';statusEl.style.display='none';btn.disabled=false;btn.textContent='送付する →';},2000);}catch(e){statusEl.style.background='#fee2e2';statusEl.style.color='#991b1b';statusEl.textContent='エラー:'+e.message;btn.disabled=false;btn.textContent='送付する →';}} function showPayslipFileName(){var input=document.getElementById('payslipFileInput');var file=input.files[0];if(!file)return;if(file.type!=='application/pdf'){alert('PDFファイルを選択してください');input.value='';return;}if(file.size>10*1024*1024){alert('ファイルサイズは10MB以下にしてください');input.value='';return;}document.getElementById('payslipFileNameText').textContent=file.name;document.getElementById('payslipFileSize').textContent=(file.size/1024).toFixed(0)+' KB';document.getElementById('payslipFileName').style.display='flex';} async function sendPayslip(){var input=document.getElementById('payslipFileInput');var file=input.files[0];if(!file){alert('PDFファイルを選択してください');return;}var monthSel=document.querySelector('#modal-send-payslip select');var targetMonth=monthSel?monthSel.value:'';var targetSel=document.getElementById('payslip-target');var target=targetSel?targetSel.value:'';if(target.indexOf('全スタッフ')>-1){alert('現在は個別送付のみ対応しています。送付先からスタッフを選択してください。');return;}var empMatch=target.match(/(\d{4})/);if(!empMatch){alert('送付先のスタッフを選択してください');return;}var employeeId=empMatch[1];var statusEl=document.getElementById('payslipStatus');var btn=document.getElementById('payslipSendBtn');btn.disabled=true;btn.textContent='送付中...';statusEl.style.display='block';statusEl.style.background='#ede9fe';statusEl.style.color='#534AB7';statusEl.textContent='アップロード中です...';try{var staffResult=await supabaseClient.from('staffs').select('id,name').eq('employee_id',employeeId).single();if(staffResult.error||!staffResult.data){throw new Error('スタッフが見つかりません');}var staffId=staffResult.data.id;var staffName=staffResult.data.name;var now=new Date();var timestamp=now.getFullYear()+(now.getMonth()+1).toString().padStart(2,'0')+now.getDate().toString().padStart(2,'0')+'_'+now.getHours().toString().padStart(2,'0')+now.getMinutes().toString().padStart(2,'0')+now.getSeconds().toString().padStart(2,'0');var filePath=employeeId+'/'+timestamp+'_payslip.pdf';var uploadResult=await supabaseClient.storage.from('payslips').upload(filePath,file,{contentType:'application/pdf',upsert:false});if(uploadResult.error){throw new Error('アップロード失敗:'+uploadResult.error.message);}var title=targetMonth+' 給与明細';var insertResult=await supabaseClient.from('documents').insert({staff_id:staffId,title:title,type:'payslip',file_url:filePath,requires_signature:false});if(insertResult.error){throw new Error('記録保存失敗:'+insertResult.error.message);}statusEl.style.background='#e6f4d7';statusEl.style.color='#2d6a10';statusEl.textContent='✓ '+staffName+'さんに送付完了しました';btn.textContent='完了 ✓';setTimeout(function(){closeModal('send-payslip');input.value='';document.getElementById('payslipFileName').style.display='none';statusEl.style.display='none';btn.disabled=false;btn.textContent='送付する →';},2000);}catch(e){statusEl.style.background='#fee2e2';statusEl.style.color='#991b1b';statusEl.textContent='エラー:'+e.message;btn.disabled=false;btn.textContent='送付する →';}} function simUp(el,fileId){el.style.display='none';document.getElementById(fileId).style.display='flex';}
+
+function simUp(el,fileId){el.style.display='none';document.getElementById(fileId).style.display='flex';}
 function simUpload(el,fileId){el.style.display='none';document.getElementById(fileId).style.display='flex';}
+
 function toggleNoNum(type){
   var cb=document.getElementById(type+'-nonum');
   var msg=document.getElementById(type+'-nomsg');
@@ -1195,64 +956,19 @@ function toggleNoNum(type){
   if(cb.checked)inp.value='';
   msg.style.display=cb.checked?'block':'none';
 }
-function toggleDocType(sel){
-  var note=document.getElementById('doc-type-note');
-  if(sel.value==='meiji'){
-    note.style.background='#e6f4d7';note.style.color='#2d6a10';
-    note.textContent='就業条件明示書は署名必須です。スタッフが確認後に署名でき、日時・社員番号が自動記録されます。';
-  } else if(sel.value==='taisha1'||sel.value==='taisha2'){
-    note.style.background='#fee2e2';note.style.color='#991b1b';
-    note.textContent='退職証明書は署名必須です。スタッフが確認後に署名でき、日時・社員番号が自動記録されます。';
-  } else if(sel.value==='other-sign'){
-    note.style.background='#e6f4d7';note.style.color='#2d6a10';
-    note.textContent='署名ありの書類はスタッフが「署名して同意する」を押すことで同意記録が残ります。';
-  } else {
-    note.style.background='#ede9fe';note.style.color='#534AB7';
-    note.textContent='署名なしの書類はスタッフが閲覧のみできます。同意記録は残りません。';
-  }
-}
-function signContract(type){
-  var now=new Date();
-  var ts=now.getFullYear()+'/'+(now.getMonth()+1).toString().padStart(2,'0')+'/'+now.getDate().toString().padStart(2,'0')+' '+now.getHours().toString().padStart(2,'0')+':'+now.getMinutes().toString().padStart(2,'0');
-  document.getElementById('sig-section').style.display='none';
-  document.getElementById('sig-done').style.display='block';
-  document.getElementById('sig-time').textContent='署名日時：'+ts+'　田中 花子（0001）';
-  document.getElementById('contract-badge').className='bdg bg';
-  document.getElementById('contract-badge').textContent='署名済';
-  document.getElementById('contract-sub').textContent='署名済：'+ts;
-  document.getElementById('contract-btn').style.display='none';
-  document.getElementById('s-pending-docs').textContent='0件';
-  document.getElementById('s-pending-docs').style.color='#1a1a1a';
-}
-function signTaisha(id){
-  var now=new Date();
-  var ts=now.getFullYear()+'/'+(now.getMonth()+1).toString().padStart(2,'0')+'/'+now.getDate().toString().padStart(2,'0')+' '+now.getHours().toString().padStart(2,'0')+':'+now.getMinutes().toString().padStart(2,'0');
-  document.getElementById(id+'-sig-section').style.display='none';
-  document.getElementById(id+'-sig-done').style.display='block';
-  document.getElementById(id+'-sig-time').textContent='署名日時：'+ts+'　田中 花子（0001）';
-  document.getElementById(id+'-badge').className='bdg bg';
-  document.getElementById(id+'-badge').textContent='署名済';
-}
+
 function approveLeave(btn){
   var row=btn.closest('tr');
   row.querySelector('.bdg').className='bdg bg';
   row.querySelector('.bdg').textContent='承認済';
   row.querySelector('td:last-child').innerHTML='<span style="font-size:12px;color:#888">承認済</span>';
-  updateAdminCount();
-  document.getElementById('leave-badge').className='bdg bg';
-  document.getElementById('leave-badge').textContent='承認済';
-  document.getElementById('s-req-status').textContent='承認済';
 }
+
 function rejectLeave(btn){
   var row=btn.closest('tr');
   row.querySelector('.bdg').className='bdg br';
   row.querySelector('.bdg').textContent='否認';
   row.querySelector('td:last-child').innerHTML='<span style="font-size:12px;color:#888">否認済</span>';
-  updateAdminCount();
-}
-function toggleNoticeMode(){var mode=document.querySelector('input[name="notice-mode"]:checked').value;var area=document.getElementById('notice-individual-area');if(area)area.style.display=mode==='individual'?'block':'none';if(mode==='all'){document.querySelectorAll('.notice-staff-check').forEach(cb=>cb.checked=false);updateNoticeCount();}}function updateNoticeCount(){var checked=document.querySelectorAll('.notice-staff-check:checked').length;var el=document.getElementById('notice-selected-count');if(el)el.textContent=checked;}function toggleNoticeMode(){var mode=document.querySelector('input[name="notice-mode"]:checked').value;var area=document.getElementById('notice-individual-area');if(area)area.style.display=mode==='individual'?'block':'none';if(mode==='all'){document.querySelectorAll('.notice-staff-check').forEach(cb=>cb.checked=false);updateNoticeCount();}}function updateNoticeCount(){var checked=document.querySelectorAll('.notice-staff-check:checked').length;var el=document.getElementById('notice-selected-count');if(el)el.textContent=checked;}function toggleNoticeMode(){var mode=document.querySelector('input[name="notice-mode"]:checked').value;var area=document.getElementById('notice-individual-area');if(area)area.style.display=mode==='individual'?'block':'none';if(mode==='all'){document.querySelectorAll('.notice-staff-check').forEach(cb=>cb.checked=false);updateNoticeCount();}}function updateNoticeCount(){var checked=document.querySelectorAll('.notice-staff-check:checked').length;var el=document.getElementById('notice-selected-count');if(el)el.textContent=checked;}function toggleNoticeMode(){var mode=document.querySelector('input[name="notice-mode"]:checked').value;var area=document.getElementById('notice-individual-area');if(area)area.style.display=mode==='individual'?'block':'none';if(mode==='all'){document.querySelectorAll('.notice-staff-check').forEach(cb=>cb.checked=false);updateNoticeCount();}}function updateNoticeCount(){var checked=document.querySelectorAll('.notice-staff-check:checked').length;var el=document.getElementById('notice-selected-count');if(el)el.textContent=checked;}function toggleNoticeMode(){var mode=document.querySelector('input[name="notice-mode"]:checked').value;var area=document.getElementById('notice-individual-area');if(area)area.style.display=mode==='individual'?'block':'none';if(mode==='all'){document.querySelectorAll('.notice-staff-check').forEach(cb=>cb.checked=false);updateNoticeCount();}}function updateNoticeCount(){var checked=document.querySelectorAll('.notice-staff-check:checked').length;var el=document.getElementById('notice-selected-count');if(el)el.textContent=checked;}function toggleNoticeMode(){var mode=document.querySelector('input[name="notice-mode"]:checked').value;var area=document.getElementById('notice-individual-area');if(area)area.style.display=mode==='individual'?'block':'none';if(mode==='all'){document.querySelectorAll('.notice-staff-check').forEach(cb=>cb.checked=false);updateNoticeCount();}}function updateNoticeCount(){var checked=document.querySelectorAll('.notice-staff-check:checked').length;var el=document.getElementById('notice-selected-count');if(el)el.textContent=checked;}function toggleNoticeMode(){var mode=document.querySelector('input[name="notice-mode"]:checked').value;var area=document.getElementById('notice-individual-area');if(area)area.style.display=mode==='individual'?'block':'none';if(mode==='all'){document.querySelectorAll('.notice-staff-check').forEach(cb=>cb.checked=false);updateNoticeCount();}}function updateNoticeCount(){var checked=document.querySelectorAll('.notice-staff-check:checked').length;var el=document.getElementById('notice-selected-count');if(el)el.textContent=checked;}function toggleNoticeMode(){var mode=document.querySelector('input[name="notice-mode"]:checked').value;var area=document.getElementById('notice-individual-area');if(area)area.style.display=mode==='individual'?'block':'none';if(mode==='all'){document.querySelectorAll('.notice-staff-check').forEach(cb=>cb.checked=false);updateNoticeCount();}}function updateNoticeCount(){var checked=document.querySelectorAll('.notice-staff-check:checked').length;var el=document.getElementById('notice-selected-count');if(el)el.textContent=checked;}function toggleNoticeMode(){var mode=document.querySelector('input[name="notice-mode"]:checked').value;var area=document.getElementById('notice-individual-area');if(area)area.style.display=mode==='individual'?'block':'none';if(mode==='all'){document.querySelectorAll('.notice-staff-check').forEach(cb=>cb.checked=false);updateNoticeCount();}}function updateNoticeCount(){var checked=document.querySelectorAll('.notice-staff-check:checked').length;var el=document.getElementById('notice-selected-count');if(el)el.textContent=checked;}function toggleNoticeMode(){var mode=document.querySelector('input[name="notice-mode"]:checked').value;var area=document.getElementById('notice-individual-area');if(area)area.style.display=mode==='individual'?'block':'none';if(mode==='all'){document.querySelectorAll('.notice-staff-check').forEach(cb=>cb.checked=false);updateNoticeCount();}}function updateNoticeCount(){var checked=document.querySelectorAll('.notice-staff-check:checked').length;var el=document.getElementById('notice-selected-count');if(el)el.textContent=checked;}function toggleNoticeMode(){var mode=document.querySelector('input[name="notice-mode"]:checked').value;var area=document.getElementById('notice-individual-area');if(area)area.style.display=mode==='individual'?'block':'none';if(mode==='all'){document.querySelectorAll('.notice-staff-check').forEach(cb=>cb.checked=false);updateNoticeCount();}}function updateNoticeCount(){var checked=document.querySelectorAll('.notice-staff-check:checked').length;var el=document.getElementById('notice-selected-count');if(el)el.textContent=checked;}function updateAdminCount(){
-  var pending=document.querySelectorAll('#admin-paid .bdg.ba').length;
-  document.getElementById('adminReqCount').textContent=pending+'件';
 }
 </script>
 </body>
