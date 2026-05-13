@@ -1085,7 +1085,7 @@ async function doLogin(type){
   }
 }
 
-async function loadStaffProfile(){
+function getStaffBucket(t){return t==='payslip'?'payslips':'contracts';} async function loadStaffProfile(){
   if(!supabaseClient) return;
   var session=await supabaseClient.auth.getSession();
   if(!session.data.session) return;
