@@ -1018,14 +1018,7 @@ async function openStaffPdf(fp,b){
   if(r.error||!r.data){alert('PDFを開けませんでした');return;}
   window.open(r.data.signedUrl,'_blank');
 }
-async function signMyDocument(id){
-  if(!myStaffData){alert('ログイン情報が取得できません');return;}
-  if(!window.confirm('この書類に署名・同意しますか?'))return;
-  var r=await supabaseClient.from('documents').update({signed_at:new Date().toISOString()}).eq('id',id);
-  if(r.error){alert('署名に失敗しました');return;}
-  alert('署名しました');
-  loadMyDocuments();
-}function updateAdminCount(){
+function updateAdminCount(){
   var pending=document.querySelectorAll('#admin-paid .bdg.ba').length;
   document.getElementById('adminReqCount').textContent=pending+'件';
 }
