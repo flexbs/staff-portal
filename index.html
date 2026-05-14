@@ -976,7 +976,7 @@ function updateAdminCount(){
   var pending=document.querySelectorAll('#admin-paid .bdg.ba').length;
   document.getElementById('adminReqCount').textContent=pending+'件';
 }
-  async function loadMyDocuments(){
+async function loadMyDocuments(){
   if(!supabaseClient)return;
   var session=await supabaseClient.auth.getSession();
   if(!session||!session.data||!session.data.session)return;
