@@ -1026,6 +1026,10 @@ async function signMyDocument(id){
   alert('署名しました');
   loadMyDocuments();
 }
+  function updateAdminCount(){
+  var pending=document.querySelectorAll('#admin-paid .bdg.ba').length;
+  document.getElementById('adminReqCount').textContent=pending+'件';
+}
 </script>
 </body>
 </html>
