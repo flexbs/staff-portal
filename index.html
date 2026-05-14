@@ -1025,8 +1025,7 @@ async function signMyDocument(id){
   if(r.error){alert('署名に失敗しました');return;}
   alert('署名しました');
   loadMyDocuments();
-}
-  function updateAdminCount(){
+}function updateAdminCount(){
   var pending=document.querySelectorAll('#admin-paid .bdg.ba').length;
   document.getElementById('adminReqCount').textContent=pending+'件';
 }
