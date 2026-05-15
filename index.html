@@ -748,7 +748,7 @@ async function loadAdminStaffList(){
   if(!supabaseClient) return;
   var {data,error}=await supabaseClient.from('staffs').select('*').order('employee_id');
   if(error||!data) return;
-  var staffOnly=data.filter(s=>s.employee_id<9000);
+  var staffOnly=data.filter(s=>s.employee_id>=1000);
   var sc=document.getElementById('staff-count');if(sc)sc.textContent=staffOnly.length+'名';
   var optionsHtml='';
   staffOnly.forEach(s=>{optionsHtml+='<option value="'+s.employee_id+'">'+s.name+'('+String(s.employee_id).padStart(4,'0')+')</option>';});
