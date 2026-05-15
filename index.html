@@ -722,22 +722,7 @@ async function loadStaffProfile(){
   el=document.getElementById('profile-note');if(el)el.textContent=data.note||'-';
   loadMyDocuments();
 }
-async function loadMyDocuments(){
-  if(!supabaseClient||!myStaffData)return;
-  var r=await supabaseClient.from('documents').select('*').eq('employee_id',myStaffData.employee_id).order('sent_at',{ascending:false});
-  var c=document.querySelector('#staff-sdocs .card');
-  if(!c)return;
-  if(!r.data||r.data.length===0){
-    c.innerHTML='<div class="ch"><span class="ct">受け取った書類</span></div><div style="padding:20px;text-align:center;color:#888;font-size:13px">まだ書類が届いていません</div>';
-    return;
-  }
-  var html='<div class="ch"><span class="ct">受け取った書類</span></div>';
-  r.data.forEach(function(d){
-    var t=d.title||'書類.pdf';
-    html+='<div class="row"><div class="ri" style="background:#e6f4d7">📄</div><div class="rb"><div class="rt">'+t+'</div><div class="rs">'+(d.sent_at||'').substring(0,10).replace(/-/g,'/')+' 送付</div></div></div>';
-  });
-  c.innerHTML=html;
-}
+
 
 
 
