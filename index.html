@@ -719,8 +719,7 @@ async function sendPayslip(){
     employee_id:parseInt(target),
     doc_type:'payslip',
     title:month+'分 給与明細.pdf',
-    file_path:filePath,
-    sent_at:new Date().toISOString()
+    file_path:filePath
   });
   if(ins.error){status.style.color='#991b1b';status.textContent='登録失敗:'+ins.error.message;return;}
   status.style.color='#2d6a10';status.textContent='送付完了!';
@@ -743,8 +742,8 @@ async function sendContract(){
     employee_id:parseInt(target),
     doc_type:'contract',
     title:title,
-    file_path:filePath,
-    sent_at:new Date().toISOString()
+    file_path:filePath
+   
   });
   if(ins.error){status.style.color='#991b1b';status.textContent='登録失敗:'+ins.error.message;return;}
   status.style.color='#2d6a10';status.textContent='送付完了!';
