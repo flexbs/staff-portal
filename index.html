@@ -319,10 +319,10 @@ input:disabled{background:#f5f4f0;color:#aaa;border-color:#e8e6e0}
       <div class="ch"><span class="ct">受け取った書類</span></div>
       <div style="padding:20px;text-align:center;color:#888;font-size:13px">読み込み中...</div>
     </div>
-  </div>
+     <div class="card">
+ </div>
 
  <div id="staff-spaid" class="sp">
-    <div class="card">
       <div class="ch"><span class="ct">有給</span></div>
       <div style="padding:40px 20px;text-align:center;color:#888">
         <div style="font-size:48px;margin-bottom:12px">📅</div>
@@ -338,71 +338,10 @@ input:disabled{background:#f5f4f0;color:#aaa;border-color:#e8e6e0}
    <div style="padding:40px 20px;text-align:center;color:#888"><div style="font-size:48px;margin-bottom:12px">📢</div><div style="font-size:16px;font-weight:600;color:#555;margin-bottom:8px">もうすぐ公開</div><div style="font-size:13px;line-height:1.7">お知らせ機能は現在準備中です。<br>公開まで今しばらくお待ちください。</div></div>
     </div>
   </div>
-
-  <div id="staff-supload" class="sp">
-    <div class="sub-tabs">
-      <button class="sub-tab active" onclick="showSub3('nyusha',this)">入社手続き</button>
-      <button class="sub-tab" onclick="showSub3('kadochu',this)">稼働中</button>
-      <button class="sub-tab" onclick="showSub3('taisha',this)">退社手続き</button>
-    </div>
-
-    <div id="upload-nyusha" class="sp3 active">
-      <div style="background:#ede9fe;border-radius:10px;padding:11px 14px;font-size:12px;color:#534AB7;margin-bottom:14px;line-height:1.7">
-        入社手続きに必要な書類です。派遣元からの書類を確認・署名し、必要書類をアップロードしてください。
-      </div>
-      <div class="upload-item">
-        <div class="upload-item-head">
-          <div class="upload-item-title">① マイナンバーカードのコピー</div>
-          <span class="upload-item-req">＊必須</span>
-        </div>
-        <div class="upload-item-desc">マイナンバーカードまたは通知カードのコピーを提出してください。</div>
-        <div class="ua" onclick="simUpload(this,'mn-file')">
-          <div style="font-size:22px;margin-bottom:6px">📎</div>
-          <div>タップしてファイルを選択</div>
-        </div>
-        <div id="mn-file" style="display:none" class="pv"><span>📄</span><div style="flex:1;font-size:13px">マイナンバー.jpg</div><button class="btn btn-sm btn-p">提出する</button></div>
-      </div>
-      <div class="upload-item">
-        <div class="upload-item-head">
-          <div class="upload-item-title">② 雇用保険被保険者番号</div>
-          <span class="upload-item-req">＊必須</span>
-        </div>
-        <div class="upload-item-desc">被保険者番号を入力してください。</div>
-        <div class="num-input-area">
-          <div class="num-input-label">被保険者番号（4桁－6桁－1桁）</div>
-          <input type="text" id="emp-num" placeholder="例：1234-567890-1" maxlength="14">
-        </div>
-        <label class="check-row" onclick="toggleNoNum('emp')">
-          <input type="checkbox" id="emp-nonum">
-          <span class="check-row-label">書類がない・初めて雇用保険に加入する</span>
-        </label>
-        <div class="no-num-msg" id="emp-nomsg">書類がない場合や初回加入の方は番号の入力は不要です。担当者がサポートします。</div>
-      </div>
-      <button class="btn btn-p" style="width:100%;padding:12px;font-size:14px;font-weight:700;margin-top:4px">保存・提出する →</button>
-    </div>
-
-    <div id="upload-kadochu" class="sp3" style="display:none">
-      <div style="background:#e6f4d7;border-radius:10px;padding:11px 14px;font-size:12px;color:#2d6a10;margin-bottom:14px;line-height:1.7">
-        稼働中に必要な書類をアップロードしてください。
-      </div>
-      <div class="upload-item">
-        <div class="upload-item-head">
-          <div class="upload-item-title">自動車保険証券のコピー</div>
-          <span class="upload-item-opt">自動車通勤の方</span>
-        </div>
-        <div class="upload-item-desc">自動車通勤の方は任意保険の証券コピーを提出してください。</div>
-        <div class="ua" onclick="simUpload(this,'car-file')">
-          <div style="font-size:22px;margin-bottom:6px">📎</div>
-          <div>タップしてファイルを選択</div>
-        </div>
-        <div id="car-file" style="display:none" class="pv"><span>🚗</span><div style="flex:1;font-size:13px">自動車保険証券.jpg</div><button class="btn btn-sm btn-p">提出する</button></div>
-      </div>
-    </div>
-
-    <div id="upload-taisha" class="sp3" style="display:none">
-      <div style="background:#fee2e2;border-radius:10px;padding:11px 14px;font-size:12px;color:#991b1b;margin-bottom:14px;line-height:1.7">
-        退社手続きの書類は派遣元から送付されます。
-      </div>
+<div id="staff-supload" class="sp">
+    <div class="card">
+      <div class="ch"><span class="ct">アップロード</span></div>
+      <div style="padding:40px 20px;text-align:center;color:#888"><div style="font-size:48px;margin-bottom:12px">📤</div><div style="font-size:16px;font-weight:600;color:#555;margin-bottom:8px">もうすぐ公開</div><div style="font-size:13px;line-height:1.7">入社・退社書類のアップロード機能は<br>現在準備中です。公開まで今しばらくお待ちください。</div></div>
     </div>
   </div>
 
