@@ -682,9 +682,9 @@ async function loadAdminUploads(){
   if(!supabaseClient) return;
   var {data:docs}=await supabaseClient.from('documents').select('*').order('created_at',{ascending:false}).limit(50);
   if(!docs) return;
-  var {data:staffs}=await supabaseClient.from('staffs').select('employee_id,name');
+  var {data:staffs}=await supabaseClient.from('staffs').select('id,name');
   var staffMap={};
-  if(staffs){staffs.forEach(s=>{staffMap[s.employee_id]=s.name;});}
+  if(staffs){staffs.forEach(s=>{staffMap[s.id]=s.name;});}
   var sentTbody=document.getElementById('admin-sent-tbody');
   if(!sentTbody) return;
   if(docs.length===0){
@@ -693,13 +693,13 @@ async function loadAdminUploads(){
   }
   sentTbody.innerHTML='';
   docs.forEach(function(d){
-    var name=staffMap[d.employee_id]||d.employee_id;
-    var typeStr=d.doc_type==='payslip'?'給与明細':'契約書';
+    var name=staffMap[d.staff_id]||'(不明)';
+    var typeStr=d.type==='payslip'?'給与明細':'契約書';
     var dateStr=d.created_at?d.created_at.substring(0,10).replace(/-/g,'/'):'';
-    var status=d.signed_at?'<span class="bdg bg">署名済</span>':(d.doc_type==='payslip'?'<span class="bdg bz">表示のみ</span>':'<span class="bdg ba">署名待ち</span>');
-    var bucket=d.doc_type==='payslip'?'payslips':'contracts';
+    var status=d.confirmed_at?'<span class="bdg bg">署名済</span>':(d.type==='payslip'?'<span class="bdg bz">表示のみ</span>':'<span class="bdg ba">署名待ち</span>');
+var bucket=d.type==='payslip'?'payslips':'contracts';
     var tr=document.createElement('tr');
-    tr.innerHTML='<td>'+name+'</td><td>'+(d.title||typeStr)+'</td><td style="white-space:nowrap">'+dateStr+'</td><td>'+status+'</td><td><button class="btn btn-sm" onclick="openStaffPdf(\''+d.file_path+'\',\''+bucket+'\')">表示</button></td>';
+tr.innerHTML='<td>'+name+'</td><td>'+(d.title||typeStr)+'</td><td style="white-space:nowrap">'+dateStr+'</td><td>'+status+'</td><td><button class="btn btn-sm" onclick="openStaffPdf(\''+d.file_url+'\',\''+bucket+'\')">表示</button></td>';
     sentTbody.appendChild(tr);
   });
 }
