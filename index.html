@@ -849,9 +849,42 @@ var el=document.getElementById('adminReqCount');
 if(el)el.textContent=pending+'件';
 }
 async function loadMyDocuments(){
-var c=document.querySelector('#staff-sdocs .card');
-if(!c)return;
-c.innerHTML='<div class="ch"><span class="ct">受け取った書類</span></div><div style="padding:40px 20px;text-align:center;color:#888"><div style="font-size:48px;margin-bottom:12px">📄</div><div style="font-size:16px;font-weight:600;color:#555;margin-bottom:8px">もうすぐ公開</div><div style="font-size:13px;line-height:1.7">契約書・給与明細などの書類機能は<br>現在準備中です。公開まで今しばらくお待ちください。</div></div>';}  
+  var c=document.getElementById('staff-docs-container');
+  if(!c)return;
+  if(!supabaseClient||!myStaffData){c.innerHTML='<div class="ch"><span class="ct">受け取った書類</span></div><div style="padding:20px;text-align:center;color:#888;font-size:13px">ログイン情報が取得できません</div>';return;}
+  c.innerHTML='<div class="ch"><span class="ct">受け取った書類</span></div><div style="padding:20px;text-align:center;color:#888;font-size:13px">読み込み中...</div>';
+  var {data:docs,error}=await supabaseClient.from('documents').select('*').eq('staff_id',myStaffData.id).order('created_at',{ascending:false});
+  if(error){c.innerHTML='<div class="ch"><span class="ct">受け取った書類</span></div><div style="padding:20px;text-align:center;color:#991b1b;font-size:13px">読み込みに失敗しました</div>';return;}
+  if(!docs||docs.length===0){
+    c.innerHTML='<div class="ch"><span class="ct">受け取った書類</span></div><div style="padding:40px 20px;text-align:center;color:#888"><div style="font-size:48px;margin-bottom:12px">📄</div><div style="font-size:14px">受け取った書類はまだありません</div></div>';
+    var pe0=document.getElementById('s-pending-docs');if(pe0)pe0.textContent='0件';
+    return;
+  }
+  var pending=0;
+  var rows='';
+  docs.forEach(function(d){
+    var typeStr=d.type==='payslip'?'給与明細':'契約書';
+    var dateStr=d.created_at?d.created_at.substring(0,10).replace(/-/g,'/'):'';
+    var bucket=d.type==='payslip'?'payslips':'contracts';
+    var isSigned=d.signed_at||d.confirmed_at;
+    var status;
+    if(d.type==='payslip'){
+      status='<span class="bdg bz">表示のみ</span>';
+    }else if(isSigned){
+      status='<span class="bdg bg">署名済</span>';
+    }else{
+      status='<span class="bdg ba">署名待ち</span>';
+      pending++;
+    }
+    var btns='<button class="btn btn-sm" onclick="openStaffPdf(\''+d.file_url+'\',\''+bucket+'\')">表示</button>';
+    if(d.type==='contract'&&!isSigned){
+      btns+=' <button class="btn btn-sm btn-p" onclick="signMyDocument(\''+d.id+'\')">署名する</button>';
+    }
+    rows+='<tr><td>'+(d.title||typeStr)+'</td><td>'+typeStr+'</td><td style="white-space:nowrap">'+dateStr+'</td><td>'+status+'</td><td style="white-space:nowrap">'+btns+'</td></tr>';
+  });
+  c.innerHTML='<div class="ch"><span class="ct">受け取った書類</span></div><div style="overflow-x:auto"><table style="width:100%;border-collapse:collapse"><thead><tr style="text-align:left;color:#888;font-size:12px"><th style="padding:8px">タイトル</th><th style="padding:8px">種類</th><th style="padding:8px">受信日</th><th style="padding:8px">状態</th><th style="padding:8px">操作</th></tr></thead><tbody>'+rows+'</tbody></table></div>';
+  var pe=document.getElementById('s-pending-docs');if(pe)pe.textContent=pending+'件';
+}
 
   
 
