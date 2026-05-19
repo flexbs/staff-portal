@@ -650,12 +650,12 @@ async function openStaffPdf(filePath,bucket){
 
 async function signMyDocument(docId){
   if(!myStaffData){alert('ログイン情報が取得できません');return;}
-  var ok=window.confirm('この書類に署名・同意しますか?');
+  var ok=window.confirm('この書類の内容を確認し、同意のうえ署名します。よろしいですか?');
   if(!ok)return;
   var now=new Date().toISOString();
-  var r=await supabaseClient.from('documents').update({signed_at:now}).eq('id',docId);
+  var r=await supabaseClient.from('documents').update({confirmed_at:now,confirmed_by:myStaffData.id}).eq('id',docId);
   if(r.error){alert('署名に失敗しました:'+r.error.message);return;}
-  alert('署名しました');
+  alert('署名しました。同意の記録を保存しました。');
   loadMyDocuments();
 }
 
@@ -863,12 +863,13 @@ async function loadMyDocuments(){
   var pending=0;
   var rows='';
   docs.forEach(function(d){
-    var typeStr=d.type==='payslip'?'給与明細':'契約書';
+    var needSign=d.requires_signature===true;
+    var typeStr=needSign?'契約書':'給与明細';
     var dateStr=d.created_at?d.created_at.substring(0,10).replace(/-/g,'/'):'';
-    var bucket=d.type==='payslip'?'payslips':'contracts';
-    var isSigned=d.signed_at||d.confirmed_at;
+    var bucket=(d.type==='payslip')?'payslips':'contracts';
+    var isSigned=d.confirmed_at?true:false;
     var status;
-    if(d.type==='payslip'){
+    if(!needSign){
       status='<span class="bdg bz">表示のみ</span>';
     }else if(isSigned){
       status='<span class="bdg bg">署名済</span>';
@@ -877,7 +878,7 @@ async function loadMyDocuments(){
       pending++;
     }
     var btns='<button class="btn btn-sm" onclick="openStaffPdf(\''+d.file_url+'\',\''+bucket+'\')">表示</button>';
-    if(d.type==='contract'&&!isSigned){
+    if(needSign&&!isSigned){
       btns+=' <button class="btn btn-sm btn-p" onclick="signMyDocument(\''+d.id+'\')">署名する</button>';
     }
     rows+='<tr><td>'+(d.title||typeStr)+'</td><td>'+typeStr+'</td><td style="white-space:nowrap">'+dateStr+'</td><td>'+status+'</td><td style="white-space:nowrap">'+btns+'</td></tr>';
