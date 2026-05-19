@@ -741,11 +741,14 @@ async function sendContract(){
   var filePath=target+'/'+docType+'_'+Date.now()+'.pdf';
   var up=await supabaseClient.storage.from('contracts').upload(filePath,file);
   if(up.error){status.style.color='#991b1b';status.textContent='アップロード失敗:'+up.error.message;return;}
+  var sRow=await supabaseClient.from('staffs').select('id').eq('employee_id',target).single();
+  if(!sRow.data){status.style.color='#991b1b';status.textContent='対象スタッフが見つかりません';return;}
+  var staffUuid=sRow.data.id;
   var ins=await supabaseClient.from('documents').insert({
-    employee_id:parseInt(target),
-    doc_type:'contract',
+    staff_id:staffUuid,
+    type:'contract',
     title:title,
-    file_path:filePath
+    file_url:filePath
    
   });
   if(ins.error){status.style.color='#991b1b';status.textContent='登録失敗:'+ins.error.message;return;}
