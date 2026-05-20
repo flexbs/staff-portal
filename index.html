@@ -207,9 +207,9 @@ input:disabled{background:#f5f4f0;color:#aaa;border-color:#e8e6e0}
       <div class="ch"><span class="ct">有給申請一覧</span><span style="font-size:11px;color:#888">最新50件</span></div>
       <div class="tbl-scroll">
         <table class="tbl">
-          <thead><tr><th>名前</th><th>社員番号</th><th>取得日</th><th>区分</th><th>事由</th><th>状態</th><th>申請日</th></tr></thead>
+          <thead><tr><th>名前</th><th>社員番号</th><th>取得日</th><th>区分</th><th>事由</th><th>状態</th><th>申請日</th><th>操作</th></tr></thead>
           <tbody id="admin-leave-tbody">
-            <tr><td colspan="7" style="text-align:center;color:#888;padding:20px">読み込み中...</td></tr>
+            <tr><td colspan="8" style="text-align:center;color:#888;padding:20px">読み込み中...</td></tr>
           </tbody>
         </table>
       </div>
@@ -758,11 +758,13 @@ async function loadAdminLeaveRequests(){
   if(!supabaseClient) return;
   var tbody=document.getElementById('admin-leave-tbody');
   if(!tbody) return;
-  tbody.innerHTML='<tr><td colspan="7" style="text-align:center;color:#888;padding:20px">読み込み中...</td></tr>';
+  tbody.innerHTML='<tr><td colspan="8" style="text-align:center;color:#888;padding:20px">読み込み中...</td></tr>';
   var {data:reqs,error}=await supabaseClient.from('leave_requests').select('*').order('created_at',{ascending:false}).limit(50);
-  if(error){tbody.innerHTML='<tr><td colspan="7" style="text-align:center;color:#991b1b;padding:20px">読み込みに失敗しました</td></tr>';return;}
+  if(error){tbody.innerHTML='<tr><td colspan="8" style="text-align:center;color:#991b1b;padding:20px">読み込みに失敗しました</td></tr>';return;}
   if(!reqs||reqs.length===0){
-    tbody.innerHTML='<tr><td colspan="7" style="text-align:center;color:#888;padding:40px 20px"><div style="font-size:40px;margin-bottom:10px">📋</div><div style="font-size:14px">有給申請はまだありません</div></td></tr>';
+    tbody.innerHTML='<tr><td colspan="8" style="text-align:center;color:#888;padding:40px 20px"><div style="font-size:40px;margin-bottom:10px">📋</div><div style="font-size:14px">有給申請はまだありません</div></td></tr>';
+    var metEl0=document.getElementById('adminReqCount');
+    if(metEl0)metEl0.textContent='0件';
     return;
   }
   var {data:staffs}=await supabaseClient.from('staffs').select('id,name,employee_id');
@@ -781,11 +783,63 @@ async function loadAdminLeaveRequests(){
     var reasonStr=r.reason||'-';
     var isCancelled=r.status==='cancelled';
     var rowStyle=isCancelled?'text-decoration:line-through;color:#aaa':'';
+    var btns='';
+    if(r.status==='pending'){
+      btns='<button class="btn btn-sm btn-g" onclick="approveLeaveRequest(\''+r.id+'\')">承認</button> <button class="btn btn-sm" onclick="cancelLeaveRequest(\''+r.id+'\',\''+r.status+'\',\''+r.leave_date+'\')">取消</button>';
+    }else if(r.status==='approved'){
+      btns='<button class="btn btn-sm" onclick="cancelLeaveRequest(\''+r.id+'\',\''+r.status+'\',\''+r.leave_date+'\')">取消</button>';
+    }
     var tr=document.createElement('tr');
     tr.style.cssText=rowStyle;
-    tr.innerHTML='<td>'+sInfo.name+'</td><td>'+sInfo.employee_id+'</td><td style="white-space:nowrap">'+leaveDateStr+'</td><td>'+dayTypeStr+'</td><td>'+reasonStr+'</td><td>'+statusStr+'</td><td style="white-space:nowrap;font-size:11px;color:#888">'+createdStr+'</td>';
+    tr.innerHTML='<td>'+sInfo.name+'</td><td>'+sInfo.employee_id+'</td><td style="white-space:nowrap">'+leaveDateStr+'</td><td>'+dayTypeStr+'</td><td>'+reasonStr+'</td><td>'+statusStr+'</td><td style="white-space:nowrap;font-size:11px;color:#888">'+createdStr+'</td><td style="white-space:nowrap">'+btns+'</td>';
     tbody.appendChild(tr);
   });
+  var pendingCount=reqs.filter(r=>r.status==='pending').length;
+  var metEl=document.getElementById('adminReqCount');
+  if(metEl)metEl.textContent=pendingCount+'件';
+}
+
+async function approveLeaveRequest(reqId){
+  if(!supabaseClient){alert('接続エラー');return;}
+  var ok=window.confirm('この申請を承認しますか?');
+  if(!ok)return;
+  var now=new Date().toISOString();
+  var r=await supabaseClient.from('leave_requests').update({status:'approved',updated_at:now}).eq('id',reqId);
+  if(r.error){alert('承認に失敗しました:'+r.error.message);return;}
+  alert('承認しました。');
+  loadAdminLeaveRequests();
+}
+
+async function cancelLeaveRequest(reqId,currentStatus,leaveDate){
+  if(!supabaseClient){alert('接続エラー');return;}
+  var today=new Date().toISOString().substring(0,10);
+  var isPastDate=leaveDate&&leaveDate<=today;
+  var msg;
+  if(isPastDate){
+    var dateStr=leaveDate.replace(/-/g,'/');
+    msg='取得日('+dateStr+')を過ぎています。本当に取消しますか?';
+  }else if(currentStatus==='approved'){
+    msg='承認済の申請を取消します。よろしいですか?';
+  }else{
+    msg='この申請を取消しますか?';
+  }
+  var ok=window.confirm(msg);
+  if(!ok)return;
+  var session=await supabaseClient.auth.getSession();
+  var adminStaffId=null;
+  if(session.data.session){
+    var email=session.data.session.user.email;
+    var empId=email.replace('@flexbs.com','');
+    var sRow=await supabaseClient.from('staffs').select('id').eq('employee_id',empId).single();
+    if(sRow.data)adminStaffId=sRow.data.id;
+  }
+  var now=new Date().toISOString();
+  var updateData={status:'cancelled',updated_at:now,cancelled_at:now};
+  if(adminStaffId)updateData.cancelled_by=adminStaffId;
+  var r=await supabaseClient.from('leave_requests').update(updateData).eq('id',reqId);
+  if(r.error){alert('取消に失敗しました:'+r.error.message);return;}
+  alert('取消しました。');
+  loadAdminLeaveRequests();
 }
 
 async function sendPayslip(){
