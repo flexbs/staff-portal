@@ -661,7 +661,7 @@ async function signMyDocument(docId){
 
 async function loadAdminStaffList(){
   if(!supabaseClient) return;
-  var {data,error}=await supabaseClient.from('staffs').select('*').order('employee_id');
+  var {data,error}=await supabaseClient.from('staffs').select('*').order('name_kana');
   if(error||!data) return;
   var staffOnly=data.filter(s=>s.employee_id>=1000);
   var sc=document.getElementById('staff-count');if(sc)sc.textContent=staffOnly.length+'名';
