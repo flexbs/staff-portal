@@ -176,7 +176,7 @@ input:disabled{background:#f5f4f0;color:#aaa;border-color:#e8e6e0}
 
   <div class="sub-tabs">
     <button class="sub-tab active" onclick="showSub('admin','docs',this)">書類管理</button>
-    <button class="sub-tab" onclick="showSub('admin','paid',this)">有給管理</button>
+    <button class="sub-tab" onclick="showSub('admin','paid',this);loadAdminLeaveRequests()">有給管理</button>
 <button class="sub-tab" onclick="showSub('admin','uploads',this);loadAdminUploads()">書類授受管理</button>    <button class="sub-tab" onclick="showSub('admin','mynumber',this)">マイナンバー管理</button>
     <button class="sub-tab" onclick="showSub('admin','notice',this)">お知らせ</button>
   </div>
@@ -204,11 +204,14 @@ input:disabled{background:#f5f4f0;color:#aaa;border-color:#e8e6e0}
 
   <div id="admin-paid" class="sp">
     <div class="card">
-      <div class="ch"><span class="ct">有給管理</span></div>
-      <div style="padding:40px 20px;text-align:center;color:#888">
-        <div style="font-size:48px;margin-bottom:12px">📅</div>
-        <div style="font-size:16px;font-weight:600;color:#555;margin-bottom:8px">もうすぐ公開</div>
-        <div style="font-size:13px;line-height:1.7">有給管理機能は現在準備中です。<br>公開まで今しばらくお待ちください。</div>
+      <div class="ch"><span class="ct">有給申請一覧</span><span style="font-size:11px;color:#888">最新50件</span></div>
+      <div class="tbl-scroll">
+        <table class="tbl">
+          <thead><tr><th>名前</th><th>社員番号</th><th>取得日</th><th>区分</th><th>事由</th><th>状態</th><th>申請日</th></tr></thead>
+          <tbody id="admin-leave-tbody">
+            <tr><td colspan="7" style="text-align:center;color:#888;padding:20px">読み込み中...</td></tr>
+          </tbody>
+        </table>
       </div>
     </div>
   </div>
@@ -653,6 +656,7 @@ async function doLogin(type){
     tabs[1].classList.add('active');
     loadAdminStaffList();
     loadAdminUploads();
+    loadAdminLeaveRequests();
   } else {
     tabs[2].classList.add('active');
     loadStaffProfile();
@@ -747,6 +751,40 @@ var bucket=d.type==='payslip'?'payslips':'contracts';
     var tr=document.createElement('tr');
 tr.innerHTML='<td>'+name+'</td><td>'+(d.title||typeStr)+'</td><td style="white-space:nowrap">'+dateStr+'</td><td>'+status+'</td><td><button class="btn btn-sm" onclick="openStaffPdf(\''+d.file_url+'\',\''+bucket+'\')">表示</button></td>';
     sentTbody.appendChild(tr);
+  });
+}
+
+async function loadAdminLeaveRequests(){
+  if(!supabaseClient) return;
+  var tbody=document.getElementById('admin-leave-tbody');
+  if(!tbody) return;
+  tbody.innerHTML='<tr><td colspan="7" style="text-align:center;color:#888;padding:20px">読み込み中...</td></tr>';
+  var {data:reqs,error}=await supabaseClient.from('leave_requests').select('*').order('created_at',{ascending:false}).limit(50);
+  if(error){tbody.innerHTML='<tr><td colspan="7" style="text-align:center;color:#991b1b;padding:20px">読み込みに失敗しました</td></tr>';return;}
+  if(!reqs||reqs.length===0){
+    tbody.innerHTML='<tr><td colspan="7" style="text-align:center;color:#888;padding:40px 20px"><div style="font-size:40px;margin-bottom:10px">📋</div><div style="font-size:14px">有給申請はまだありません</div></td></tr>';
+    return;
+  }
+  var {data:staffs}=await supabaseClient.from('staffs').select('id,name,employee_id');
+  var staffMap={};
+  if(staffs){staffs.forEach(s=>{staffMap[s.id]={name:s.name,employee_id:s.employee_id};});}
+  tbody.innerHTML='';
+  reqs.forEach(function(r){
+    var sInfo=staffMap[r.staff_id]||{name:'(不明)',employee_id:''};
+    var dayTypeStr=r.day_type==='full'?'1日':(r.day_type==='am'?'AM':(r.day_type==='pm'?'PM':r.day_type));
+    var statusStr;
+    if(r.status==='approved'){statusStr='<span class="bdg bg">承認済</span>';}
+    else if(r.status==='cancelled'){statusStr='<span class="bdg bz">取消</span>';}
+    else{statusStr='<span class="bdg ba">申請中</span>';}
+    var leaveDateStr=r.leave_date?r.leave_date.replace(/-/g,'/'):'';
+    var createdStr=r.created_at?r.created_at.substring(0,10).replace(/-/g,'/'):'';
+    var reasonStr=r.reason||'-';
+    var isCancelled=r.status==='cancelled';
+    var rowStyle=isCancelled?'text-decoration:line-through;color:#aaa':'';
+    var tr=document.createElement('tr');
+    tr.style.cssText=rowStyle;
+    tr.innerHTML='<td>'+sInfo.name+'</td><td>'+sInfo.employee_id+'</td><td style="white-space:nowrap">'+leaveDateStr+'</td><td>'+dayTypeStr+'</td><td>'+reasonStr+'</td><td>'+statusStr+'</td><td style="white-space:nowrap;font-size:11px;color:#888">'+createdStr+'</td>';
+    tbody.appendChild(tr);
   });
 }
 
