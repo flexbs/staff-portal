@@ -782,7 +782,7 @@ async function loadAdminLeaveRequests(){
     var createdStr=r.created_at?r.created_at.substring(0,10).replace(/-/g,'/'):'';
     var reasonStr=r.reason||'-';
     var isCancelled=r.status==='cancelled';
-    var rowStyle=isCancelled?'text-decoration:line-through;color:#aaa':'';
+    var rowStyle=isCancelled?'background:#fee2e2;text-decoration:line-through;text-decoration-color:#991b1b;text-decoration-thickness:2px;color:#666':'';
     var btns='';
     if(r.status==='pending'){
       btns='<button class="btn btn-sm btn-g" onclick="approveLeaveRequest(\''+r.id+'\')">承認</button> <button class="btn btn-sm" onclick="cancelLeaveRequest(\''+r.id+'\',\''+r.status+'\',\''+r.leave_date+'\')">取消</button>';
@@ -966,7 +966,7 @@ async function loadMyLeaveRequests(){
     var createdStr=r.created_at?r.created_at.substring(0,10).replace(/-/g,'/'):'';
     var reasonStr=r.reason||'-';
     var isCancelled=r.status==='cancelled';
-    var rowStyle=isCancelled?'text-decoration:line-through;color:#aaa':'';
+    var rowStyle=isCancelled?'background:#fee2e2;text-decoration:line-through;text-decoration-color:#991b1b;text-decoration-thickness:2px;color:#666':'';
     rows+='<tr style="'+rowStyle+'"><td style="white-space:nowrap">'+leaveDateStr+'</td><td>'+dayTypeStr+'</td><td>'+reasonStr+'</td><td>'+statusStr+'</td><td style="white-space:nowrap;font-size:11px;color:#888">'+createdStr+'</td></tr>';
   });
   c.innerHTML='<div class="ch"><span class="ct">自分の申請履歴</span></div><div style="overflow-x:auto"><table style="width:100%;border-collapse:collapse"><thead><tr style="text-align:left;color:#888;font-size:12px"><th style="padding:8px">取得日</th><th style="padding:8px">区分</th><th style="padding:8px">事由</th><th style="padding:8px">状態</th><th style="padding:8px">申請日</th></tr></thead><tbody>'+rows+'</tbody></table></div>';
