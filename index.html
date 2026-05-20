@@ -366,6 +366,10 @@ input:disabled{background:#f5f4f0;color:#aaa;border-color:#e8e6e0}
         <button class="btn btn-p" onclick="submitLeaveRequest()">申請する →</button>
       </div>
     </div>
+    <div class="card" id="my-leave-list-container">
+      <div class="ch"><span class="ct">自分の申請履歴</span></div>
+      <div style="padding:20px;text-align:center;color:#888;font-size:13px">読み込み中...</div>
+    </div>
   </div>
 
   <div id="staff-snotice" class="sp">
@@ -677,6 +681,7 @@ async function loadStaffProfile(){
   el=document.getElementById('profile-insurance');if(el)el.textContent=data.insurance_number||'';
   el=document.getElementById('profile-note');if(el)el.textContent=data.note||'-';
   loadMyDocuments();
+  loadMyLeaveRequests();
 }
 
 
@@ -844,6 +849,35 @@ async function submitLeaveRequest(){
   document.querySelector('input[name="leave-day-type"][value="full"]').checked=true;
   document.getElementById('leave-reason').value='';
   document.getElementById('leave-workplace-approved').checked=false;
+  loadMyLeaveRequests();
+}
+
+async function loadMyLeaveRequests(){
+  var c=document.getElementById('my-leave-list-container');
+  if(!c)return;
+  if(!supabaseClient||!myStaffData){c.innerHTML='<div class="ch"><span class="ct">自分の申請履歴</span></div><div style="padding:20px;text-align:center;color:#888;font-size:13px">ログイン情報が取得できません</div>';return;}
+  c.innerHTML='<div class="ch"><span class="ct">自分の申請履歴</span></div><div style="padding:20px;text-align:center;color:#888;font-size:13px">読み込み中...</div>';
+  var {data:reqs,error}=await supabaseClient.from('leave_requests').select('*').eq('staff_id',myStaffData.id).order('created_at',{ascending:false}).limit(20);
+  if(error){c.innerHTML='<div class="ch"><span class="ct">自分の申請履歴</span></div><div style="padding:20px;text-align:center;color:#991b1b;font-size:13px">読み込みに失敗しました</div>';return;}
+  if(!reqs||reqs.length===0){
+    c.innerHTML='<div class="ch"><span class="ct">自分の申請履歴</span></div><div style="padding:40px 20px;text-align:center;color:#888"><div style="font-size:48px;margin-bottom:12px">📋</div><div style="font-size:14px">申請履歴はまだありません</div></div>';
+    return;
+  }
+  var rows='';
+  reqs.forEach(function(r){
+    var dayTypeStr=r.day_type==='full'?'1日':(r.day_type==='am'?'AM':(r.day_type==='pm'?'PM':r.day_type));
+    var statusStr;
+    if(r.status==='approved'){statusStr='<span class="bdg bg">承認済</span>';}
+    else if(r.status==='cancelled'){statusStr='<span class="bdg bz">取消</span>';}
+    else{statusStr='<span class="bdg ba">申請中</span>';}
+    var leaveDateStr=r.leave_date?r.leave_date.replace(/-/g,'/'):'';
+    var createdStr=r.created_at?r.created_at.substring(0,10).replace(/-/g,'/'):'';
+    var reasonStr=r.reason||'-';
+    var isCancelled=r.status==='cancelled';
+    var rowStyle=isCancelled?'text-decoration:line-through;color:#aaa':'';
+    rows+='<tr style="'+rowStyle+'"><td style="white-space:nowrap">'+leaveDateStr+'</td><td>'+dayTypeStr+'</td><td>'+reasonStr+'</td><td>'+statusStr+'</td><td style="white-space:nowrap;font-size:11px;color:#888">'+createdStr+'</td></tr>';
+  });
+  c.innerHTML='<div class="ch"><span class="ct">自分の申請履歴</span></div><div style="overflow-x:auto"><table style="width:100%;border-collapse:collapse"><thead><tr style="text-align:left;color:#888;font-size:12px"><th style="padding:8px">取得日</th><th style="padding:8px">区分</th><th style="padding:8px">事由</th><th style="padding:8px">状態</th><th style="padding:8px">申請日</th></tr></thead><tbody>'+rows+'</tbody></table></div>';
 }
 
 function showPage(id,tabEl){
