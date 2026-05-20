@@ -744,12 +744,13 @@ async function sendContract(){
   var sRow=await supabaseClient.from('staffs').select('id').eq('employee_id',target).single();
   if(!sRow.data){status.style.color='#991b1b';status.textContent='対象スタッフが見つかりません';return;}
   var staffUuid=sRow.data.id;
+  var needsSig=(docType!=='other-nosign');
   var ins=await supabaseClient.from('documents').insert({
     staff_id:staffUuid,
     type:'contract',
     title:title,
-    file_url:filePath
-   
+    file_url:filePath,
+    requires_signature:needsSig
   });
   if(ins.error){status.style.color='#991b1b';status.textContent='登録失敗:'+ins.error.message;return;}
   status.style.color='#2d6a10';status.textContent='送付完了!';
