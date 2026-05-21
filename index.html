@@ -178,7 +178,7 @@ input:disabled{background:#f5f4f0;color:#aaa;border-color:#e8e6e0}
     <button class="sub-tab active" onclick="showSub('admin','docs',this)">書類管理</button>
     <button class="sub-tab" onclick="showSub('admin','paid',this);loadAdminLeaveRequests()">有給管理</button>
 <button class="sub-tab" onclick="showSub('admin','uploads',this);loadAdminUploads()">書類授受管理</button>    <button class="sub-tab" onclick="showSub('admin','mynumber',this)">マイナンバー管理</button>
-    <button class="sub-tab" onclick="showSub('admin','notice',this)">お知らせ</button>
+    <button class="sub-tab" onclick="showSub('admin','notice',this);loadAdminNotices()">お知らせ</button>
   </div>
 
   <div id="admin-docs" class="sp active">
@@ -291,7 +291,7 @@ input:disabled{background:#f5f4f0;color:#aaa;border-color:#e8e6e0}
   <div id="admin-notice" class="sp">
     <div class="card">
       <div class="ch"><span class="ct">送信済みお知らせ</span><button class="btn btn-sm btn-p" onclick="openModal('send-notice')">新規送信</button></div>
-      <div style="padding:40px 20px;text-align:center;color:#888"><div style="font-size:48px;margin-bottom:12px">📢</div><div style="font-size:16px;font-weight:600;color:#555;margin-bottom:8px">もうすぐ公開</div><div style="font-size:13px;line-height:1.7">お知らせ機能は現在準備中です。<br>公開まで今しばらくお待ちください。</div></div>
+      <div class="tbl-scroll" id="admin-notices-container"><table class="tbl"><thead><tr><th>タイトル</th><th>送信先</th><th>確認状況</th><th>送信日</th><th></th></tr></thead><tbody id="admin-notices-tbody"><tr><td colspan="5" style="text-align:center;color:#888;padding:20px">読み込み中...</td></tr></tbody></table></div>
     </div>
   </div>
 </div>
@@ -526,6 +526,18 @@ input:disabled{background:#f5f4f0;color:#aaa;border-color:#e8e6e0}
     <div class="ma">
       <button class="btn btn-sm" onclick="closeModal('send-notice')">キャンセル</button>
       <button class="btn btn-sm btn-p" onclick="sendNotice()">送信する →</button>
+    </div>
+  </div>
+</div>
+
+  <div class="mbg" id="modal-notice-detail">
+  <div class="modal" style="max-width:560px">
+    <div class="mt">お知らせ詳細</div>
+    <div id="notice-detail-content">
+      <div style="padding:20px;text-align:center;color:#888">読み込み中...</div>
+    </div>
+    <div class="ma">
+      <button class="btn btn-sm" onclick="closeModal('notice-detail')">閉じる</button>
     </div>
   </div>
 </div>
@@ -1219,7 +1231,95 @@ async function sendNotice(){
   document.getElementById('notice-target-list-area').style.display='none';
   setTimeout(()=>{closeModal('send-notice');statusEl.style.display='none';},1500);
 }
-  
+  async function loadAdminNotices(){
+  if(!supabaseClient)return;
+  var tbody=document.getElementById('admin-notices-tbody');
+  if(!tbody)return;
+  tbody.innerHTML='<tr><td colspan="5" style="text-align:center;color:#888;padding:20px">読み込み中...</td></tr>';
+  var {data:notices,error}=await supabaseClient.from('notices').select('*').order('created_at',{ascending:false}).limit(50);
+  if(error){tbody.innerHTML='<tr><td colspan="5" style="text-align:center;color:#991b1b;padding:20px">読み込みに失敗しました</td></tr>';return;}
+  if(!notices||notices.length===0){
+    tbody.innerHTML='<tr><td colspan="5" style="text-align:center;color:#888;padding:40px 20px"><div style="font-size:40px;margin-bottom:10px">📢</div><div style="font-size:14px">送信済みのお知らせはまだありません</div></td></tr>';
+    return;
+  }
+  var {data:recipients}=await supabaseClient.from('notice_recipients').select('notice_id,confirmed_at');
+  var recMap={};
+  if(recipients){
+    recipients.forEach(function(r){
+      if(!recMap[r.notice_id])recMap[r.notice_id]={total:0,confirmed:0};
+      recMap[r.notice_id].total++;
+      if(r.confirmed_at)recMap[r.notice_id].confirmed++;
+    });
+  }
+  tbody.innerHTML='';
+  notices.forEach(function(n){
+    var stats=recMap[n.id]||{total:0,confirmed:0};
+    var confirmStr=stats.confirmed+' / '+stats.total;
+    var dateStr=n.created_at?n.created_at.substring(0,10).replace(/-/g,'/'):'';
+    var titleStr=n.title||'(無題)';
+    var tr=document.createElement('tr');
+    tr.innerHTML='<td>'+titleStr+'</td><td style="white-space:nowrap">'+stats.total+'名</td><td style="white-space:nowrap">'+confirmStr+'</td><td style="white-space:nowrap;font-size:11px;color:#888">'+dateStr+'</td><td><button class="btn btn-sm" onclick="openNoticeDetail(\''+n.id+'\')">詳細</button></td>';
+    tbody.appendChild(tr);
+  });
+}
+
+async function openNoticeDetail(noticeId){
+  if(!supabaseClient){alert('接続エラー');return;}
+  openModal('notice-detail');
+  var c=document.getElementById('notice-detail-content');
+  c.innerHTML='<div style="padding:20px;text-align:center;color:#888">読み込み中...</div>';
+  var nRow=await supabaseClient.from('notices').select('*').eq('id',noticeId).single();
+  if(nRow.error||!nRow.data){c.innerHTML='<div style="padding:20px;text-align:center;color:#991b1b">読み込みに失敗しました</div>';return;}
+  var notice=nRow.data;
+  var rRows=await supabaseClient.from('notice_recipients').select('*').eq('notice_id',noticeId);
+  var recipients=rRows.data||[];
+  var {data:staffs}=await supabaseClient.from('staffs').select('id,name,employee_id');
+  var staffMap={};
+  if(staffs){staffs.forEach(s=>{staffMap[s.id]={name:s.name,employee_id:s.employee_id};});}
+  var confirmedList=[];
+  var unconfirmedList=[];
+  recipients.forEach(function(r){
+    var sInfo=staffMap[r.staff_id]||{name:'(不明)',employee_id:''};
+    if(r.confirmed_at){
+      confirmedList.push({name:sInfo.name,employee_id:sInfo.employee_id,confirmed_at:r.confirmed_at});
+    }else{
+      unconfirmedList.push({name:sInfo.name,employee_id:sInfo.employee_id});
+    }
+  });
+  var fileHtml='';
+  if(notice.file_url){
+    var r=await supabaseClient.storage.from('notices').createSignedUrl(notice.file_url,3600);
+    if(r.data&&r.data.signedUrl){
+      fileHtml='<div style="margin-top:10px"><a href="'+r.data.signedUrl+'" target="_blank" rel="noopener" class="btn btn-sm" style="text-decoration:none;display:inline-block">📄 添付PDFを表示</a></div>';
+    }
+  }
+  var sentDate=notice.created_at?notice.created_at.substring(0,10).replace(/-/g,'/'):'';
+  var html='<div style="margin-bottom:14px"><div style="font-size:16px;font-weight:700;color:#1a1a1a;margin-bottom:4px">'+(notice.title||'(無題)')+'</div><div style="font-size:11px;color:#888">送信日：'+sentDate+'</div></div>';
+  html+='<div style="background:#f5f4f0;border-radius:8px;padding:12px;margin-bottom:14px;font-size:13px;line-height:1.7;white-space:pre-wrap">'+(notice.body||'')+'</div>';
+  html+=fileHtml;
+  html+='<div style="margin-top:16px;font-size:13px;font-weight:700;color:#2d6a10;margin-bottom:6px">確認済（'+confirmedList.length+'名）</div>';
+  if(confirmedList.length===0){
+    html+='<div style="font-size:12px;color:#888;padding:6px 8px">まだ確認した人はいません</div>';
+  }else{
+    html+='<div style="max-height:160px;overflow-y:auto;border:1px solid #e8e6e0;border-radius:8px;padding:6px 10px;background:#fafaf8">';
+    confirmedList.forEach(function(x){
+      var d=x.confirmed_at?x.confirmed_at.substring(0,10).replace(/-/g,'/'):'';
+      html+='<div style="display:flex;justify-content:space-between;padding:4px 0;font-size:12px;border-bottom:1px solid #f0efe9"><span>'+x.name+'（'+x.employee_id+'）</span><span style="color:#888">'+d+'</span></div>';
+    });
+    html+='</div>';
+  }
+  html+='<div style="margin-top:14px;font-size:13px;font-weight:700;color:#991b1b;margin-bottom:6px">未確認（'+unconfirmedList.length+'名）</div>';
+  if(unconfirmedList.length===0){
+    html+='<div style="font-size:12px;color:#888;padding:6px 8px">全員確認済みです</div>';
+  }else{
+    html+='<div style="max-height:160px;overflow-y:auto;border:1px solid #e8e6e0;border-radius:8px;padding:6px 10px;background:#fafaf8">';
+    unconfirmedList.forEach(function(x){
+      html+='<div style="padding:4px 0;font-size:12px;border-bottom:1px solid #f0efe9">'+x.name+'（'+x.employee_id+'）</div>';
+    });
+    html+='</div>';
+  }
+  c.innerHTML=html;
+}
 
 
 </script>
