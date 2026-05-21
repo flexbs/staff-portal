@@ -693,9 +693,18 @@ async function loadStaffProfile(){
 
 async function openStaffPdf(filePath,bucket){
   if(!supabaseClient){alert('接続エラー');return;}
+  var newTab=window.open('','_blank');
   var r=await supabaseClient.storage.from(bucket).createSignedUrl(filePath,3600);
-  if(r.error||!r.data){alert('PDFを開けませんでした');return;}
-  window.open(r.data.signedUrl,'_blank');
+  if(r.error||!r.data){
+    if(newTab)newTab.close();
+    alert('PDFを開けませんでした');
+    return;
+  }
+  if(newTab){
+    newTab.location.href=r.data.signedUrl;
+  }else{
+    window.location.href=r.data.signedUrl;
+  }
 }
 
 async function signMyDocument(docId){
