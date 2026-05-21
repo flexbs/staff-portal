@@ -291,7 +291,7 @@ input:disabled{background:#f5f4f0;color:#aaa;border-color:#e8e6e0}
 
   <div id="admin-notice" class="sp">
     <div class="card">
-      <div class="ch"><span class="ct">送信済みお知らせ</span><button class="btn btn-sm btn-p" onclick="openModal('notice-soon')">新規送信</button></div>
+      <div class="ch"><span class="ct">送信済みお知らせ</span><button class="btn btn-sm btn-p" onclick="openModal('send-notice')">新規送信</button></div>
       <div style="padding:40px 20px;text-align:center;color:#888"><div style="font-size:48px;margin-bottom:12px">📢</div><div style="font-size:16px;font-weight:600;color:#555;margin-bottom:8px">もうすぐ公開</div><div style="font-size:13px;line-height:1.7">お知らせ機能は現在準備中です。<br>公開まで今しばらくお待ちください。</div></div>
     </div>
   </div>
@@ -507,9 +507,27 @@ input:disabled{background:#f5f4f0;color:#aaa;border-color:#e8e6e0}
 <div class="mbg" id="modal-send-notice">
   <div class="modal">
     <div class="mt">お知らせを送信する</div>
-    <div class="fg"><label class="fl">タイトル</label><input type="text" placeholder="例：健康診断のご案内"></div>
-    <div class="fg"><label class="fl">内容</label><textarea rows="4" placeholder="本文を入力してください"></textarea></div>
-    <div class="ma"><button class="btn btn-sm" onclick="closeModal('send-notice')">キャンセル</button><button class="btn btn-sm btn-p" onclick="closeModal('send-notice')">送信する →</button></div>
+    <div class="fg"><label class="fl">タイトル <span style="color:#991b1b">*必須</span></label><input type="text" id="notice-title" placeholder="例：健康診断のご案内"></div>
+    <div class="fg"><label class="fl">本文 <span style="color:#991b1b">*必須</span></label><textarea id="notice-body" rows="6" placeholder="本文を入力してください"></textarea></div>
+    <div class="fg"><label class="fl">PDFファイル（任意）</label><input type="file" id="notice-file" accept=".pdf"></div>
+    <div class="fg">
+      <label class="fl">送信先 <span style="color:#991b1b">*必須</span></label>
+      <div class="radio-row">
+        <label><input type="radio" name="notice-target-type" value="all" checked onchange="toggleNoticeTargetList()">全員一斉</label>
+        <label><input type="radio" name="notice-target-type" value="individual" onchange="toggleNoticeTargetList()">個別選択</label>
+      </div>
+    </div>
+    <div class="fg" id="notice-target-list-area" style="display:none">
+      <label class="fl">送信先スタッフを選択</label>
+      <div id="notice-target-list" style="max-height:240px;overflow-y:auto;border:1px solid #d8d6d0;border-radius:8px;padding:8px 12px;background:#fafaf8">
+        読み込み中...
+      </div>
+    </div>
+    <div id="notice-status" style="display:none;font-size:13px;margin-top:8px;padding:10px;border-radius:8px"></div>
+    <div class="ma">
+      <button class="btn btn-sm" onclick="closeModal('send-notice')">キャンセル</button>
+      <button class="btn btn-sm btn-p" onclick="sendNotice()">送信する →</button>
+    </div>
   </div>
 </div>
 <div class="mbg" id="modal-notice-soon"><div class="modal"><div style="padding:40px 20px;text-align:center;color:#888"><div style="font-size:48px;margin-bottom:12px">📢</div><div style="font-size:18px;font-weight:600;color:#555;margin-bottom:8px">お知らせ機能は準備中です</div><div style="font-size:13px;line-height:1.7;margin-bottom:20px">この機能は現在開発中です。<br>公開までもうしばらくお待ちください。</div><button class="btn btn-sm btn-p" onclick="closeModal('notice-soon')">閉じる</button></div></div></div>
@@ -1113,7 +1131,95 @@ async function loadMyDocuments(){
   c.innerHTML='<div class="ch"><span class="ct">受け取った書類</span></div><div style="overflow-x:auto"><table style="width:100%;border-collapse:collapse"><thead><tr style="text-align:left;color:#888;font-size:12px"><th style="padding:8px">タイトル</th><th style="padding:8px">種類</th><th style="padding:8px">受信日</th><th style="padding:8px">状態</th><th style="padding:8px">操作</th></tr></thead><tbody>'+rows+'</tbody></table></div>';
   var pe=document.getElementById('s-pending-docs');if(pe)pe.textContent=pending+'件';
 }
+function toggleNoticeTargetList(){
+  var type=document.querySelector('input[name="notice-target-type"]:checked').value;
+  var area=document.getElementById('notice-target-list-area');
+  if(type==='individual'){
+    area.style.display='block';
+    loadNoticeTargetList();
+  }else{
+    area.style.display='none';
+  }
+}
 
+async function loadNoticeTargetList(){
+  if(!supabaseClient)return;
+  var box=document.getElementById('notice-target-list');
+  box.innerHTML='読み込み中...';
+  var {data,error}=await supabaseClient.from('staffs').select('id,name,employee_id,name_kana').order('name_kana');
+  if(error||!data){box.innerHTML='<span style="color:#991b1b">読み込みに失敗しました</span>';return;}
+  var staffOnly=data.filter(s=>s.employee_id>=1000);
+  if(staffOnly.length===0){box.innerHTML='スタッフがいません';return;}
+  var html='';
+  staffOnly.forEach(function(s){
+    html+='<label style="display:flex;align-items:center;gap:8px;padding:5px 0;cursor:pointer;font-size:13px"><input type="checkbox" class="notice-target-cb" value="'+s.id+'" style="width:16px;height:16px;accent-color:#534AB7;cursor:pointer"><span>'+s.name+'（'+s.employee_id+'）</span></label>';
+  });
+  box.innerHTML=html;
+}
+
+async function sendNotice(){
+  if(!supabaseClient){alert('接続エラー');return;}
+  var title=document.getElementById('notice-title').value.trim();
+  var body=document.getElementById('notice-body').value.trim();
+  var fileInput=document.getElementById('notice-file');
+  var targetType=document.querySelector('input[name="notice-target-type"]:checked').value;
+  var statusEl=document.getElementById('notice-status');
+  if(!title){
+    statusEl.style.display='block';statusEl.style.background='#fee2e2';statusEl.style.color='#991b1b';
+    statusEl.textContent='タイトルを入力してください';return;
+  }
+  if(!body){
+    statusEl.style.display='block';statusEl.style.background='#fee2e2';statusEl.style.color='#991b1b';
+    statusEl.textContent='本文を入力してください';return;
+  }
+  var targetStaffIds=[];
+  if(targetType==='all'){
+    var {data:allStaffs}=await supabaseClient.from('staffs').select('id,employee_id');
+    if(!allStaffs){statusEl.style.display='block';statusEl.style.background='#fee2e2';statusEl.style.color='#991b1b';statusEl.textContent='スタッフ一覧の取得に失敗しました';return;}
+    targetStaffIds=allStaffs.filter(s=>s.employee_id>=1000).map(s=>s.id);
+  }else{
+    var cbs=document.querySelectorAll('.notice-target-cb:checked');
+    cbs.forEach(cb=>targetStaffIds.push(cb.value));
+    if(targetStaffIds.length===0){
+      statusEl.style.display='block';statusEl.style.background='#fee2e2';statusEl.style.color='#991b1b';
+      statusEl.textContent='送信先スタッフを選択してください';return;
+    }
+  }
+  var ok=window.confirm('お知らせを'+targetStaffIds.length+'名に送信します。送信後の編集はできません。よろしいですか?');
+  if(!ok)return;
+  statusEl.style.display='block';statusEl.style.background='#f5f4f0';statusEl.style.color='#666';
+  statusEl.textContent='送信中...';
+  var fileUrl=null;
+  if(fileInput.files&&fileInput.files[0]){
+    var file=fileInput.files[0];
+    var filePath='notice_'+Date.now()+'.pdf';
+    var up=await supabaseClient.storage.from('notices').upload(filePath,file);
+    if(up.error){statusEl.style.background='#fee2e2';statusEl.style.color='#991b1b';statusEl.textContent='PDFアップロード失敗:'+up.error.message;return;}
+    fileUrl=filePath;
+  }
+  var session=await supabaseClient.auth.getSession();
+  var adminStaffId=null;
+  if(session.data.session){
+    var email=session.data.session.user.email;
+    var empId=email.replace('@flexbs.com','');
+    var sRow=await supabaseClient.from('staffs').select('id').eq('employee_id',empId).single();
+    if(sRow.data)adminStaffId=sRow.data.id;
+  }
+  var noticeIns=await supabaseClient.from('notices').insert({title:title,body:body,file_url:fileUrl,created_by:adminStaffId}).select().single();
+  if(noticeIns.error){statusEl.style.background='#fee2e2';statusEl.style.color='#991b1b';statusEl.textContent='登録失敗:'+noticeIns.error.message;return;}
+  var noticeId=noticeIns.data.id;
+  var recipients=targetStaffIds.map(sid=>({notice_id:noticeId,staff_id:sid}));
+  var recIns=await supabaseClient.from('notice_recipients').insert(recipients);
+  if(recIns.error){statusEl.style.background='#fee2e2';statusEl.style.color='#991b1b';statusEl.textContent='受信者登録失敗:'+recIns.error.message;return;}
+  statusEl.style.background='#e6f4d7';statusEl.style.color='#2d6a10';
+  statusEl.textContent='送信完了！'+targetStaffIds.length+'名に送信しました。';
+  document.getElementById('notice-title').value='';
+  document.getElementById('notice-body').value='';
+  document.getElementById('notice-file').value='';
+  document.querySelector('input[name="notice-target-type"][value="all"]').checked=true;
+  document.getElementById('notice-target-list-area').style.display='none';
+  setTimeout(()=>{closeModal('send-notice');statusEl.style.display='none';},1500);
+}
   
 
 
