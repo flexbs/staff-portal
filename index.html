@@ -401,6 +401,21 @@ input:disabled{background:#f5f4f0;color:#aaa;border-color:#e8e6e0}
       <div class="profile-row"><span class="profile-label">雇用保険番号</span><span class="profile-val" id="profile-insurance">-</span></div>
       <div class="profile-row"><span class="profile-label">備考</span><span class="profile-val" id="profile-note">-</span></div>
     </div>
+<div class="card">
+  <div class="ch"><span class="ct">パスワード変更</span></div>
+  <div style="background:#fef3cd;border-radius:8px;padding:10px 12px;font-size:12px;color:#8a5a00;margin-bottom:14px;line-height:1.7">
+    パスワードは大切な個人情報です。定期的な変更をおすすめします。<br>
+    変更後は、新しいパスワードで再ログインしていただきます。
+  </div>
+  <div class="fg"><label class="fl">現在のパスワード <span style="color:#991b1b">*必須</span></label><input type="password" id="pw-current" placeholder="現在のパスワード"></div>
+  <div class="fg"><label class="fl">新しいパスワード <span style="color:#991b1b">*必須</span></label><input type="password" id="pw-new" placeholder="8文字以上"></div>
+  <div class="fg"><label class="fl">新しいパスワード（確認） <span style="color:#991b1b">*必須</span></label><input type="password" id="pw-new-confirm" placeholder="もう一度入力"></div>
+  <div id="pw-status" style="display:none;font-size:13px;margin-top:8px;padding:10px;border-radius:8px"></div>
+  <div style="text-align:right;margin-top:14px">
+    <button class="btn btn-p" onclick="changeMyPassword()">変更する →</button>
+  </div>
+</div>
+    
   </div>
 </div>
 
@@ -1400,6 +1415,61 @@ async function confirmMyNotice(recipientId){
   if(r.error){alert('確認の記録に失敗しました:'+r.error.message);return;}
   closeModal('my-notice');
   loadMyNotices();
+}
+
+  async function changeMyPassword(){
+  if(!supabaseClient){alert('接続エラー');return;}
+  var currentPw=document.getElementById('pw-current').value;
+  var newPw=document.getElementById('pw-new').value;
+  var newPwConfirm=document.getElementById('pw-new-confirm').value;
+  var statusEl=document.getElementById('pw-status');
+  if(!currentPw){
+    statusEl.style.display='block';statusEl.style.background='#fee2e2';statusEl.style.color='#991b1b';
+    statusEl.textContent='現在のパスワードを入力してください';return;
+  }
+  if(!newPw){
+    statusEl.style.display='block';statusEl.style.background='#fee2e2';statusEl.style.color='#991b1b';
+    statusEl.textContent='新しいパスワードを入力してください';return;
+  }
+  if(newPw.length<8){
+    statusEl.style.display='block';statusEl.style.background='#fee2e2';statusEl.style.color='#991b1b';
+    statusEl.textContent='新しいパスワードは8文字以上で入力してください';return;
+  }
+  if(newPw!==newPwConfirm){
+    statusEl.style.display='block';statusEl.style.background='#fee2e2';statusEl.style.color='#991b1b';
+    statusEl.textContent='新しいパスワードが一致しません';return;
+  }
+  if(newPw===currentPw){
+    statusEl.style.display='block';statusEl.style.background='#fee2e2';statusEl.style.color='#991b1b';
+    statusEl.textContent='現在と同じパスワードは設定できません';return;
+  }
+  statusEl.style.display='block';statusEl.style.background='#f5f4f0';statusEl.style.color='#666';
+  statusEl.textContent='変更中...';
+  var session=await supabaseClient.auth.getSession();
+  if(!session.data.session){
+    statusEl.style.background='#fee2e2';statusEl.style.color='#991b1b';
+    statusEl.textContent='ログイン情報が取得できません';return;
+  }
+  var email=session.data.session.user.email;
+  var verify=await supabaseClient.auth.signInWithPassword({email:email,password:currentPw});
+  if(verify.error){
+    statusEl.style.background='#fee2e2';statusEl.style.color='#991b1b';
+    statusEl.textContent='現在のパスワードが正しくありません';return;
+  }
+  var update=await supabaseClient.auth.updateUser({password:newPw});
+  if(update.error){
+    statusEl.style.background='#fee2e2';statusEl.style.color='#991b1b';
+    statusEl.textContent='パスワード変更に失敗しました:'+update.error.message;return;
+  }
+  statusEl.style.background='#e6f4d7';statusEl.style.color='#2d6a10';
+  statusEl.textContent='パスワードを変更しました。再ログインしてください。';
+  document.getElementById('pw-current').value='';
+  document.getElementById('pw-new').value='';
+  document.getElementById('pw-new-confirm').value='';
+  setTimeout(async function(){
+    await supabaseClient.auth.signOut();
+    location.reload();
+  },2000);
 }
 </script>
 </body>
