@@ -821,7 +821,7 @@ async function loadAdminUploads(){
     var name=staffMap[d.staff_id]||'(不明)';
     var typeStr=d.type==='payslip'?'給与明細':'契約書';
     var dateStr=d.created_at?d.created_at.substring(0,10).replace(/-/g,'/'):'';
-    var status=d.confirmed_at?'<span class="bdg bg">署名済</span>':(d.type==='payslip'?'<span class="bdg bz">表示のみ</span>':'<span class="bdg ba">署名待ち</span>');
+    var status=d.type==='payslip'?(d.confirmed_at?'<span class="bdg bg">確認済</span>':'<span class="bdg ba">未確認</span>'):(d.confirmed_at?'<span class="bdg bg">署名済</span>':'<span class="bdg ba">署名待ち</span>');
 var bucket=d.type==='payslip'?'payslips':'contracts';
     var tr=document.createElement('tr');
 var sUrl='';var r=await supabaseClient.storage.from(bucket).createSignedUrl(d.file_url,3600);if(r.data&&r.data.signedUrl)sUrl=r.data.signedUrl;
