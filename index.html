@@ -773,6 +773,16 @@ async function signMyDocument(docId){
   alert('署名しました。同意の記録を保存しました。');
   loadMyDocuments();
 }
+  async function confirmMyDocument(docId){
+  if(!myStaffData){alert('ログイン情報が取得できません');return;}
+  var ok=window.confirm('この書類を確認しましたか？\n（確認の記録が残ります）');
+  if(!ok)return;
+  var now=new Date().toISOString();
+  var r=await supabaseClient.from('documents').update({confirmed_at:now,confirmed_by:myStaffData.id}).eq('id',docId);
+  if(r.error){alert('確認の記録に失敗しました：'+r.error.message);return;}
+  alert('確認しました。記録を保存しました。');
+  loadMyDocuments();
+}
 
 async function loadAdminStaffList(){
   if(!supabaseClient) return;
@@ -1152,7 +1162,12 @@ async function loadMyDocuments(){
     var isSigned=d.confirmed_at?true:false;
     var status;
     if(!needSign){
-      status='<span class="bdg bz">表示のみ</span>';
+ if(isSigned){
+        status='<span class="bdg bg">確認済</span>';
+      }else{
+        status='<span class="bdg ba">確認待ち</span>';
+        pending++;
+      } 
     }else if(isSigned){
       status='<span class="bdg bg">署名済</span>';
     }else{
@@ -1163,6 +1178,8 @@ async function loadMyDocuments(){
     var btns=sUrl?'<a class="btn btn-sm" href="'+sUrl+'" target="_blank" rel="noopener" style="text-decoration:none;display:inline-block">表示</a>':'<button class="btn btn-sm" onclick="alert(\'PDFを開けませんでした\')">表示</button>';
     if(needSign&&!isSigned){
       btns+=' <button class="btn btn-sm btn-p" onclick="signMyDocument(\''+d.id+'\')">署名する</button>';
+   }else if(!needSign&&!isSigned){
+      btns+=' <button class="btn btn-sm btn-p" onclick="confirmMyDocument(\''+d.id+'\')">確認しました</button>';
     }
     rows+='<tr><td>'+(d.title||typeStr)+'</td><td>'+typeStr+'</td><td style="white-space:nowrap">'+dateStr+'</td><td>'+status+'</td><td style="white-space:nowrap">'+btns+'</td></tr>';
   }
