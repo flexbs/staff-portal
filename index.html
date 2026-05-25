@@ -305,7 +305,7 @@ input:disabled{background:#f5f4f0;color:#aaa;border-color:#e8e6e0}
       <div style="font-size:17px;font-weight:800;letter-spacing:-0.3px"><span class="staff-name-display">スタッフ さん</span></div>
       <div style="font-size:12px;color:#888;margin-top:2px"><span class="staff-workplace-display">社員番号：---</span></div>
     </div>
-    <span class="bdg bg" style="margin-left:auto">稼働中</span>
+    <span class="bdg bg" id="staff-status-badge" style="margin-left:auto">稼働中</span>
   </div>
 
   <div class="sub-tabs">
@@ -751,6 +751,26 @@ async function loadStaffProfile(){
       paidTab.style.display='';
     }
   }
+  var statusBadge=document.getElementById('staff-status-badge');
+    if(statusBadge){
+      var st=data.status;
+      if(st==='短期・単発'){
+        statusBadge.className='bdg bb';
+        statusBadge.textContent='短期・単発';
+      }else if(st==='育休中'){
+        statusBadge.className='bdg ba';
+        statusBadge.textContent='育休中';
+      }else if(st==='休業中'){
+        statusBadge.className='bdg bo';
+        statusBadge.textContent='休業中';
+      }else if(st==='契約終了'){
+        statusBadge.className='bdg bz';
+        statusBadge.textContent='契約終了';
+      }else{
+        statusBadge.className='bdg bg';
+        statusBadge.textContent='稼働中';
+      }
+    }
   loadMyLeaveRequests();
 }
 
