@@ -912,7 +912,7 @@ async function loadAdminStaffList(){
   staffOnly.forEach(function(s){
     var tr=document.createElement('tr');
 　　var statusBdg=s.status==='稼働中'?'<span class="bdg bg">稼働中</span>':s.status==='契約終了'?'<span class="bdg bz">契約終了</span>':s.status==='育休中'?'<span class="bdg ba">育休中</span>':s.status==='休業中'?'<span class="bdg bo">休業中</span>':s.status==='短期・単発'?'<span class="bdg bb">短期・単発</span>':'<span class="bdg bz">-</span>';
-    var paperBdg=(s.paper_payslip===true && s.paper_contract===true)?'<span class="bdg bz" style="margin-left:4px;font-size:10px">📄紙</span>':(s.paper_payslip===true)?'<span class="bdg bz" style="margin-left:4px;font-size:10px">📄給与</span>':(s.paper_contract===true)?'<span class="bdg bz" style="margin-left:4px;font-size:10px">📄契約</span>':'';
+　　var paperBdg=(s.paper_payslip===true && s.paper_contract===true)?'<span class="bdg bo" style="margin-left:4px;font-size:10px">📄全て紙</span>':(s.paper_payslip===true)?'<span class="bdg bo" style="margin-left:4px;font-size:10px">📄給与</span>':(s.paper_contract===true)?'<span class="bdg bo" style="margin-left:4px;font-size:10px">📄契約</span>':'';
     tr.innerHTML='<td>'+s.name+'</td><td>'+statusBdg+paperBdg+'</td><td>'+s.employee_id+'</td><td>'+(s.workplace||'')+'</td><td><span class="bdg bz">未閲覧</span></td><td><span class="bdg bz">未送付</span></td><td style="font-size:11px;color:#888">—</td><td><button class="btn btn-sm" onclick="openStaffDetail('+s.employee_id+')">詳細</button></td>';
     tbody.appendChild(tr);
   });
