@@ -1047,6 +1047,13 @@ async function sendPayslip(){
   var month=document.getElementById('payslip-month').value;
   var fileInput=document.getElementById('payslip-file');
   var status=document.getElementById('payslip-status');
+  if(target){
+      var ppCheck=await supabaseClient.from('staffs').select('name,paper_payslip').eq('employee_id',target).single();
+      if(ppCheck.data && ppCheck.data.paper_payslip===true){
+        var ok=confirm('⚠️ '+ppCheck.data.name+' さんは給与明細を紙で受け取る運用です。\n本当にポータルから送付しますか？');
+        if(!ok){status.style.display='none';return;}
+      }
+    }
   if(!fileInput.files||!fileInput.files[0]){alert('PDFファイルを選択してください');return;}
   var file=fileInput.files[0];
   status.style.display='block';status.style.color='#666';status.textContent='アップロード中...';
@@ -1073,6 +1080,13 @@ async function sendContract(){
   var title=document.getElementById('contract-title').value||'契約書.pdf';
   var fileInput=document.getElementById('contract-file');
   var status=document.getElementById('contract-status');
+  if(target){
+      var pcCheck=await supabaseClient.from('staffs').select('name,paper_contract').eq('employee_id',target).single();
+      if(pcCheck.data && pcCheck.data.paper_contract===true){
+        var ok=confirm('⚠️ '+pcCheck.data.name+' さんは契約書を紙で受け取る運用です。\n本当にポータルから送付しますか？');
+        if(!ok){status.style.display='none';return;}
+      }
+    }
   if(!fileInput.files||!fileInput.files[0]){alert('PDFファイルを選択してください');return;}
   var file=fileInput.files[0];
   status.style.display='block';status.style.color='#666';status.textContent='アップロード中...';
