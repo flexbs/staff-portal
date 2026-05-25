@@ -193,9 +193,9 @@ input:disabled{background:#f5f4f0;color:#aaa;border-color:#e8e6e0}
       </div>
       <div class="tbl-scroll">
         <table class="tbl">
-          <thead><tr><th>名前</th><th>社員番号</th><th>派遣先</th><th>4月給与明細</th><th>就業条件明示書</th><th>確認日時</th><th></th></tr></thead>
+         <thead><tr><th>名前</th><th>ステータス</th><th>社員番号</th><th>派遣先</th><th>4月給与明細</th><th>就業条件明示書</th><th>確認日時</th><th></th></tr></thead>
           <tbody id="admin-staff-tbody">
-            <tr><td>読み込み中...</td><td></td><td></td><td></td><td></td><td></td><td></td></tr>
+            <tr><td>読み込み中...</td><td></td><td></td><td></td><td></td><td></td><td></td><td></td></tr>
           </tbody>
         </table>
       </div>
@@ -800,7 +800,8 @@ async function loadAdminStaffList(){
   tbody.innerHTML='';
   staffOnly.forEach(function(s){
     var tr=document.createElement('tr');
-    tr.innerHTML='<td>'+s.name+'</td><td>'+s.employee_id+'</td><td>'+(s.workplace||'')+'</td><td><span class="bdg bz">未閲覧</span></td><td><span class="bdg bz">未送付</span></td><td style="font-size:11px;color:#888">—</td><td><button class="btn btn-sm" onclick="openStaffDetail('+s.employee_id+')">詳細</button></td>';
+    var statusBdg=s.status==='稼働中'?'<span class="bdg bg">稼働中</span>':s.status==='契約終了'?'<span class="bdg bz">契約終了</span>':s.status==='育休中'?'<span class="bdg ba">育休中</span>':s.status==='休業中'?'<span class="bdg bo">休業中</span>':'<span class="bdg bz">-</span>';
+    tr.innerHTML='<td>'+s.name+'</td><td>'+statusBdg+'</td><td>'+s.employee_id+'</td><td>'+(s.workplace||'')+'</td><td><span class="bdg bz">未閲覧</span></td><td><span class="bdg bz">未送付</span></td><td style="font-size:11px;color:#888">—</td><td><button class="btn btn-sm" onclick="openStaffDetail('+s.employee_id+')">詳細</button></td>';
     tbody.appendChild(tr);
   });
 }
