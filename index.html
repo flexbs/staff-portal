@@ -47,6 +47,11 @@ body{font-family:'Hiragino Sans','Meiryo',sans-serif;background:#F5F4F0;color:#1
 .bp{background:#ede9fe;color:#5b21b6}
 .bo{background:#fde6d3;color:#9a4a00} 
 .bz{background:#f0efe9;color:#666}
+.qa-section{margin-bottom:20px}
+.qa-h{font-size:14px;font-weight:700;color:#5b21b6;margin-bottom:10px;padding-bottom:6px;border-bottom:2px solid #ede9fe}
+.qa-item{margin-bottom:14px;padding:10px 12px;background:#fafafa;border-radius:8px;border-left:3px solid #ede9fe}
+.qa-q{font-size:13px;font-weight:700;color:#333;margin-bottom:6px}
+.qa-a{font-size:13px;color:#555;line-height:1.7}
 .row{display:flex;align-items:center;gap:10px;padding:10px 0;border-bottom:1px solid #f0efe9}
 .row:last-child{border-bottom:none}
 .ri{width:34px;height:34px;border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:15px;flex-shrink:0}
@@ -314,6 +319,7 @@ input:disabled{background:#f5f4f0;color:#aaa;border-color:#e8e6e0}
     <button class="sub-tab" onclick="showSub('staff','snotice',this);loadMyNotices()">お知らせ</button>
     <button class="sub-tab" onclick="showSub('staff','supload',this)">アップロード</button>
     <button class="sub-tab" onclick="showSub('staff','sprofile',this)">プロフィール</button>
+    <button class="sub-tab" onclick="showSub('staff','sqa',this)">Q&A</button>
   </div>
 
   <div id="staff-sdocs" class="sp active">
@@ -418,6 +424,83 @@ input:disabled{background:#f5f4f0;color:#aaa;border-color:#e8e6e0}
 </div>
     
   </div>
+  <div id="staff-sqa" class="sp">
+      <div class="card">
+        <div class="ch"><span class="ct">よくあるご質問</span></div>
+        <div style="background:#fef3cd;border-radius:8px;padding:10px 12px;font-size:12px;color:#8a5a00;margin-bottom:14px;line-height:1.6">
+          ポータルサイトのご利用でお困りのときは、こちらをご確認ください。<br>
+          解決しない場合は、担当営業までお気軽にご連絡ください。
+        </div>
+
+        <div class="qa-section">
+          <div class="qa-h">🔐 ログインについて</div>
+          <div class="qa-item">
+            <div class="qa-q">Q. パスワードを忘れてしまいました</div>
+            <div class="qa-a">担当営業までご連絡ください。再設定いたします。</div>
+          </div>
+          <div class="qa-item">
+            <div class="qa-q">Q. ログインできません</div>
+            <div class="qa-a">以下をご確認ください。<br>・社員番号（数字4桁）が正しいか<br>・パスワードが正しいか（大文字・小文字・記号にご注意ください）<br>それでもログインできない場合は、担当営業までご連絡ください。</div>
+          </div>
+          <div class="qa-item">
+            <div class="qa-q">Q. パスワードを変更したい</div>
+            <div class="qa-a">ログイン後、画面上の「プロフィール」タブから変更できます。</div>
+          </div>
+        </div>
+
+        <div class="qa-section">
+          <div class="qa-h">📄 書類について</div>
+          <div class="qa-item">
+            <div class="qa-q">Q. 給与明細を確認するには？</div>
+            <div class="qa-a">ログイン後、「書類」タブを開いてください。「受け取った書類」一覧に表示されます。「表示」ボタンでPDFを開き、内容を確認したら「確認しました」ボタンを押してください。</div>
+          </div>
+          <div class="qa-item">
+            <div class="qa-q">Q. 契約書に署名するには？</div>
+            <div class="qa-a">「書類」タブを開き、署名が必要な書類の「表示」ボタンをクリックしてください。PDF内の署名欄にご署名いただき、「確認しました」ボタンを押してください。</div>
+          </div>
+          <div class="qa-item">
+            <div class="qa-q">Q. スマホでPDFが開けません</div>
+            <div class="qa-a">「表示」ボタンを長押しして「新しいタブで開く」を選択してください。それでも開けない場合は、担当営業までご連絡ください。</div>
+          </div>
+          <div class="qa-item">
+            <div class="qa-q">Q. 「確認しました」ボタンを押したあと、もう一度見ることはできますか？</div>
+            <div class="qa-a">はい、「受け取った書類」一覧からいつでも再度ご覧いただけます。</div>
+          </div>
+        </div>
+
+        <div class="qa-section">
+          <div class="qa-h">🌴 有給について</div>
+          <div class="qa-item">
+            <div class="qa-q">Q. 有給を申請するには？</div>
+            <div class="qa-a">「有給」タブを開き、「新規申請」ボタンから申請してください。取得希望日と理由を入力して送信します。</div>
+          </div>
+          <div class="qa-item">
+            <div class="qa-q">Q. 残日数を知りたい</div>
+            <div class="qa-a">担当営業までお問い合わせください。</div>
+          </div>
+          <div class="qa-item">
+            <div class="qa-q">Q. 申請を取り消したい</div>
+            <div class="qa-a">担当営業までご連絡ください。</div>
+          </div>
+        </div>
+
+        <div class="qa-section">
+          <div class="qa-h">👤 プロフィールについて</div>
+          <div class="qa-item">
+            <div class="qa-q">Q. 住所・電話番号などを変更したい</div>
+            <div class="qa-a">現在準備中です。変更がある場合は担当営業までご連絡ください。</div>
+          </div>
+        </div>
+
+        <div class="qa-section">
+          <div class="qa-h">💬 その他</div>
+          <div class="qa-item">
+            <div class="qa-q">Q. その他のお問い合わせ</div>
+            <div class="qa-a">ご不明な点がございましたら、担当営業までお気軽にご連絡ください。</div>
+          </div>
+        </div>
+      </div>
+    </div>
 </div>
 
 </div>
