@@ -310,7 +310,7 @@ input:disabled{background:#f5f4f0;color:#aaa;border-color:#e8e6e0}
 
   <div class="sub-tabs">
     <button class="sub-tab active" onclick="showSub('staff','sdocs',this)">書類</button>
-    <button class="sub-tab" onclick="showSub('staff','spaid',this)">有給</button>
+    <button class="sub-tab" id="staff-tab-spaid" onclick="showSub('staff','spaid',this)">有給</button>
     <button class="sub-tab" onclick="showSub('staff','snotice',this);loadMyNotices()">お知らせ</button>
     <button class="sub-tab" onclick="showSub('staff','supload',this)">アップロード</button>
     <button class="sub-tab" onclick="showSub('staff','sprofile',this)">プロフィール</button>
@@ -743,6 +743,14 @@ async function loadStaffProfile(){
   el=document.getElementById('profile-insurance');if(el)el.textContent=data.insurance_number||'';
   el=document.getElementById('profile-note');if(el)el.textContent=data.note||'-';
   loadMyDocuments();
+  var paidTab=document.getElementById('staff-tab-spaid');
+  if(paidTab){
+    if(data.status==='短期・単発'){
+      paidTab.style.display='none';
+    }else{
+      paidTab.style.display='';
+    }
+  }
   loadMyLeaveRequests();
 }
 
@@ -800,7 +808,7 @@ async function loadAdminStaffList(){
   tbody.innerHTML='';
   staffOnly.forEach(function(s){
     var tr=document.createElement('tr');
-    var statusBdg=s.status==='稼働中'?'<span class="bdg bg">稼働中</span>':s.status==='契約終了'?'<span class="bdg bz">契約終了</span>':s.status==='育休中'?'<span class="bdg ba">育休中</span>':s.status==='休業中'?'<span class="bdg bo">休業中</span>':'<span class="bdg bz">-</span>';
+　　var statusBdg=s.status==='稼働中'?'<span class="bdg bg">稼働中</span>':s.status==='契約終了'?'<span class="bdg bz">契約終了</span>':s.status==='育休中'?'<span class="bdg ba">育休中</span>':s.status==='休業中'?'<span class="bdg bo">休業中</span>':s.status==='短期・単発'?'<span class="bdg bb">短期・単発</span>':'<span class="bdg bz">-</span>';
     tr.innerHTML='<td>'+s.name+'</td><td>'+statusBdg+'</td><td>'+s.employee_id+'</td><td>'+(s.workplace||'')+'</td><td><span class="bdg bz">未閲覧</span></td><td><span class="bdg bz">未送付</span></td><td style="font-size:11px;color:#888">—</td><td><button class="btn btn-sm" onclick="openStaffDetail('+s.employee_id+')">詳細</button></td>';
     tbody.appendChild(tr);
   });
