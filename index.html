@@ -902,6 +902,7 @@ async function loadAdminStaffList(){
   if(!supabaseClient) return;
   var {data,error}=await supabaseClient.from('staffs').select('*').order('name_kana');
   if(error||!data) return;
+  var {data:allDocs}=await supabaseClient.from('documents').select('staff_id,type,confirmed_at').order('created_at',{ascending:false});
   var staffOnly=data.filter(s=>s.employee_id>=1000);
   var sc=document.getElementById('staff-count');if(sc)sc.textContent=staffOnly.length+'名';
   var optionsHtml='';
@@ -914,7 +915,13 @@ async function loadAdminStaffList(){
     var tr=document.createElement('tr');
 　　var statusBdg=s.status==='稼働中'?'<span class="bdg bg">稼働中</span>':s.status==='契約終了'?'<span class="bdg bz">契約終了</span>':s.status==='育休中'?'<span class="bdg ba">育休中</span>':s.status==='休業中'?'<span class="bdg bo">休業中</span>':s.status==='短期・単発'?'<span class="bdg bb">短期・単発</span>':'<span class="bdg bz">-</span>';
 　　var paperBdg=(s.paper_payslip===true && s.paper_contract===true)?'<span class="bdg bo" style="margin-left:4px;font-size:10px">📄全て紙</span>':(s.paper_payslip===true)?'<span class="bdg bo" style="margin-left:4px;font-size:10px">📄給与</span>':(s.paper_contract===true)?'<span class="bdg bo" style="margin-left:4px;font-size:10px">📄契約</span>':'';
-    tr.innerHTML='<td>'+s.name+'</td><td>'+statusBdg+paperBdg+'</td><td>'+s.employee_id+'</td><td>'+(s.workplace||'')+'</td><td><span class="bdg bz">未閲覧</span></td><td><span class="bdg bz">未送付</span></td><td style="font-size:11px;color:#888">—</td><td><button class="btn btn-sm" onclick="openStaffDetail('+s.employee_id+')">詳細</button></td>';
+    var myDocs=allDocs?allDocs.filter(d=>d.staff_id===s.id):[];
+      var latestContract=myDocs.find(d=>d.type==='contract');
+      var latestPayslip=myDocs.find(d=>d.type==='payslip');
+      var payslipBdg=!latestPayslip?'<span class="bdg bz">未閲覧</span>':(latestPayslip.confirmed_at?'<span class="bdg bg">確認済</span>':'<span class="bdg bo">未確認</span>');
+      var contractBdg=!latestContract?'<span class="bdg bz">未送付</span>':(latestContract.confirmed_at?'<span class="bdg bg">確認済</span>':'<span class="bdg bo">送付済</span>');
+      var confirmedTd=(latestContract && latestContract.confirmed_at)?'<td style="font-size:11px">'+new Date(latestContract.confirmed_at).toLocaleString('ja-JP',{year:'numeric',month:'2-digit',day:'2-digit',hour:'2-digit',minute:'2-digit'})+'</td>':(latestContract?'<td style="font-size:11px;color:#888">未確認</td>':'<td style="font-size:11px;color:#888">—</td>');
+    tr.innerHTML='<td>'+s.name+'</td><td>'+statusBdg+paperBdg+'</td><td>'+s.employee_id+'</td><td>'+(s.workplace||'')+'</td><td>'+payslipBdg+'</td><td>'+contractBdg+'</td>'+confirmedTd+'<td><button class="btn btn-sm" onclick="openStaffDetail('+s.employee_id+')">詳細</button></td>';
     tbody.appendChild(tr);
   });
 }
