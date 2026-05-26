@@ -570,10 +570,11 @@ input:disabled{background:#f5f4f0;color:#aaa;border-color:#e8e6e0}
   <div class="modal">
     <div class="mt">給与明細PDFを送付する</div>
 <div class="fg"><label class="fl">対象月</label><select id="payslip-month"><option value="2026-05">2026年5月分</option><option value="2026-06">2026年6月分</option><option value="2026-07">2026年7月分</option><option value="2026-08">2026年8月分</option><option value="2026-09">2026年9月分</option><option value="2026-10">2026年10月分</option><option value="2026-11">2026年11月分</option><option value="2026-12">2026年12月分</option><option value="2027-01">2027年1月分</option><option value="2027-02">2027年2月分</option><option value="2027-03">2027年3月分</option><option value="2027-04">2027年4月分</option><option value="2027-05">2027年5月分</option><option value="2027-06">2027年6月分</option><option value="2027-07">2027年7月分</option><option value="2027-08">2027年8月分</option><option value="2027-09">2027年9月分</option><option value="2027-10">2027年10月分</option><option value="2027-11">2027年11月分</option><option value="2027-12">2027年12月分</option><option value="2028-01">2028年1月分</option><option value="2028-02">2028年2月分</option><option value="2028-03">2028年3月分</option><option value="2028-04">2028年4月分</option></select></div>
-    <div class="fg"><label class="fl">送付先</label><select id="payslip-target"><option>読み込み中...</option></select></div>
+<div class="fg"><label class="fl">送付先</label><select id="payslip-target" onchange="checkPaperPayslip()"><option>読み込み中...</option></select></div>
     <div class="fg"><label class="fl">PDFファイル</label><input type="file" id="payslip-file" accept=".pdf"></div>
     <div id="payslip-status" style="display:none;font-size:12px;margin-top:8px"></div>
-    <div class="ma"><button class="btn btn-sm" onclick="closeModal('send-payslip')">キャンセル</button><button class="btn btn-sm btn-p" onclick="sendPayslip()">送付する →</button></div>
+    <div id="payslip-paper-warning" style="display:none;background:#fee;border:2px solid #c00;border-radius:8px;padding:12px;margin-top:8px;color:#c00;font-weight:bold;font-size:14px;text-align:center">🚨 この方は給与明細を紙で受け取る方です<br>ポータルからは送付できません</div>
+    <div class="ma"><button class="btn btn-sm" onclick="closeModal('send-payslip')">キャンセル</button><button id="payslip-send-btn" class="btn btn-sm btn-p" onclick="sendPayslip()">送付する →</button></div>
   </div>
 </div>
 
@@ -581,8 +582,7 @@ input:disabled{background:#f5f4f0;color:#aaa;border-color:#e8e6e0}
 <div class="mbg" id="modal-send-contract">
   <div class="modal">
     <div class="mt">書類PDFを送付する</div>
-    <div class="fg"><label class="fl">送付先</label><select id="contract-target"><option>読み込み中...</option></select></div>
-    <div class="fg"><label class="fl">書類の種類</label><select id="doc-type-select">
+<div class="fg"><label class="fl">送付先</label><select id="contract-target" onchange="checkPaperContract()"><option>読み込み中...</option></select></div>    <div class="fg"><label class="fl">書類の種類</label><select id="doc-type-select">
       <option value="meiji">就業条件明示書（署名あり）</option>
       <option value="taisha1">退職証明書（署名あり）</option>
       <option value="other-sign">その他書類（署名あり）</option>
@@ -591,7 +591,8 @@ input:disabled{background:#f5f4f0;color:#aaa;border-color:#e8e6e0}
 <div class="fg"><label class="fl">書類タイトル</label><input type="text" id="contract-title" placeholder="例：就業条件明示書（2026年6月1日〜2026年8月31日）"></div>
     <div class="fg"><label class="fl">PDFファイル</label><input type="file" id="contract-file" accept=".pdf"></div>
     <div id="contract-status" style="display:none;font-size:12px;margin-top:8px"></div>
-    <div class="ma"><button class="btn btn-sm" onclick="closeModal('send-contract')">キャンセル</button><button class="btn btn-sm btn-p" onclick="sendContract()">送付する →</button></div>
+    <div id="contract-paper-warning" style="display:none;background:#fee;border:2px solid #c00;border-radius:8px;padding:12px;margin-top:8px;color:#c00;font-weight:bold;font-size:14px;text-align:center">🚨 この方は契約書を紙で受け取る方です<br>ポータルからは送付できません</div>
+    <div class="ma"><button class="btn btn-sm" onclick="closeModal('send-contract')">キャンセル</button><button id="contract-send-btn"  class="btn btn-sm btn-p" onclick="sendContract()">送付する →</button></div>
   </div>
 </div>
 
@@ -1048,13 +1049,8 @@ async function sendPayslip(){
   var month=document.getElementById('payslip-month').value;
   var fileInput=document.getElementById('payslip-file');
   var status=document.getElementById('payslip-status');
-  if(target){
-      var ppCheck=await supabaseClient.from('staffs').select('name,paper_payslip').eq('employee_id',target).single();
-      if(ppCheck.data && ppCheck.data.paper_payslip===true){
-        var ok=confirm('⚠️ '+ppCheck.data.name+' さんは給与明細を紙で受け取る運用です。\n本当にポータルから送付しますか？');
-        if(!ok){status.style.display='none';return;}
-      }
-    }
+   
+   
   if(!fileInput.files||!fileInput.files[0]){alert('PDFファイルを選択してください');return;}
   var file=fileInput.files[0];
   status.style.display='block';status.style.color='#666';status.textContent='アップロード中...';
@@ -1074,20 +1070,51 @@ async function sendPayslip(){
   status.style.color='#2d6a10';status.textContent='送付完了!';
   setTimeout(()=>{closeModal('send-payslip');loadAdminUploads();},1000);
 }
+async function checkPaperContract(){
+  var target=document.getElementById('contract-target').value;
+  var warning=document.getElementById('contract-paper-warning');
+  var btn=document.getElementById('contract-send-btn');
+  if(!target){warning.style.display='none';btn.disabled=false;btn.style.opacity='1';btn.style.cursor='pointer';return;}
+  var {data}=await supabaseClient.from('staffs').select('paper_contract').eq('employee_id',target).single();
+  if(data && data.paper_contract===true){
+    warning.style.display='block';
+    btn.disabled=true;
+    btn.style.opacity='0.4';
+    btn.style.cursor='not-allowed';
+  }else{
+    warning.style.display='none';
+    btn.disabled=false;
+    btn.style.opacity='1';
+    btn.style.cursor='pointer';
+  }
+}
 
+async function checkPaperPayslip(){
+  var target=document.getElementById('payslip-target').value;
+  var warning=document.getElementById('payslip-paper-warning');
+  var btn=document.getElementById('payslip-send-btn');
+  if(!target){warning.style.display='none';btn.disabled=false;btn.style.opacity='1';btn.style.cursor='pointer';return;}
+  var {data}=await supabaseClient.from('staffs').select('paper_payslip').eq('employee_id',target).single();
+  if(data && data.paper_payslip===true){
+    warning.style.display='block';
+    btn.disabled=true;
+    btn.style.opacity='0.4';
+    btn.style.cursor='not-allowed';
+  }else{
+    warning.style.display='none';
+    btn.disabled=false;
+    btn.style.opacity='1';
+    btn.style.cursor='pointer';
+  }
+}
 async function sendContract(){
   var target=document.getElementById('contract-target').value;
   var docType=document.getElementById('doc-type-select').value;
   var title=document.getElementById('contract-title').value||'契約書.pdf';
   var fileInput=document.getElementById('contract-file');
   var status=document.getElementById('contract-status');
-  if(target){
-      var pcCheck=await supabaseClient.from('staffs').select('name,paper_contract').eq('employee_id',target).single();
-      if(pcCheck.data && pcCheck.data.paper_contract===true){
-        var ok=confirm('⚠️ '+pcCheck.data.name+' さんは契約書を紙で受け取る運用です。\n本当にポータルから送付しますか？');
-        if(!ok){status.style.display='none';return;}
-      }
-    }
+      
+    
   if(!fileInput.files||!fileInput.files[0]){alert('PDFファイルを選択してください');return;}
   var file=fileInput.files[0];
   status.style.display='block';status.style.color='#666';status.textContent='アップロード中...';
