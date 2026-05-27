@@ -194,6 +194,7 @@ input:disabled{background:#f5f4f0;color:#aaa;border-color:#e8e6e0}
         <div class="btn-row">
           <button class="btn btn-sm btn-p" onclick="openModal('send-payslip')">給与明細送付</button>
           <button class="btn btn-sm" onclick="openModal('send-contract')">契約書送付</button>
+          <button class="btn btn-sm" onclick="exportStaffCSV()">📥 CSV出力</button>
         </div>
       </div>
       <div class="tbl-scroll">
@@ -925,6 +926,34 @@ async function loadAdminStaffList(){
     tbody.appendChild(tr);
   });
 }
+ async function exportStaffCSV(){
+  if(!supabaseClient){alert('接続エラーです');return;}
+  var {data:staffs,error}=await supabaseClient.from('staffs').select('*').order('name_kana');
+  if(error||!staffs){alert('スタッフ情報の取得に失敗しました');return;}
+  var {data:docs}=await supabaseClient.from('documents').select('staff_id,type,confirmed_at,created_at').is('cancelled_at',null).order('created_at',{ascending:false});
+  var staffOnly=staffs.filter(s=>s.employee_id>=1000);
+  var rows=[['社員番号','氏名','フリガナ','ステータス','派遣先','給与明細','就業条件明示書','確認日時']];
+  staffOnly.forEach(function(s){
+    var myDocs=docs?docs.filter(d=>d.staff_id===s.id):[];
+    var latestContract=myDocs.find(d=>d.type==='contract');
+    var latestPayslip=myDocs.find(d=>d.type==='payslip');
+    var payslipStatus=!latestPayslip?'未閲覧':(latestPayslip.confirmed_at?'確認済':'未確認');
+    var contractStatus=!latestContract?'未送付':(latestContract.confirmed_at?'確認済':'送付済');
+    var confirmedAt=(latestContract&&latestContract.confirmed_at)?new Date(latestContract.confirmed_at).toLocaleString('ja-JP',{year:'numeric',month:'2-digit',day:'2-digit',hour:'2-digit',minute:'2-digit'}):'—';
+    rows.push([String(s.employee_id).padStart(4,'0'),s.name||'',s.name_kana||'',s.status||'',s.workplace||'',payslipStatus,contractStatus,confirmedAt]);
+  });
+  var csv=rows.map(r=>r.map(c=>'"'+String(c).replace(/"/g,'""')+'"').join(',')).join('\r\n');
+  var bom='\uFEFF';
+  var blob=new Blob([bom+csv],{type:'text/csv;charset=utf-8'});
+  var d=new Date();
+  var ymd=d.getFullYear()+String(d.getMonth()+1).padStart(2,'0')+String(d.getDate()).padStart(2,'0');
+  var a=document.createElement('a');
+  a.href=URL.createObjectURL(blob);
+  a.download='スタッフ一覧_'+ymd+'.csv';
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+} 
 async function loadAdminMetrics(){
   if(!supabaseClient) return;
  var {data:docs,error}=await supabaseClient.from('documents').select('type,requires_signature,confirmed_at').is('cancelled_at',null);
