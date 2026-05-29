@@ -212,7 +212,7 @@ input:disabled{background:#f5f4f0;color:#aaa;border-color:#e8e6e0}
         <div class="ch"><span class="ct">有給情報一覧</span></div>
         <div class="tbl-scroll">
           <table class="tbl">
-            <thead><tr><th>名前</th><th>社員番号</th><th>派遣開始日</th><th>有給取得日</th><th>付与日数</th><th>種別</th></tr></thead>
+            <thead><tr><th>名前</th><th>社員番号</th><th>派遣開始日</th><th>有給取得日</th><th>付与日数</th><th>次回付与日</th><th>種別</th></tr></thead>
             <tbody id="admin-paid-leave-tbody"><tr><td colspan="6" style="text-align:center;color:#888;padding:20px">読み込み中...</td></tr></tbody>
           </table>
         </div>
@@ -576,6 +576,7 @@ input:disabled{background:#f5f4f0;color:#aaa;border-color:#e8e6e0}
     <div class="profile-row"><span class="profile-label">基礎年金番号</span><span class="profile-val" id="modal-pension"></span></div>
     <div class="profile-row"><span class="profile-label">雇用保険番号</span><span class="profile-val" id="modal-insurance"></span></div>
     <div class="profile-row"><span class="profile-label">備考</span><span class="profile-val" id="modal-note"></span></div>
+    <div class="profile-row"><span class="profile-label">有給対象外</span><label style="display:flex;align-items:center;gap:6px;cursor:pointer"><input type="checkbox" id="modal-paid-leave-exempt" style="width:16px;height:16px;accent-color:#534AB7"><span style="font-size:12px;color:#666">チェックするとスタッフ画面の有給情報が非表示になります</span></label></div>
     <div class="ma"><button class="btn btn-sm" onclick="closeModal('staff-profile')">閉じる</button><button class="btn btn-sm btn-p" onclick="saveStaffProfile()">保存する →</button></div>
   </div>
 </div>
@@ -1206,6 +1207,11 @@ async function sendContract(){
   function displayPaidLeaveInfo(data){
   const el=document.getElementById('paid-leave-info');
   if(!el)return;
+  if(data.paid_leave_exempt){
+    const card=document.getElementById('paid-leave-info-card');
+    if(card)card.style.display='none';
+    return;
+  }
   let grantDate=data.paid_leave_grant_date;
   let grantDays=data.paid_leave_grant_days;
   if(!grantDate&&data.dispatch_start_date){
@@ -1233,7 +1239,7 @@ async function sendContract(){
   if(!tbody)return;
   const{data,error}=await supabaseClient.from('staffs').select('name,employee_id,dispatch_start_date,paid_leave_grant_date,paid_leave_grant_days').order('employee_id');
   if(error||!data){tbody.innerHTML='<tr><td colspan="6" style="text-align:center;color:#888;padding:20px">読み込みエラー</td></tr>';return;}
-  const staffOnly=data.filter(s=>s.employee_id>=1000&&s.employee_id<9000);
+  const staffOnly=data.filter(s=>s.employee_id>=1000&&s.employee_id<9900&&s.paid_leave_exempt!==true);
   tbody.innerHTML='';
   staffOnly.forEach(s=>{
     let grantDate=s.paid_leave_grant_date;
@@ -1254,7 +1260,13 @@ async function sendContract(){
     const d=grantDate?new Date(grantDate):null;
     const dateStr=d?d.getFullYear()+'年'+(d.getMonth()+1)+'月'+d.getDate()+'日':'未設定';
     const tr=document.createElement('tr');
-    tr.innerHTML='<td>'+s.name+'</td><td>'+String(s.employee_id).padStart(4,'0')+'</td><td>'+(s.dispatch_start_date||'-')+'</td><td>'+dateStr+'</td><td>'+(grantDays||'-')+'日</td><td><span class="bdg '+(type==='自動'?'bb':'bg')+'">'+type+'</span></td>';
+    const nextGrantDate=grantDate?new Date(new Date(grantDate).setFullYear(new Date(grantDate).getFullYear()+1)):null;
+    const paidLeaveSteps=[10,11,12,14,16,18,20];
+    const nextGrantDays=grantDays?(paidLeaveSteps[Math.min(paidLeaveSteps.indexOf(grantDays)+1,paidLeaveSteps.length-1)]):null;
+    const daysUntilNext=nextGrantDate?Math.ceil((nextGrantDate-new Date())/(1000*60*60*24)):null;
+    const nextDateStr=nextGrantDate?(nextGrantDate.getFullYear()+'年'+(nextGrantDate.getMonth()+1)+'月'+nextGrantDate.getDate()+'日'):'未設定';
+    const alertHtml=daysUntilNext!==null&&daysUntilNext<=30&&daysUntilNext>=0?'<br><span style="color:#991b1b;font-size:11px;font-weight:700">⚠️ あと'+daysUntilNext+'日</span>':'';
+    tr.innerHTML='<td>'+s.name+'</td><td>'+String(s.employee_id).padStart(4,'0')+'</td><td>'+(s.dispatch_start_date||'-')+'</td><td>'+dateStr+'</td><td>'+(grantDays||'-')+'日</td><td>'+nextDateStr+alertHtml+'</td><td><span class="bdg '+(type==='自動'?'bb':'bg')+'">'+type+'</span></td>';
     tbody.appendChild(tr);
   });
 }
@@ -1265,7 +1277,8 @@ async function saveStaffProfile(){
     const contractEnd=document.getElementById('modal-contract').value||null;
     const paidLeaveDate=document.getElementById('modal-paid-leave-date').value||null;
     const paidLeaveDays=document.getElementById('modal-paid-leave-days').value?parseInt(document.getElementById('modal-paid-leave-days').value):null;
-    const{error}=await supabaseClient.from('staffs').update({restriction_date:restrictionDate,contract_end_date:contractEnd,paid_leave_grant_date:paidLeaveDate,paid_leave_grant_days:paidLeaveDays}).eq('employee_id',empId);
+    const paidLeaveExempt=document.getElementById('modal-paid-leave-exempt').checked;
+    const{error}=await supabaseClient.from('staffs').update({restriction_date:restrictionDate,contract_end_date:contractEnd,paid_leave_grant_date:paidLeaveDate,paid_leave_grant_days:paidLeaveDays,paid_leave_exempt:paidLeaveExempt}).eq('employee_id',empId);
     if(error){alert('保存失敗：'+error.message);return;}
     alert('保存しました！');
     closeModal('staff-profile');
@@ -1406,6 +1419,7 @@ document.getElementById('modal-paid-leave-days').value=data.paid_leave_grant_day
     document.getElementById('modal-pension').textContent=data.pension_number||'';
     document.getElementById('modal-insurance').textContent=data.insurance_number||'';
     document.getElementById('modal-note').textContent=data.note||'';
+    document.getElementById('modal-paid-leave-exempt').checked=data.paid_leave_exempt||false;
     openModal('staff-profile');
   }catch(e){alert('エラー:'+e.message);}
 }
