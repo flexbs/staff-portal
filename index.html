@@ -336,6 +336,11 @@ input:disabled{background:#f5f4f0;color:#aaa;border-color:#e8e6e0}
   </div>
 
   <div id="staff-spaid" class="sp">
+    <div class="card" id="paid-leave-info-card">
+        <div class="ch"><span class="ct">有給情報</span></div>
+        <div id="paid-leave-info" style="font-size:13px;color:#1a1a1a;padding:4px 0">読み込み中...</div>
+        <div style="font-size:11px;color:#888;margin-top:6px">※有給休暇は付与日から2年で時効となります</div>
+      </div>
     <div class="card">
       <div class="ch"><span class="ct">有給休暇申請</span></div>
       <div class="leave-notice">
@@ -829,6 +834,7 @@ async function loadStaffProfile(){
   el=document.getElementById('profile-insurance');if(el)el.textContent=data.insurance_number||'';
   el=document.getElementById('profile-note');if(el)el.textContent=data.note||'-';
   loadMyDocuments();
+  displayPaidLeaveInfo(data);
   var paidTab=document.getElementById('staff-tab-spaid');
   if(paidTab){
     if(data.status==='短期・単発'){
@@ -1188,6 +1194,30 @@ async function sendContract(){
   if(ins.error){status.style.color='#991b1b';status.textContent='登録失敗:'+ins.error.message;return;}
   status.style.color='#2d6a10';status.textContent='送付完了!';const titleVal=document.getElementById('contract-title')?document.getElementById('contract-title').value:'';const dateMatch=titleVal.match(/(\d{4})年(\d{1,2})月(\d{1,2})日[〜～](\d{4})年(\d{1,2})月(\d{1,2})日/);const cStart=dateMatch?dateMatch[1]+'-'+String(dateMatch[2]).padStart(2,'0')+'-'+String(dateMatch[3]).padStart(2,'0'):null;const cEnd=dateMatch?dateMatch[4]+'-'+String(dateMatch[5]).padStart(2,'0')+'-'+String(dateMatch[6]).padStart(2,'0'):null;if(cEnd){await supabaseClient.from('staffs').update({contract_end_date:cEnd,contract_start_date:cStart}).eq('employee_id',target);}
   setTimeout(()=>{closeModal('send-contract');loadAdminUploads();},1000);
+}
+  function displayPaidLeaveInfo(data){
+  const el=document.getElementById('paid-leave-info');
+  if(!el)return;
+  let grantDate=data.paid_leave_grant_date;
+  let grantDays=data.paid_leave_grant_days;
+  if(!grantDate&&data.dispatch_start_date){
+    const start=new Date(data.dispatch_start_date);
+    const today=new Date();
+    const months=(today.getFullYear()-start.getFullYear())*12+(today.getMonth()-start.getMonth());
+    const thresholds=[{m:6,d:10},{m:18,d:11},{m:30,d:12},{m:42,d:14},{m:54,d:16},{m:66,d:18},{m:78,d:20}];
+    let years=0;for(let i=0;i<thresholds.length;i++){if(months>=thresholds[i].m){years=i;}}
+    grantDays=thresholds[years].d;
+    let grantD=new Date(start);grantD.setMonth(grantD.getMonth()+6);
+    while(grantD<=today){let next=new Date(grantD);next.setFullYear(next.getFullYear()+1);if(next>today)break;grantD=next;}
+    grantDate=grantD.toISOString().split('T')[0];
+  }
+  if(grantDate){
+    const d=new Date(grantDate);
+    const str=d.getFullYear()+'年'+(d.getMonth()+1)+'月'+d.getDate()+'日';
+    el.innerHTML='有給取得日：<strong>'+str+'</strong>　付与日数：<strong>'+(grantDays||'-')+'日</strong>';
+  }else{
+    el.textContent='有給情報がまだ登録されていません';
+  }
 }
 async function saveStaffProfile(){
   try{
