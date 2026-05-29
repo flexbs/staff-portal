@@ -132,10 +132,11 @@ input:disabled{background:#f5f4f0;color:#aaa;border-color:#e8e6e0}
 <div id="appRoot">
 <div class="nav">
   <div class="nav-logo" style="display:flex;align-items:center;gap:6px"><img src="https://raw.githubusercontent.com/flexbs/staff-portal/main/flexlogo1.jpg" style="height:32px;width:auto"> <span style="color:#3a9bd5;font-size:13px">スタッフポータル</span></div>
-  <div class="nav-tabs">
-    <button class="nav-tab active" onclick="showPage('login',this)">ログイン</button>
-    <button class="nav-tab" onclick="showPage('admin',this)">管理者</button>
-    <button class="nav-tab" onclick="showPage('staff',this)">スタッフ</button>
+  <div class="nav-tabs" id="nav-tabs">
+    <button class="nav-tab active" id="nav-login-btn" onclick="showPage('login',this)">ログイン</button>
+  </div>
+  <div id="nav-logout-area" style="display:none">
+    <button class="btn btn-sm" onclick="doLogout()" style="font-size:12px">ログアウト</button>
   </div>
   <div class="nav-right" id="navRight" style="display:none">
     <div class="av"></div><span class="hide-sp"></span>
@@ -184,6 +185,7 @@ input:disabled{background:#f5f4f0;color:#aaa;border-color:#e8e6e0}
     <button class="sub-tab active" onclick="showSub('admin','docs',this)">書類管理</button>
 <button class="sub-tab" onclick="showSub('admin','paid',this);loadAdminLeaveRequests();loadAdminPaidLeaveList()">有給管理</button><button class="sub-tab" onclick="showSub('admin','uploads',this);loadAdminUploads()">書類授受管理</button>    <button class="sub-tab" onclick="showSub('admin','mynumber',this)">マイナンバー管理</button>
     <button class="sub-tab" onclick="showSub('admin','notice',this);loadAdminNotices()">お知らせ</button>
+    <button class="sub-tab" onclick="showSub('admin','settings',this)">設定</button>
   </div>
 
   <div id="admin-docs" class="sp active">
@@ -291,6 +293,22 @@ input:disabled{background:#f5f4f0;color:#aaa;border-color:#e8e6e0}
             <tr><td style="font-size:12px;white-space:nowrap">2025/04/01 10:22</td><td>田中 花子</td><td>年金事務所</td><td>社会保険加入手続き</td><td>山本</td></tr>
           </tbody>
         </table>
+      </div>
+    </div>
+  </div>
+
+  <div id="admin-settings" class="sp">
+    <div class="card">
+      <div class="ch"><span class="ct">パスワード変更</span></div>
+      <div style="background:#fef3cd;border-radius:8px;padding:10px 12px;font-size:12px;color:#8a5a00;margin-bottom:14px;line-height:1.7">
+        パスワードは定期的に変更することをおすすめします。<br>変更後は新しいパスワードで再ログインしていただきます。
+      </div>
+      <div class="fg"><label class="fl">現在のパスワード <span style="color:#991b1b">*必須</span></label><input type="password" id="admin-pw-current" placeholder="現在のパスワード"></div>
+      <div class="fg"><label class="fl">新しいパスワード <span style="color:#991b1b">*必須</span></label><input type="password" id="admin-pw-new" placeholder="8文字以上"></div>
+      <div class="fg"><label class="fl">新しいパスワード（確認） <span style="color:#991b1b">*必須</span></label><input type="password" id="admin-pw-new-confirm" placeholder="もう一度入力"></div>
+      <div id="admin-pw-status" style="display:none;font-size:13px;margin-top:8px;padding:10px;border-radius:8px"></div>
+      <div style="text-align:right;margin-top:14px">
+        <button class="btn btn-p" onclick="changeAdminPassword()">変更する →</button>
       </div>
     </div>
   </div>
@@ -801,18 +819,60 @@ function saveProvideRecord(){
 
 async function doLogin(type){
   showPage(type,null);
-  var tabs=document.querySelectorAll('.nav-tab');
-  tabs.forEach(t=>t.classList.remove('active'));
+  // ナビバー切り替え：ログイン後はログアウトボタンのみ
+  document.getElementById('nav-login-btn').style.display='none';
+  document.getElementById('nav-logout-area').style.display='flex';
+  document.getElementById('navRight').style.display= type==='staff' ? 'flex' : 'none';
   if(type==='admin'){
-    tabs[1].classList.add('active');
     loadAdminStaffList();
     loadAdminUploads();
     loadAdminLeaveRequests();
     loadAdminMetrics();
   } else {
-    tabs[2].classList.add('active');
     loadStaffProfile();
   }
+}
+
+async function changeAdminPassword(){
+  var current=document.getElementById('admin-pw-current').value;
+  var newPw=document.getElementById('admin-pw-new').value;
+  var confirm=document.getElementById('admin-pw-new-confirm').value;
+  var statusEl=document.getElementById('admin-pw-status');
+  statusEl.style.display='block';
+  if(!current||!newPw||!confirm){
+    statusEl.style.background='#fee2e2';statusEl.style.color='#991b1b';
+    statusEl.textContent='すべての項目を入力してください';return;
+  }
+  if(newPw.length<8){
+    statusEl.style.background='#fee2e2';statusEl.style.color='#991b1b';
+    statusEl.textContent='新しいパスワードは8文字以上にしてください';return;
+  }
+  if(newPw!==confirm){
+    statusEl.style.background='#fee2e2';statusEl.style.color='#991b1b';
+    statusEl.textContent='新しいパスワードが一致しません';return;
+  }
+  statusEl.style.background='#f5f4f0';statusEl.style.color='#666';
+  statusEl.textContent='変更中...';
+  var update=await supabaseClient.auth.updateUser({password:newPw});
+  if(update.error){
+    statusEl.style.background='#fee2e2';statusEl.style.color='#991b1b';
+    statusEl.textContent='変更に失敗しました:'+update.error.message;return;
+  }
+  statusEl.style.background='#e6f4d7';statusEl.style.color='#2d6a10';
+  statusEl.textContent='パスワードを変更しました！再ログインしてください';
+  document.getElementById('admin-pw-current').value='';
+  document.getElementById('admin-pw-new').value='';
+  document.getElementById('admin-pw-new-confirm').value='';
+  setTimeout(async function(){
+    await supabaseClient.auth.signOut();
+    location.reload();
+  },2000);
+}
+
+async function doLogout(){
+  if(!confirm('ログアウトしますか？'))return;
+  await supabaseClient.auth.signOut();
+  location.reload();
 }
 async function loadStaffProfile(){
   if(!supabaseClient) return;
