@@ -208,15 +208,7 @@ input:disabled{background:#f5f4f0;color:#aaa;border-color:#e8e6e0}
   </div>
 
   <div id="admin-paid" class="sp">
-    <div class="card">
-        <div class="ch"><span class="ct">有給情報一覧</span></div>
-        <div class="tbl-scroll">
-          <table class="tbl">
-            <thead><tr><th>名前</th><th>社員番号</th><th>派遣開始日</th><th>有給取得日</th><th>付与日数</th><th>次回付与日</th><th>種別</th></tr></thead>
-            <tbody id="admin-paid-leave-tbody"><tr><td colspan="6" style="text-align:center;color:#888;padding:20px">読み込み中...</td></tr></tbody>
-          </table>
-        </div>
-      </div>
+
     <div class="card">
       <div class="ch"><span class="ct">有給申請一覧</span><span style="font-size:11px;color:#888">最新50件</span></div>
       <div class="tbl-scroll">
@@ -576,6 +568,8 @@ input:disabled{background:#f5f4f0;color:#aaa;border-color:#e8e6e0}
     <div class="profile-row"><span class="profile-label">基礎年金番号</span><span class="profile-val" id="modal-pension"></span></div>
     <div class="profile-row"><span class="profile-label">雇用保険番号</span><span class="profile-val" id="modal-insurance"></span></div>
     <div class="profile-row"><span class="profile-label">備考</span><span class="profile-val" id="modal-note"></span></div>
+    <div class="profile-row"><span class="profile-label">次回付与日</span><span class="profile-val" id="modal-next-grant-date" style="color:#534AB7;font-weight:600">-</span></div>
+    <div id="modal-next-grant-alert" style="display:none;background:#fee2e2;border-radius:8px;padding:8px 12px;font-size:12px;color:#991b1b;font-weight:700;margin-bottom:8px"></div>
     <div class="profile-row"><span class="profile-label">有給対象外</span><label style="display:flex;align-items:center;gap:6px;cursor:pointer"><input type="checkbox" id="modal-paid-leave-exempt" style="width:16px;height:16px;accent-color:#534AB7"><span style="font-size:12px;color:#666">チェックするとスタッフ画面の有給情報が非表示になります</span></label></div>
     <div class="ma"><button class="btn btn-sm" onclick="closeModal('staff-profile')">閉じる</button><button class="btn btn-sm btn-p" onclick="saveStaffProfile()">保存する →</button></div>
   </div>
@@ -1414,8 +1408,45 @@ async function openStaffDetail(empId){
     document.getElementById('modal-dispatch-start').textContent=data.dispatch_start_date||'';
     document.getElementById('modal-contract').value=data.contract_end_date||'';
     document.getElementById('modal-restriction').value=data.restriction_date||'';
-    document.getElementById('modal-paid-leave-date').value=data.paid_leave_grant_date||'';
-document.getElementById('modal-paid-leave-days').value=data.paid_leave_grant_days||'';
+    // 有給取得日・付与日数：保存値がなければ自動計算して表示
+    let modalGrantDate=data.paid_leave_grant_date||'';
+    let modalGrantDays=data.paid_leave_grant_days||'';
+    if(!modalGrantDate&&data.dispatch_start_date){
+      const start=new Date(data.dispatch_start_date);
+      const today=new Date();
+      const months=(today.getFullYear()-start.getFullYear())*12+(today.getMonth()-start.getMonth());
+      const thresholds=[{m:6,d:10},{m:18,d:11},{m:30,d:12},{m:42,d:14},{m:54,d:16},{m:66,d:18},{m:78,d:20}];
+      let idx=0;for(let i=0;i<thresholds.length;i++){if(months>=thresholds[i].m)idx=i;}
+      modalGrantDays=thresholds[idx].d;
+      let grantD=new Date(start);grantD.setMonth(grantD.getMonth()+6);
+      while(grantD<=today){let next=new Date(grantD);next.setFullYear(next.getFullYear()+1);if(next>today)break;grantD=next;}
+      modalGrantDate=grantD.toISOString().split('T')[0];
+    }
+    document.getElementById('modal-paid-leave-date').value=modalGrantDate;
+    document.getElementById('modal-paid-leave-days').value=modalGrantDays;
+    // 次回付与日を計算して表示
+    const nextSteps=[10,11,12,14,16,18,20];
+    const nextDays=modalGrantDays?(nextSteps[Math.min(nextSteps.indexOf(Number(modalGrantDays))+1,nextSteps.length-1)]):'-';
+    const nextDateEl=document.getElementById('modal-next-grant-date');
+    const nextAlertEl=document.getElementById('modal-next-grant-alert');
+    if(nextDateEl){
+      if(modalGrantDate){
+        const nextD=new Date(modalGrantDate);nextD.setFullYear(nextD.getFullYear()+1);
+        const daysLeft=Math.ceil((nextD-new Date())/(1000*60*60*24));
+        nextDateEl.textContent=nextD.getFullYear()+'年'+(nextD.getMonth()+1)+'月'+nextD.getDate()+'日　次回付与日数：'+nextDays+'日';
+        if(nextAlertEl){
+          if(daysLeft<=30&&daysLeft>=0){
+            nextAlertEl.textContent='⚠️ 次回付与日まであと'+daysLeft+'日です！更新してください';
+            nextAlertEl.style.display='block';
+          }else{
+            nextAlertEl.style.display='none';
+          }
+        }
+      }else{
+        nextDateEl.textContent='未設定';
+        if(nextAlertEl)nextAlertEl.style.display='none';
+      }
+    }
     document.getElementById('modal-pension').textContent=data.pension_number||'';
     document.getElementById('modal-insurance').textContent=data.insurance_number||'';
     document.getElementById('modal-note').textContent=data.note||'';
