@@ -1257,6 +1257,37 @@ async function sendContract(){
     el.textContent='有給情報がまだ登録されていません';
   }
 }
+    async function loadAdminPaidLeaveList(){
+  if(!supabaseClient)return;
+  const tbody=document.getElementById('admin-paid-leave-tbody');
+  if(!tbody)return;
+  const{data,error}=await supabaseClient.from('staffs').select('name,employee_id,dispatch_start_date,paid_leave_grant_date,paid_leave_grant_days').order('employee_id');
+  if(error||!data){tbody.innerHTML='<tr><td colspan="6" style="text-align:center;color:#888;padding:20px">読み込みエラー</td></tr>';return;}
+  const staffOnly=data.filter(s=>s.employee_id>=1000&&s.employee_id<9000);
+  tbody.innerHTML='';
+  staffOnly.forEach(s=>{
+    let grantDate=s.paid_leave_grant_date;
+    let grantDays=s.paid_leave_grant_days;
+    let type='手動';
+    if(!grantDate&&s.dispatch_start_date){
+      const start=new Date(s.dispatch_start_date);
+      const today=new Date();
+      const months=(today.getFullYear()-start.getFullYear())*12+(today.getMonth()-start.getMonth());
+      const thresholds=[{m:6,d:10},{m:18,d:11},{m:30,d:12},{m:42,d:14},{m:54,d:16},{m:66,d:18},{m:78,d:20}];
+      let idx=0;for(let i=0;i<thresholds.length;i++){if(months>=thresholds[i].m)idx=i;}
+      grantDays=thresholds[idx].d;
+      let grantD=new Date(start);grantD.setMonth(grantD.getMonth()+6);
+      while(grantD<=today){let next=new Date(grantD);next.setFullYear(next.getFullYear()+1);if(next>today)break;grantD=next;}
+      grantDate=grantD.toISOString().split('T')[0];
+      type='自動';
+    }
+    const d=grantDate?new Date(grantDate):null;
+    const dateStr=d?d.getFullYear()+'年'+(d.getMonth()+1)+'月'+d.getDate()+'日':'未設定';
+    const tr=document.createElement('tr');
+    tr.innerHTML='<td>'+s.name+'</td><td>'+String(s.employee_id).padStart(4,'0')+'</td><td>'+(s.dispatch_start_date||'-')+'</td><td>'+dateStr+'</td><td>'+(grantDays||'-')+'日</td><td><span class="bdg '+(type==='自動'?'bb':'bg')+'">'+type+'</span></td>';
+    tbody.appendChild(tr);
+  });
+}
 async function saveStaffProfile(){
   try{
     const empId=document.getElementById('modal-empid').textContent.replace('社員番号：','');
