@@ -1185,7 +1185,7 @@ async function sendContract(){
     requires_signature:needsSig
   });
   if(ins.error){status.style.color='#991b1b';status.textContent='登録失敗:'+ins.error.message;return;}
-  status.style.color='#2d6a10';status.textContent='送付完了!';
+  status.style.color='#2d6a10';status.textContent='送付完了!';const titleVal=document.getElementById('contract-title')?document.getElementById('contract-title').value:'';const dateMatch=titleVal.match(/(\d{4})年(\d{1,2})月(\d{1,2})日[〜～](\d{4})年(\d{1,2})月(\d{1,2})日/);const cStart=dateMatch?dateMatch[1]+'-'+String(dateMatch[2]).padStart(2,'0')+'-'+String(dateMatch[3]).padStart(2,'0'):null;const cEnd=dateMatch?dateMatch[4]+'-'+String(dateMatch[5]).padStart(2,'0')+'-'+String(dateMatch[6]).padStart(2,'0'):null;if(cEnd){await supabaseClient.from('staffs').update({contract_end_date:cEnd,contract_start_date:cStart}).eq('employee_id',target);}
   setTimeout(()=>{closeModal('send-contract');loadAdminUploads();},1000);
 }
 
