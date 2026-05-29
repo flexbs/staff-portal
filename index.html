@@ -558,11 +558,12 @@ input:disabled{background:#f5f4f0;color:#aaa;border-color:#e8e6e0}
     <div class="profile-row"><span class="profile-label">派遣先</span><span class="profile-val" id="modal-workplace"></span></div>
     <div class="profile-row"><span class="profile-label">派遣開始日</span><span class="profile-val" id="modal-dispatch-start"></span></div>
     <div class="profile-row"><span class="profile-label">現契約期間</span><input type="text" id="modal-contract" style="width:auto;font-size:12px;padding:4px 8px;text-align:right"></div>
-    <div class="profile-row"><span class="profile-label">個人抵触日</span><input type="date" id="modal-restriction" style="width:auto;font-size:12px;padding:4px 8px"></div>
+    <div class="profile-row"><span class="profile-label">個人抵触日</span><input type="date" id="modal-restriction" style="width:auto;font-size:12px;padding:4px 8px"></div><div class="profile-row"><span class="profile-label">有給取得日</span><input type="date" id="modal-paid-leave-date" style="width:auto;font-size:12px;padding:4px 8px"></div>
+          <div class="profile-row"><span class="profile-label">付与日数</span><input type="number" id="modal-paid-leave-days" placeholder="自動計算" style="width:80px;font-size:12px;padding:4px 8px"> <span style="font-size:12px;color:#888">日</span></div>
     <div class="profile-row"><span class="profile-label">基礎年金番号</span><span class="profile-val" id="modal-pension"></span></div>
     <div class="profile-row"><span class="profile-label">雇用保険番号</span><span class="profile-val" id="modal-insurance"></span></div>
     <div class="profile-row"><span class="profile-label">備考</span><span class="profile-val" id="modal-note"></span></div>
-    <div class="ma"><button class="btn btn-sm" onclick="closeModal('staff-profile')">閉じる</button><button class="btn btn-sm btn-p" onclick="closeModal('staff-profile')">保存する →</button></div>
+    <div class="ma"><button class="btn btn-sm" onclick="closeModal('staff-profile')">閉じる</button><button class="btn btn-sm btn-p" onclick="saveStaffProfile()">保存する →</button></div>
   </div>
 </div>
 
@@ -1188,7 +1189,19 @@ async function sendContract(){
   status.style.color='#2d6a10';status.textContent='送付完了!';const titleVal=document.getElementById('contract-title')?document.getElementById('contract-title').value:'';const dateMatch=titleVal.match(/(\d{4})年(\d{1,2})月(\d{1,2})日[〜～](\d{4})年(\d{1,2})月(\d{1,2})日/);const cStart=dateMatch?dateMatch[1]+'-'+String(dateMatch[2]).padStart(2,'0')+'-'+String(dateMatch[3]).padStart(2,'0'):null;const cEnd=dateMatch?dateMatch[4]+'-'+String(dateMatch[5]).padStart(2,'0')+'-'+String(dateMatch[6]).padStart(2,'0'):null;if(cEnd){await supabaseClient.from('staffs').update({contract_end_date:cEnd,contract_start_date:cStart}).eq('employee_id',target);}
   setTimeout(()=>{closeModal('send-contract');loadAdminUploads();},1000);
 }
-
+async function saveStaffProfile(){
+  try{
+    const empId=document.getElementById('modal-empid').textContent.replace('社員番号：','');
+    const restrictionDate=document.getElementById('modal-restriction').value||null;
+    const contractEnd=document.getElementById('modal-contract').value||null;
+    const paidLeaveDate=document.getElementById('modal-paid-leave-date').value||null;
+    const paidLeaveDays=document.getElementById('modal-paid-leave-days').value?parseInt(document.getElementById('modal-paid-leave-days').value):null;
+    const{error}=await supabaseClient.from('staffs').update({restriction_date:restrictionDate,contract_end_date:contractEnd,paid_leave_grant_date:paidLeaveDate,paid_leave_grant_days:paidLeaveDays}).eq('employee_id',empId);
+    if(error){alert('保存失敗：'+error.message);return;}
+    alert('保存しました！');
+    closeModal('staff-profile');
+  }catch(e){alert('エラー：'+e.message);}
+}
 async function submitLeaveRequest(){
   if(!supabaseClient||!myStaffData){alert('ログイン情報が取得できません');return;}
   var leaveDate=document.getElementById('leave-date').value;
@@ -1319,6 +1332,8 @@ async function openStaffDetail(empId){
     document.getElementById('modal-dispatch-start').textContent=data.dispatch_start_date||'';
     document.getElementById('modal-contract').value=data.contract_end_date||'';
     document.getElementById('modal-restriction').value=data.restriction_date||'';
+    document.getElementById('modal-paid-leave-date').value=data.paid_leave_grant_date||'';
+document.getElementById('modal-paid-leave-days').value=data.paid_leave_grant_days||'';
     document.getElementById('modal-pension').textContent=data.pension_number||'';
     document.getElementById('modal-insurance').textContent=data.insurance_number||'';
     document.getElementById('modal-note').textContent=data.note||'';
