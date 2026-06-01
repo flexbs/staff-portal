@@ -299,6 +299,16 @@ input:disabled{background:#f5f4f0;color:#aaa;border-color:#e8e6e0}
     <div id="uploads-sent" class="sp" style="display:none">
       <div class="card">
         <div class="ch"><span class="ct">派遣元からスタッフへの送付書類</span></div>
+        <div style="margin-bottom:12px;display:flex;align-items:center;gap:8px;flex-wrap:wrap">
+          <label style="font-size:13px;color:#555">スタッフ：</label>
+          <select id="sent-filter-staff" onchange="filterSentDocs()" style="padding:6px 10px;border-radius:8px;border:1px solid #d8d6d0;font-size:13px">
+            <option value="all">全員</option>
+          </select>
+          <label style="font-size:13px;color:#555">月：</label>
+          <select id="sent-filter-month" onchange="filterSentDocs()" style="padding:6px 10px;border-radius:8px;border:1px solid #d8d6d0;font-size:13px">
+            <option value="all">すべて</option>
+          </select>
+        </div>
         <div class="tbl-scroll">
           <table class="tbl">
 <thead><tr><th>名前</th><th>給与</th><th>就業条件明示書</th><th>送付日</th><th>署名・確認</th><th></th><th></th></tr></thead>
@@ -1135,13 +1145,37 @@ async function loadAdminMetrics(){
   var c=document.getElementById('unsigned-contract-count');
   if(c)c.textContent=unsignedContract+'件';
 }
+var _sentDocsAll=[];
+var _sentStaffMap={};
 async function loadAdminUploads(){
   if(!supabaseClient) return;
-  var {data:docs}=await supabaseClient.from('documents').select('*').is('cancelled_at',null).order('created_at',{ascending:false}).limit(50);
+  var {data:docs}=await supabaseClient.from('documents').select('*').is('cancelled_at',null).order('created_at',{ascending:false}).limit(200);
   if(!docs) return;
-  var {data:staffs}=await supabaseClient.from('staffs').select('id,name');
+  var {data:staffs}=await supabaseClient.from('staffs').select('id,name,employee_id');
   var staffMap={};
-  if(staffs){staffs.forEach(s=>{staffMap[s.id]=s.name;});}
+  if(staffs){staffs.forEach(s=>{staffMap[s.id]={name:s.name,employee_id:s.employee_id};});}
+  _sentDocsAll=docs;
+  _sentStaffMap=staffMap;
+  // スタッフ絞り込みドロップダウン初期化
+  var staffSel=document.getElementById('sent-filter-staff');
+  if(staffSel){
+    var uniqueStaffs={};
+    docs.forEach(d=>{if(staffMap[d.staff_id]&&!uniqueStaffs[d.staff_id])uniqueStaffs[d.staff_id]=staffMap[d.staff_id];});
+    staffSel.innerHTML='<option value="all">全員</option>';
+    Object.entries(uniqueStaffs).sort((a,b)=>a[1].employee_id-b[1].employee_id).forEach(([id,s])=>{
+      staffSel.innerHTML+='<option value="'+id+'">'+s.name+'（'+String(s.employee_id).padStart(4,'0')+'）</option>';
+    });
+  }
+  // 月絞り込みドロップダウン初期化
+  var monthSel=document.getElementById('sent-filter-month');
+  if(monthSel){
+    var months=new Set();
+    docs.forEach(d=>{if(d.created_at)months.add(d.created_at.substring(0,7));});
+    monthSel.innerHTML='<option value="all">すべて</option>';
+    Array.from(months).sort().reverse().forEach(m=>{
+      monthSel.innerHTML+='<option value="'+m+'">'+m.replace('-','年')+'月</option>';
+    });
+  }
   var sentTbody=document.getElementById('admin-sent-tbody');
   if(!sentTbody) return;
   if(docs.length===0){
@@ -1150,7 +1184,7 @@ async function loadAdminUploads(){
   }
   sentTbody.innerHTML='';
   for(var i=0;i<docs.length;i++){var d=docs[i];
-    var name=staffMap[d.staff_id]||'(不明)';
+    var name=(_sentStaffMap[d.staff_id]&&_sentStaffMap[d.staff_id].name)||staffMap[d.staff_id]||'(不明)';
     var typeStr=d.type==='payslip'?'給与明細':'契約書';
     var dateStr=d.created_at?d.created_at.substring(0,10).replace(/-/g,'/'):'';
     var status=d.type==='payslip'?(d.confirmed_at?'<span class="bdg bg">確認済</span>':'<span class="bdg ba">未確認</span>'):(d.confirmed_at?'<span class="bdg bg">署名済</span>':'<span class="bdg bo">署名待ち</span>');
@@ -1161,6 +1195,34 @@ tr.innerHTML='<td>'+name+'</td><td>'+(d.type==='payslip'?(d.title||typeStr):'-')
                                  sentTbody.appendChild(tr);
   }
 }
+async function filterSentDocs(){
+  var staffVal=document.getElementById('sent-filter-staff').value;
+  var monthVal=document.getElementById('sent-filter-month').value;
+  var filtered=_sentDocsAll;
+  if(staffVal!=='all')filtered=filtered.filter(d=>d.staff_id===staffVal);
+  if(monthVal!=='all')filtered=filtered.filter(d=>d.created_at&&d.created_at.startsWith(monthVal));
+  var sentTbody=document.getElementById('admin-sent-tbody');
+  if(!sentTbody)return;
+  if(filtered.length===0){
+    sentTbody.innerHTML='<tr><td colspan="7" style="text-align:center;color:#888;padding:20px">該当する書類はありません</td></tr>';
+    return;
+  }
+  sentTbody.innerHTML='<tr><td colspan="7" style="text-align:center;color:#888;padding:10px">読み込み中...</td></tr>';
+  sentTbody.innerHTML='';
+  for(var i=0;i<filtered.length;i++){
+    var d=filtered[i];
+    var sInfo=_sentStaffMap[d.staff_id]||{name:'(不明)'};
+    var dateStr=d.created_at?d.created_at.substring(0,10).replace(/-/g,'/'):'-';
+    var status=d.type==='payslip'?(d.confirmed_at?'<span class="bdg bg">確認済</span>':'<span class="bdg ba">未確認</span>'):(d.confirmed_at?'<span class="bdg bg">署名済</span>':'<span class="bdg bo">署名待ち</span>');
+    var bucket=d.type==='payslip'?'payslips':'contracts';
+    var tr=document.createElement('tr');
+    var r=await supabaseClient.storage.from(bucket).createSignedUrl(d.file_url,3600);
+    var sUrl=r.data&&r.data.signedUrl?r.data.signedUrl:'';
+    tr.innerHTML='<td>'+sInfo.name+'</td><td>'+(d.type==='payslip'?(d.title||'給与明細'):'-')+'</td><td>'+(d.type==='contract'?(d.title||'契約書'):'-')+'</td><td style="white-space:nowrap">'+dateStr+'</td><td>'+status+'</td><td>'+(sUrl?'<a class="btn btn-sm" href="'+sUrl+'" target="_blank" rel="noopener" style="text-decoration:none;display:inline-block">表示</a>':'')+'</td><td>'+(d.confirmed_at?'<span style="color:#999;font-size:11px">完了</span>':'<button class="btn btn-sm" style="background:#fee;color:#c00;border:1px solid #c00" onclick="cancelDocument(''+d.id+'',''+d.file_url+'',''+bucket+'')">取り消す</button>')+'</td>';
+    sentTbody.appendChild(tr);
+  }
+}
+
 async function cancelDocument(docId,fileUrl,bucket){
   if(!supabaseClient){alert('接続エラーです');return;}
   var ok=window.confirm('この書類の送付を取り消します。よろしいですか？\n（スタッフ画面からも見えなくなります）');
@@ -1685,15 +1747,49 @@ async function loadMyDocuments(){
    var sUrl='';var r=await supabaseClient.storage.from(bucket).createSignedUrl(d.file_url,3600);if(r.data&&r.data.signedUrl)sUrl=r.data.signedUrl;
     var btns=sUrl?'<a class="btn btn-sm" href="'+sUrl+'" target="_blank" rel="noopener" style="text-decoration:none;display:inline-block">表示</a>':'<button class="btn btn-sm" onclick="alert(\'PDFを開けませんでした\')">表示</button>';
     if(needSign&&!isSigned){
-      btns+=' <button class="btn btn-sm btn-p" onclick="signMyDocument(\''+d.id+'\')">署名する</button>';
-   }else if(!needSign&&!isSigned){
-      btns+=' <button class="btn btn-sm btn-p" onclick="confirmMyDocument(\''+d.id+'\')">確認しました</button>';
+      btns='<div style="display:flex;flex-direction:column;gap:6px;align-items:flex-start">'+(sUrl?'<a class="btn btn-sm" href="'+sUrl+'" target="_blank" rel="noopener" style="text-decoration:none;display:inline-block">📄 PDFを表示</a>':'<button class="btn btn-sm" onclick="alert(\'PDFを開けませんでした\')">表示</button>');
+      btns+='<label style="font-size:12px;display:flex;align-items:center;gap:4px;cursor:pointer"><input type="checkbox" id="pdf-check-'+d.id+'" onchange="toggleSignBtn(\''+d.id+'\')" style="width:14px;height:14px"> PDFを確認しました</label>';
+      btns+='<button class="btn btn-sm btn-p" id="sign-btn-'+d.id+'" onclick="signMyDocument(\''+d.id+'\')" disabled style="opacity:0.4;cursor:not-allowed">署名する</button></div>';
+    }else if(!needSign&&!isSigned){
+      btns='<div style="display:flex;flex-direction:column;gap:6px;align-items:flex-start">'+(sUrl?'<a class="btn btn-sm" href="'+sUrl+'" target="_blank" rel="noopener" style="text-decoration:none;display:inline-block">📄 PDFを表示</a>':'<button class="btn btn-sm" onclick="alert(\'PDFを開けませんでした\')">表示</button>');
+      btns+='<label style="font-size:12px;display:flex;align-items:center;gap:4px;cursor:pointer"><input type="checkbox" id="pdf-check-'+d.id+'" onchange="toggleConfirmBtn(\''+d.id+'\')" style="width:14px;height:14px"> PDFを確認しました</label>';
+      btns+='<button class="btn btn-sm btn-p" id="confirm-btn-'+d.id+'" onclick="confirmMyDocument(\''+d.id+'\')" disabled style="opacity:0.4;cursor:not-allowed">確認しました</button></div>';
     }
     rows+='<tr><td>'+(d.title||typeStr)+'</td><td>'+typeStr+'</td><td style="white-space:nowrap">'+dateStr+'</td><td>'+status+'</td><td style="white-space:nowrap">'+btns+'</td></tr>';
   }
   c.innerHTML='<div class="ch"><span class="ct">受け取った書類</span></div><div style="overflow-x:auto"><table style="width:100%;border-collapse:collapse"><thead><tr style="text-align:left;color:#888;font-size:12px"><th style="padding:8px">タイトル</th><th style="padding:8px">種類</th><th style="padding:8px">受信日</th><th style="padding:8px">状態</th><th style="padding:8px">操作</th></tr></thead><tbody>'+rows+'</tbody></table></div>';
   var pe=document.getElementById('s-pending-docs');if(pe)pe.textContent=pending+'件';
 }
+function toggleSignBtn(docId){
+  var cb=document.getElementById('pdf-check-'+docId);
+  var btn=document.getElementById('sign-btn-'+docId);
+  if(!cb||!btn)return;
+  if(cb.checked){
+    btn.disabled=false;
+    btn.style.opacity='1';
+    btn.style.cursor='pointer';
+  }else{
+    btn.disabled=true;
+    btn.style.opacity='0.4';
+    btn.style.cursor='not-allowed';
+  }
+}
+
+function toggleConfirmBtn(docId){
+  var cb=document.getElementById('pdf-check-'+docId);
+  var btn=document.getElementById('confirm-btn-'+docId);
+  if(!cb||!btn)return;
+  if(cb.checked){
+    btn.disabled=false;
+    btn.style.opacity='1';
+    btn.style.cursor='pointer';
+  }else{
+    btn.disabled=true;
+    btn.style.opacity='0.4';
+    btn.style.cursor='not-allowed';
+  }
+}
+
 function toggleNoticeTargetList(){
   var type=document.querySelector('input[name="notice-target-type"]:checked').value;
   var area=document.getElementById('notice-target-list-area');
@@ -1788,7 +1884,7 @@ async function sendNotice(){
   var tbody=document.getElementById('admin-notices-tbody');
   if(!tbody)return;
   tbody.innerHTML='<tr><td colspan="5" style="text-align:center;color:#888;padding:20px">読み込み中...</td></tr>';
-  var {data:notices,error}=await supabaseClient.from('notices').select('*').order('created_at',{ascending:false}).limit(50);
+  var {data:notices,error}=await supabaseClient.from('notices').select('*').is('cancelled_at',null).order('created_at',{ascending:false}).limit(50);
   if(error){tbody.innerHTML='<tr><td colspan="5" style="text-align:center;color:#991b1b;padding:20px">読み込みに失敗しました</td></tr>';return;}
   if(!notices||notices.length===0){
     tbody.innerHTML='<tr><td colspan="5" style="text-align:center;color:#888;padding:40px 20px"><div style="font-size:40px;margin-bottom:10px">📢</div><div style="font-size:14px">送信済みのお知らせはまだありません</div></td></tr>';
