@@ -185,7 +185,7 @@ input:disabled{background:#f5f4f0;color:#aaa;border-color:#e8e6e0}
     <button class="sub-tab active" onclick="showSub('admin','docs',this)">書類管理</button>
     <button class="sub-tab" onclick="showSub('admin','nyusha',this)">入社手続き</button>
     <button class="sub-tab" onclick="showSub('admin','taisha',this)">退職手続き</button>
-<button class="sub-tab" onclick="showSub('admin','paid',this);loadAdminLeaveRequests();loadAdminPaidLeaveList()">有給管理</button><button class="sub-tab" onclick="showSub('admin','uploads',this);loadAdminUploads()">書類授受管理</button>    <button class="sub-tab" onclick="showSub('admin','mynumber',this)">マイナンバー管理</button>
+<button class="sub-tab" onclick="showSub('admin','paid',this);loadAdminLeaveRequests();loadAdminPaidLeaveList();loadLeaveHistory()">有給管理</button><button class="sub-tab" onclick="showSub('admin','uploads',this);loadAdminUploads()">書類授受管理</button>    <button class="sub-tab" onclick="showSub('admin','mynumber',this)">マイナンバー管理</button>
     <button class="sub-tab" onclick="showSub('admin','notice',this);loadAdminNotices()">お知らせ</button>
     <button class="sub-tab" onclick="showSub('admin','settings',this)">設定</button>
   </div>
@@ -234,6 +234,24 @@ input:disabled{background:#f5f4f0;color:#aaa;border-color:#e8e6e0}
   </div>
 
   <div id="admin-paid" class="sp">
+
+    <div class="card">
+      <div class="ch"><span class="ct">有給取得履歴</span></div>
+      <div style="margin-bottom:12px;display:flex;align-items:center;gap:8px">
+        <label style="font-size:13px;color:#555">スタッフ絞り込み：</label>
+        <select id="leave-history-filter" onchange="filterLeaveHistory()" style="padding:6px 10px;border-radius:8px;border:1px solid #d8d6d0;font-size:13px">
+          <option value="all">全員</option>
+        </select>
+      </div>
+      <div class="tbl-scroll">
+        <table class="tbl">
+          <thead><tr><th>名前</th><th>社員番号</th><th>取得日</th><th>区分</th><th>状態</th><th>申請日</th></tr></thead>
+          <tbody id="admin-leave-history-tbody">
+            <tr><td colspan="6" style="text-align:center;color:#888;padding:20px">読み込み中...</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
 
     <div class="card">
       <div class="ch"><span class="ct">有給申請一覧</span><span style="font-size:11px;color:#888">最新50件</span></div>
@@ -1668,7 +1686,7 @@ async function sendNotice(){
       statusEl.textContent='送信先スタッフを選択してください';return;
     }
   }
-  var ok=window.confirm('お知らせを'+targetStaffIds.length+'名に送信します。送信後の編集はできません。よろしいですか?');
+  var ok=window.confirm('お知らせを'+targetStaffIds.length+'名に送信します。よろしいですか？\n※誤送信の場合は送信済み一覧から取消できます。');
   if(!ok)return;
   statusEl.style.display='block';statusEl.style.background='#f5f4f0';statusEl.style.color='#666';
   statusEl.textContent='送信中...';
@@ -1730,7 +1748,10 @@ async function sendNotice(){
     var dateStr=n.created_at?n.created_at.substring(0,10).replace(/-/g,'/'):'';
     var titleStr=n.title||'(無題)';
     var tr=document.createElement('tr');
-    tr.innerHTML='<td>'+titleStr+'</td><td style="white-space:nowrap">'+stats.total+'名</td><td style="white-space:nowrap">'+confirmStr+'</td><td style="white-space:nowrap;font-size:11px;color:#888">'+dateStr+'</td><td><button class="btn btn-sm" onclick="openNoticeDetail(\''+n.id+'\')">詳細</button></td>';
+    var cancelledStyle=n.cancelled_at?'background:#fee2e2;text-decoration:line-through;color:#aaa':'';
+    tr.style.cssText=cancelledStyle;
+    var cancelBtn=n.cancelled_at?'<span style="font-size:11px;color:#991b1b">取消済</span>':'<button class="btn btn-sm" onclick="cancelNotice(\''+n.id+'\')" style="margin-left:4px">取消</button>';
+    tr.innerHTML='<td>'+titleStr+'</td><td style="white-space:nowrap">'+stats.total+'名</td><td style="white-space:nowrap">'+confirmStr+'</td><td style="white-space:nowrap;font-size:11px;color:#888">'+dateStr+'</td><td><button class="btn btn-sm" onclick="openNoticeDetail(\''+n.id+'\')">詳細</button>'+cancelBtn+'</td>';
     tbody.appendChild(tr);
   });
 }
@@ -1793,6 +1814,75 @@ async function openNoticeDetail(noticeId){
   c.innerHTML=html;
 }
 
+async function cancelNotice(noticeId){
+  if(!supabaseClient){alert('接続エラー');return;}
+  if(!confirm('このお知らせを取消します。スタッフ画面からも見えなくなります。よろしいですか？'))return;
+  var now=new Date().toISOString();
+  var r=await supabaseClient.from('notices').update({cancelled_at:now}).eq('id',noticeId);
+  if(r.error){alert('取消に失敗しました：'+r.error.message);return;}
+  alert('お知らせを取消しました。');
+  loadAdminNotices();
+}
+
+var leaveHistoryAll=[];
+async function loadLeaveHistory(){
+  if(!supabaseClient)return;
+  var tbody=document.getElementById('admin-leave-history-tbody');
+  if(!tbody)return;
+  tbody.innerHTML='<tr><td colspan="6" style="text-align:center;color:#888;padding:20px">読み込み中...</td></tr>';
+  var {data:reqs,error}=await supabaseClient.from('leave_requests').select('*').eq('status','approved').order('leave_date',{ascending:false}).limit(200);
+  if(error){tbody.innerHTML='<tr><td colspan="6" style="text-align:center;color:#991b1b;padding:20px">読み込みに失敗しました</td></tr>';return;}
+  var {data:staffs}=await supabaseClient.from('staffs').select('id,name,employee_id');
+  var staffMap={};
+  if(staffs){staffs.forEach(s=>{staffMap[s.id]={name:s.name,employee_id:s.employee_id};});}
+  leaveHistoryAll=reqs||[];
+  // フィルタドロップダウンにスタッフを追加
+  var sel=document.getElementById('leave-history-filter');
+  var uniqueStaffs={};
+  leaveHistoryAll.forEach(r=>{
+    var s=staffMap[r.staff_id];
+    if(s&&!uniqueStaffs[r.staff_id])uniqueStaffs[r.staff_id]={id:r.staff_id,name:s.name,employee_id:s.employee_id};
+  });
+  sel.innerHTML='<option value="all">全員</option>';
+  Object.values(uniqueStaffs).sort((a,b)=>a.employee_id-b.employee_id).forEach(s=>{
+    sel.innerHTML+='<option value="'+s.id+'">'+s.name+'（'+String(s.employee_id).padStart(4,'0')+'）</option>';
+  });
+  renderLeaveHistory(leaveHistoryAll,staffMap);
+}
+
+function filterLeaveHistory(){
+  var sel=document.getElementById('leave-history-filter');
+  var val=sel.value;
+  var tbody=document.getElementById('admin-leave-history-tbody');
+  if(!tbody)return;
+  var {data:staffs}=[];
+  // staffMapを再構築
+  var staffMap={};
+  if(window._staffMapCache)staffMap=window._staffMapCache;
+  var filtered=val==='all'?leaveHistoryAll:leaveHistoryAll.filter(r=>r.staff_id===val);
+  renderLeaveHistory(filtered,staffMap);
+}
+
+function renderLeaveHistory(reqs,staffMap){
+  var tbody=document.getElementById('admin-leave-history-tbody');
+  if(!tbody)return;
+  if(!reqs||reqs.length===0){
+    tbody.innerHTML='<tr><td colspan="6" style="text-align:center;color:#888;padding:40px 20px"><div style="font-size:40px;margin-bottom:10px">📋</div><div style="font-size:14px">取得履歴はありません</div></td></tr>';
+    return;
+  }
+  tbody.innerHTML='';
+  reqs.forEach(function(r){
+    var sInfo=staffMap[r.staff_id]||{name:'(不明)',employee_id:''};
+    var dayTypeStr=r.day_type==='full'?'全日':(r.day_type==='am'?'AM半休':(r.day_type==='pm'?'PM半休':r.day_type));
+    var leaveDateStr=r.leave_date?r.leave_date.replace(/-/g,'/'):'-';
+    var createdStr=r.created_at?r.created_at.substring(0,10).replace(/-/g,'/'):'-';
+    var tr=document.createElement('tr');
+    tr.innerHTML='<td>'+sInfo.name+'</td><td>'+String(sInfo.employee_id).padStart(4,'0')+'</td><td style="white-space:nowrap">'+leaveDateStr+'</td><td>'+dayTypeStr+'</td><td><span class="bdg bg">承認済</span></td><td style="white-space:nowrap;font-size:11px;color:#888">'+createdStr+'</td>';
+    tbody.appendChild(tr);
+  });
+  window._staffMapCache=staffMap;
+}
+
 async function loadMyNotices(){
   var c=document.getElementById('staff-notices-tbody');
   if(!c)return;
@@ -1805,7 +1895,7 @@ async function loadMyNotices(){
     return;
   }
   var noticeIds=recs.map(r=>r.notice_id);
-  var {data:notices}=await supabaseClient.from('notices').select('id,title,created_at').in('id',noticeIds);
+  var {data:notices}=await supabaseClient.from('notices').select('id,title,created_at').in('id',noticeIds).is('cancelled_at',null);
   var noticeMap={};
   if(notices){notices.forEach(n=>{noticeMap[n.id]=n;});}
   c.innerHTML='';
