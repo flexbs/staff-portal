@@ -1213,6 +1213,8 @@ async function sendPayslip(){
    
    
   if(!fileInput.files||!fileInput.files[0]){alert('PDFファイルを選択してください');return;}
+  var targetName=document.getElementById('payslip-target').options[document.getElementById('payslip-target').selectedIndex].text;
+  if(!confirm(targetName+'に'+month+'分の給与明細を送付します。よろしいですか？'))return;
   var file=fileInput.files[0];
   status.style.display='block';status.style.color='#666';status.textContent='アップロード中...';
   var filePath=target+'/'+month+'_payslip_'+Date.now()+'.pdf';
@@ -1277,6 +1279,8 @@ async function sendContract(){
       
     
   if(!fileInput.files||!fileInput.files[0]){alert('PDFファイルを選択してください');return;}
+  var targetName=document.getElementById('contract-target').options[document.getElementById('contract-target').selectedIndex].text;
+  if(!confirm(targetName+'に就業条件明示書を送付します。よろしいですか？'))return;
   var file=fileInput.files[0];
   status.style.display='block';status.style.color='#666';status.textContent='アップロード中...';
   var filePath=target+'/'+docType+'_'+Date.now()+'.pdf';
