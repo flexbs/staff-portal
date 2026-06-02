@@ -356,7 +356,7 @@ input:disabled{background:#f5f4f0;color:#aaa;border-color:#e8e6e0}
 
   <div id="admin-kintai" class="sp">
     <div class="card">
-      <div class="ch"><span class="ct">勤怠管理（単発スタッフ）</span></div>
+      <div class="ch"><span class="ct">勤怠管理（単発スタッフ）</span><button class="btn btn-sm" onclick="exportKintaiCSV()">📥 CSV出力</button></div>
       <div class="tbl-scroll"><table class="tbl"><thead><tr><th>名前</th><th>社員番号</th><th>勤務日</th><th>始業</th><th>終業</th><th>休憩</th><th>実労働</th><th>状態</th><th>申請日</th><th></th></tr></thead><tbody id="admin-kintai-tbody"><tr><td colspan="10" style="text-align:center;color:#888;padding:20px">読み込み中...</td></tr></tbody></table></div>
     </div>
   </div>
@@ -1021,6 +1021,36 @@ async function loadAdminKintai(){
   });
 }
 
+async function exportKintaiCSV(){
+  if(!supabaseClient){alert('接続エラー');return;}
+  var {data,error}=await supabaseClient.from('kintai_records').select('*').order('work_date',{ascending:false});
+  if(error||!data||data.length===0){alert('データがありません');return;}
+  var {data:staffs}=await supabaseClient.from('staffs').select('id,name,employee_id');
+  var staffMap={};
+  if(staffs){staffs.forEach(s=>{staffMap[s.id]={name:s.name,employee_id:s.employee_id};});}
+  var rows=[['社員番号','氏名','勤務日','始業時間','終業時間','休憩(分)','実労働時間','状態','申請日']];
+  data.forEach(function(r){
+    var sInfo=staffMap[r.staff_id]||{name:'(不明)',employee_id:''};
+    var workH=Math.floor(r.work_minutes/60);
+    var workM=r.work_minutes%60;
+    var workStr=workH+'時間'+(workM>0?workM+'分':'');
+    var statusStr=r.status==='approved'?'承認済':r.status==='rejected'?'否認':'確認待ち';
+    var createdStr=r.created_at?r.created_at.substring(0,10).replace(/-/g,'/'):'';
+    rows.push([String(sInfo.employee_id).padStart(4,'0'),sInfo.name,r.work_date.replace(/-/g,'/'),r.start_time,r.end_time,r.break_minutes,workStr,statusStr,createdStr]);
+  });
+  var csv=rows.map(function(r){return r.map(function(c){return '"'+String(c).replace(/"/g,'""')+'"';}).join(',');}).join('\r\n');
+  var bom='\uFEFF';
+  var blob=new Blob([bom+csv],{type:'text/csv;charset=utf-8'});
+  var d=new Date();
+  var ymd=d.getFullYear()+String(d.getMonth()+1).padStart(2,'0')+String(d.getDate()).padStart(2,'0');
+  var a=document.createElement('a');
+  a.href=URL.createObjectURL(blob);
+  a.download='勤怠記録_'+ymd+'.csv';
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+}
+
 async function approveKintai(id){
   if(!supabaseClient)return;
   if(!confirm('この勤怠を承認しますか？'))return;
@@ -1225,7 +1255,7 @@ async function exportStaffCSV(){
     var salesPerson=salesMap[workplace]||'未設定';
     rows.push([String(s.employee_id).padStart(4,'0'),s.name||'',s.name_kana||'',s.status||'',workplace,salesPerson,payslipStatus,contractStatus,confirmedAt]);
   });
-  var csv=rows.map(r=>r.map(c=>'"'+String(c).replace(/"/g,'""')+'"').join(',')).join('\r\n');
+  var csv=rows.map(function(r){return r.map(function(c){return '"'+String(c).replace(/"/g,'""')+'"';}).join(',');}).join('\r\n');
   var bom='\uFEFF';
   var blob=new Blob([bom+csv],{type:'text/csv;charset=utf-8'});
   var d=new Date();
