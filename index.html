@@ -187,6 +187,7 @@ input:disabled{background:#f5f4f0;color:#aaa;border-color:#e8e6e0}
     <button class="sub-tab" onclick="showSub('admin','taisha',this)">退職手続き</button>
 <button class="sub-tab" onclick="showSub('admin','paid',this);loadAdminLeaveRequests();loadAdminPaidLeaveList();loadLeaveHistory()">有給管理</button><button class="sub-tab" onclick="showSub('admin','uploads',this);loadAdminUploads()">書類授受管理</button>    <button class="sub-tab" onclick="showSub('admin','mynumber',this)">マイナンバー管理</button>
     <button class="sub-tab" onclick="showSub('admin','notice',this);loadAdminNotices()">お知らせ</button>
+    <button class="sub-tab" onclick="showSub('admin','kintai',this);loadAdminKintai()">勤怠管理（単発）</button>
     <button class="sub-tab" onclick="showSub('admin','settings',this)">設定</button>
   </div>
 
@@ -353,6 +354,13 @@ input:disabled{background:#f5f4f0;color:#aaa;border-color:#e8e6e0}
     </div>
   </div>
 
+  <div id="admin-kintai" class="sp">
+    <div class="card">
+      <div class="ch"><span class="ct">勤怠管理（単発スタッフ）</span></div>
+      <div class="tbl-scroll"><table class="tbl"><thead><tr><th>名前</th><th>社員番号</th><th>勤務日</th><th>始業</th><th>終業</th><th>休憩</th><th>実労働</th><th>状態</th><th>申請日</th><th></th></tr></thead><tbody id="admin-kintai-tbody"><tr><td colspan="10" style="text-align:center;color:#888;padding:20px">読み込み中...</td></tr></tbody></table></div>
+    </div>
+  </div>
+
   <div id="admin-settings" class="sp">
     <div class="card">
       <div class="ch"><span class="ct">パスワード変更</span></div>
@@ -390,6 +398,7 @@ input:disabled{background:#f5f4f0;color:#aaa;border-color:#e8e6e0}
 
   <div class="sub-tabs">
     <button class="sub-tab active" onclick="showSub('staff','sdocs',this)">書類</button>
+    <button class="sub-tab" id="staff-tab-kintai" onclick="showSub('staff','skintai',this);loadMyKintai()" style="display:none">勤怠</button>
     <button class="sub-tab" id="staff-tab-spaid" onclick="showSub('staff','spaid',this)">有給</button>
     <button class="sub-tab" onclick="showSub('staff','snotice',this);loadMyNotices()">お知らせ</button>
     <button class="sub-tab" onclick="showSub('staff','supload',this)">アップロード</button>
@@ -407,6 +416,26 @@ input:disabled{background:#f5f4f0;color:#aaa;border-color:#e8e6e0}
       <div style="padding:20px;text-align:center;color:#888;font-size:13px">読み込み中...</div>
     </div>
 <div class="card" id="staff-docs-bottom-card"></div>
+  </div>
+
+  <div id="staff-skintai" class="sp">
+    <div class="card">
+      <div class="ch"><span class="ct">勤怠入力</span></div>
+      <div style="background:#fef3cd;border-radius:8px;padding:10px 12px;font-size:12px;color:#8a5a00;margin-bottom:14px;line-height:1.7">勤務終了後に入力してください。入力後、派遣先担当者に承認依頼が送信されます。</div>
+      <div class="fg"><label class="fl">勤務日 <span style="color:#991b1b">*必須</span></label><input type="date" id="kintai-date"></div>
+      <div class="g2">
+        <div class="fg"><label class="fl">始業時間 <span style="color:#991b1b">*必須</span></label><input type="time" id="kintai-start"></div>
+        <div class="fg"><label class="fl">終業時間 <span style="color:#991b1b">*必須</span></label><input type="time" id="kintai-end"></div>
+      </div>
+      <div class="fg"><label class="fl">休憩時間</label><select id="kintai-break" style="width:auto"><option value="0">なし</option><option value="30">30分</option><option value="45">45分</option><option value="60" selected>60分</option><option value="90">90分</option></select></div>
+      <div class="fg"><label class="fl">備考</label><textarea id="kintai-note" rows="2" placeholder="例：教育訓練など"></textarea></div>
+      <div id="kintai-status" style="display:none;font-size:13px;margin-top:8px;padding:10px;border-radius:8px"></div>
+      <div style="text-align:right;margin-top:14px"><button class="btn btn-p" onclick="submitKintai()">申請する →</button></div>
+    </div>
+    <div class="card" id="my-kintai-list-container">
+      <div class="ch"><span class="ct">自分の勤怠履歴</span></div>
+      <div style="padding:20px;text-align:center;color:#888;font-size:13px">読み込み中...</div>
+    </div>
   </div>
 
   <div id="staff-spaid" class="sp">
@@ -922,6 +951,86 @@ async function changeAdminPassword(){
   },2000);
 }
 
+
+async function submitKintai(){
+  if(!supabaseClient||!myStaffData){alert('ログイン情報が取得できません');return;}
+  var date=document.getElementById('kintai-date').value;
+  var start=document.getElementById('kintai-start').value;
+  var end=document.getElementById('kintai-end').value;
+  var breakMin=parseInt(document.getElementById('kintai-break').value)||0;
+  var note=document.getElementById('kintai-note').value;
+  var statusEl=document.getElementById('kintai-status');
+  if(!date){statusEl.style.display='block';statusEl.style.background='#fee2e2';statusEl.style.color='#991b1b';statusEl.textContent='勤務日を入力してください';return;}
+  if(!start){statusEl.style.display='block';statusEl.style.background='#fee2e2';statusEl.style.color='#991b1b';statusEl.textContent='始業時間を入力してください';return;}
+  if(!end){statusEl.style.display='block';statusEl.style.background='#fee2e2';statusEl.style.color='#991b1b';statusEl.textContent='終業時間を入力してください';return;}
+  var startMin=parseInt(start.split(':')[0])*60+parseInt(start.split(':')[1]);
+  var endMin=parseInt(end.split(':')[0])*60+parseInt(end.split(':')[1]);
+  var workMin=endMin-startMin-breakMin;
+  if(workMin<=0){statusEl.style.display='block';statusEl.style.background='#fee2e2';statusEl.style.color='#991b1b';statusEl.textContent='終業時間が始業時間より前になっています';return;}
+  if(!confirm(date+'の勤怠を申請します。よろしいですか？'))return;
+  statusEl.style.display='block';statusEl.style.background='#f5f4f0';statusEl.style.color='#666';statusEl.textContent='申請中...';
+  var ins=await supabaseClient.from('kintai_records').insert({staff_id:myStaffData.id,work_date:date,start_time:start,end_time:end,break_minutes:breakMin,work_minutes:workMin,note:note||null,status:'pending'});
+  if(ins.error){statusEl.style.background='#fee2e2';statusEl.style.color='#991b1b';statusEl.textContent='申請に失敗しました:'+ins.error.message;return;}
+  statusEl.style.background='#e6f4d7';statusEl.style.color='#2d6a10';statusEl.textContent='申請しました！担当者が確認します。';
+  document.getElementById('kintai-date').value='';
+  document.getElementById('kintai-start').value='';
+  document.getElementById('kintai-end').value='';
+  document.getElementById('kintai-break').value='60';
+  document.getElementById('kintai-note').value='';
+  loadMyKintai();
+}
+
+async function loadMyKintai(){
+  var c=document.getElementById('my-kintai-list-container');
+  if(!c||!supabaseClient||!myStaffData)return;
+  c.innerHTML='<div class="ch"><span class="ct">自分の勤怠履歴</span></div><div style="padding:20px;text-align:center;color:#888;font-size:13px">読み込み中...</div>';
+  var {data,error}=await supabaseClient.from('kintai_records').select('*').eq('staff_id',myStaffData.id).order('work_date',{ascending:false}).limit(20);
+  if(error||!data||data.length===0){c.innerHTML='<div class="ch"><span class="ct">自分の勤怠履歴</span></div><div style="padding:40px 20px;text-align:center;color:#888"><div style="font-size:40px;margin-bottom:10px">📋</div><div style="font-size:14px">勤怠履歴はまだありません</div></div>';return;}
+  var rows='';
+  data.forEach(function(r){
+    var workH=Math.floor(r.work_minutes/60);var workM=r.work_minutes%60;
+    var workStr=workH+'時間'+(workM>0?workM+'分':'');
+    var statusStr=r.status==='approved'?'<span class="bdg bg">承認済</span>':r.status==='rejected'?'<span class="bdg br">否認</span>':'<span class="bdg ba">確認待ち</span>';
+    rows+='<tr><td style="white-space:nowrap">'+r.work_date.replace(/-/g,'/')+'</td><td>'+r.start_time+'</td><td>'+r.end_time+'</td><td>'+r.break_minutes+'分</td><td>'+workStr+'</td><td>'+statusStr+'</td></tr>';
+  });
+  c.innerHTML='<div class="ch"><span class="ct">自分の勤怠履歴</span></div><div style="overflow-x:auto"><table style="width:100%;border-collapse:collapse"><thead><tr style="text-align:left;color:#888;font-size:12px"><th style="padding:8px">勤務日</th><th style="padding:8px">始業</th><th style="padding:8px">終業</th><th style="padding:8px">休憩</th><th style="padding:8px">実労働</th><th style="padding:8px">状態</th></tr></thead><tbody>'+rows+'</tbody></table></div>';
+}
+
+async function loadAdminKintai(){
+  if(!supabaseClient)return;
+  var tbody=document.getElementById('admin-kintai-tbody');
+  if(!tbody)return;
+  tbody.innerHTML='<tr><td colspan="10" style="text-align:center;color:#888;padding:20px">読み込み中...</td></tr>';
+  var {data,error}=await supabaseClient.from('kintai_records').select('*').order('work_date',{ascending:false}).limit(100);
+  if(error){tbody.innerHTML='<tr><td colspan="10" style="text-align:center;color:#991b1b;padding:20px">読み込みに失敗しました</td></tr>';return;}
+  if(!data||data.length===0){tbody.innerHTML='<tr><td colspan="10" style="text-align:center;color:#888;padding:40px 20px"><div style="font-size:40px;margin-bottom:10px">📋</div><div style="font-size:14px">勤怠記録はまだありません</div></td></tr>';return;}
+  var {data:staffs}=await supabaseClient.from('staffs').select('id,name,employee_id');
+  var staffMap={};
+  if(staffs){staffs.forEach(s=>{staffMap[s.id]={name:s.name,employee_id:s.employee_id};});}
+  tbody.innerHTML='';
+  data.forEach(function(r){
+    var sInfo=staffMap[r.staff_id]||{name:'(不明)',employee_id:''};
+    var workH=Math.floor(r.work_minutes/60);var workM=r.work_minutes%60;
+    var workStr=workH+'時間'+(workM>0?workM+'分':'');
+    var statusStr=r.status==='approved'?'<span class="bdg bg">承認済</span>':r.status==='rejected'?'<span class="bdg br">否認</span>':'<span class="bdg ba">確認待ち</span>';
+    var createdStr=r.created_at?r.created_at.substring(0,10).replace(/-/g,'/'):'';
+    var btns=r.status==='pending'?'<button class="btn btn-sm btn-g" onclick="approveKintai(\"'+r.id+'\")">承認</button>':'';
+    var tr=document.createElement('tr');
+    tr.innerHTML='<td>'+sInfo.name+'</td><td>'+String(sInfo.employee_id).padStart(4,'0')+'</td><td style="white-space:nowrap">'+r.work_date.replace(/-/g,'/')+'</td><td>'+r.start_time+'</td><td>'+r.end_time+'</td><td>'+r.break_minutes+'分</td><td>'+workStr+'</td><td>'+statusStr+'</td><td style="font-size:11px;color:#888">'+createdStr+'</td><td>'+btns+'</td>';
+    tbody.appendChild(tr);
+  });
+}
+
+async function approveKintai(id){
+  if(!supabaseClient)return;
+  if(!confirm('この勤怠を承認しますか？'))return;
+  var now=new Date().toISOString();
+  var r=await supabaseClient.from('kintai_records').update({status:'approved',approved_at:now}).eq('id',id);
+  if(r.error){alert('承認に失敗しました:'+r.error.message);return;}
+  alert('承認しました！');
+  loadAdminKintai();
+}
+
 async function doLogout(){
   if(!confirm('ログアウトしますか？'))return;
   await supabaseClient.auth.signOut();
@@ -958,6 +1067,10 @@ async function loadStaffProfile(){
     }else{
       paidTab.style.display='';
     }
+  }
+  var kintaiTab=document.getElementById('staff-tab-kintai');
+  if(kintaiTab){
+    kintaiTab.style.display=(data.status==='短期・単発')?'':'none';
   }
   var statusBadge=document.getElementById('staff-status-badge');
     if(statusBadge){
@@ -1058,8 +1171,8 @@ async function loadAdminStaffList(){
   tbody.innerHTML='';
   staffOnly.forEach(function(s){
     var tr=document.createElement('tr');
-　　var statusBdg=s.status==='稼働中'?'<span class="bdg bg">稼働中</span>':s.status==='契約終了'?'<span class="bdg bz">契約終了</span>':s.status==='育休中'?'<span class="bdg ba">育休中</span>':s.status==='休業中'?'<span class="bdg bo">休業中</span>':s.status==='短期・単発'?'<span class="bdg bb">短期・単発</span>':'<span class="bdg bz">-</span>';
-　　var paperBdg=(s.paper_payslip===true && s.paper_contract===true)?'<span class="bdg bo" style="margin-left:4px;font-size:10px">📄全て紙</span>':(s.paper_payslip===true)?'<span class="bdg bo" style="margin-left:4px;font-size:10px">📄給与</span>':(s.paper_contract===true)?'<span class="bdg bo" style="margin-left:4px;font-size:10px">📄契約</span>':'';
+    var statusBdg=s.status==='稼働中'?'<span class="bdg bg">稼働中</span>':s.status==='契約終了'?'<span class="bdg bz">契約終了</span>':s.status==='育休中'?'<span class="bdg ba">育休中</span>':s.status==='休業中'?'<span class="bdg bo">休業中</span>':s.status==='短期・単発'?'<span class="bdg bb">短期・単発</span>':'<span class="bdg bz">-</span>';
+    var paperBdg=(s.paper_payslip===true && s.paper_contract===true)?'<span class="bdg bo" style="margin-left:4px;font-size:10px">📄全て紙</span>':(s.paper_payslip===true)?'<span class="bdg bo" style="margin-left:4px;font-size:10px">📄給与</span>':(s.paper_contract===true)?'<span class="bdg bo" style="margin-left:4px;font-size:10px">📄契約</span>':'';
     var myDocs=allDocs?allDocs.filter(d=>d.staff_id===s.id):[];
       var latestContract=myDocs.find(d=>d.type==='contract');
       var latestPayslip=myDocs.find(d=>d.type==='payslip');
@@ -1383,7 +1496,7 @@ async function sendContract(){
   if(grantDate){
     const d=new Date(grantDate);
     const str=d.getFullYear()+'年'+(d.getMonth()+1)+'月'+d.getDate()+'日';
-    el.innerHTML='有給取得日：<strong>'+str+'</strong>　付与日数：<strong>'+(grantDays||'-')+'日</strong>';
+    el.innerHTML='有給取得日：<strong>'+str+'</strong>  付与日数：<strong>'+(grantDays||'-')+'日</strong>';
   }else{
     el.textContent='有給情報がまだ登録されていません';
   }
@@ -1594,7 +1707,7 @@ async function openStaffDetail(empId){
       if(modalGrantDate){
         const nextD=new Date(modalGrantDate);nextD.setFullYear(nextD.getFullYear()+1);
         const daysLeft=Math.ceil((nextD-new Date())/(1000*60*60*24));
-        nextDateEl.textContent=nextD.getFullYear()+'年'+(nextD.getMonth()+1)+'月'+nextD.getDate()+'日　次回付与日数：'+nextDays+'日';
+        nextDateEl.textContent=nextD.getFullYear()+'年'+(nextD.getMonth()+1)+'月'+nextD.getDate()+'日  次回付与日数：'+nextDays+'日';
         if(nextAlertEl){
           if(daysLeft<=30&&daysLeft>=0){
             nextAlertEl.textContent='⚠️ 次回付与日まであと'+daysLeft+'日です！更新してください';
