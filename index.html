@@ -667,6 +667,7 @@ input:disabled{background:#f5f4f0;color:#aaa;border-color:#e8e6e0}
       <div style="width:44px;height:44px;border-radius:50%;background:#ede9fe;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:700;color:#5b21b6" id="modal-avatar"></div>
       <div><div style="font-size:15px;font-weight:700" id="modal-name"></div><div style="font-size:12px;color:#888;margin-top:2px" id="modal-empid"></div></div>
     </div>
+    <div class="profile-row"><span class="profile-label">ステータス</span><select id="modal-status" style="width:auto;font-size:12px;padding:4px 8px"><option value="稼働中">稼働中</option><option value="短期・単発">短期・単発</option><option value="請負">請負</option><option value="育休中">育休中</option><option value="休業中">休業中</option><option value="契約終了">契約終了</option></select></div>
     <div class="profile-row"><span class="profile-label">派遣先</span><span class="profile-val" id="modal-workplace"></span></div>
     <div class="profile-row"><span class="profile-label">派遣開始日</span><span class="profile-val" id="modal-dispatch-start"></span></div>
     <div class="profile-row"><span class="profile-label">現契約期間</span><input type="text" id="modal-contract" style="width:auto;font-size:12px;padding:4px 8px;text-align:right"></div>
@@ -1625,7 +1626,8 @@ async function saveStaffProfile(){
     const workHours=document.getElementById('modal-work-hours').value!==''?parseInt(document.getElementById('modal-work-hours').value):null;
     const workMins=document.getElementById('modal-work-mins').value!==''?parseInt(document.getElementById('modal-work-mins').value):0;
     const workMinutesPerDay=(workHours!==null)?(workHours*60+workMins):null;
-    const{error}=await supabaseClient.from('staffs').update({restriction_date:restrictionDate,contract_end_date:contractEnd,paid_leave_grant_date:paidLeaveDate,paid_leave_grant_days:paidLeaveDays,paid_leave_exempt:paidLeaveExempt,paid_leave_remaining:paidLeaveRemaining,work_minutes_per_day:workMinutesPerDay}).eq('employee_id',empId);
+    const staffStatus=document.getElementById('modal-status').value;
+    const{error}=await supabaseClient.from('staffs').update({status:staffStatus,restriction_date:restrictionDate,contract_end_date:contractEnd,paid_leave_grant_date:paidLeaveDate,paid_leave_grant_days:paidLeaveDays,paid_leave_exempt:paidLeaveExempt,paid_leave_remaining:paidLeaveRemaining,work_minutes_per_day:workMinutesPerDay}).eq('employee_id',empId);
     if(error){alert('保存失敗：'+error.message);return;}
     alert('保存しました！');
     closeModal('staff-profile');
@@ -1758,6 +1760,8 @@ async function openStaffDetail(empId){
     document.getElementById('modal-empid').textContent='社員番号:'+(data.employee_id||'');
     document.getElementById('modal-avatar').textContent=data.name?data.name.replace(' ','').slice(0,2):'';
     document.getElementById('modal-workplace').textContent=data.workplace||'';
+    var stSel=document.getElementById('modal-status');
+    if(stSel)stSel.value=data.status||'稼働中';
     document.getElementById('modal-dispatch-start').textContent=data.dispatch_start_date||'';
     document.getElementById('modal-contract').value=data.contract_end_date||'';
     document.getElementById('modal-restriction').value=data.restriction_date||'';
