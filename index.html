@@ -668,14 +668,14 @@ input:disabled{background:#f5f4f0;color:#aaa;border-color:#e8e6e0}
       <div><div style="font-size:15px;font-weight:700" id="modal-name"></div><div style="font-size:12px;color:#888;margin-top:2px" id="modal-empid"></div></div>
     </div>
     <div class="profile-row"><span class="profile-label">ステータス</span><select id="modal-status" style="width:auto;font-size:12px;padding:4px 8px"><option value="稼働中">稼働中</option><option value="短期・単発">短期・単発</option><option value="請負">請負</option><option value="育休中">育休中</option><option value="休業中">休業中</option><option value="契約終了">契約終了</option></select></div>
-    <div class="profile-row"><span class="profile-label">派遣先</span><span class="profile-val" id="modal-workplace"></span></div>
-    <div class="profile-row"><span class="profile-label">派遣開始日</span><span class="profile-val" id="modal-dispatch-start"></span></div>
+    <div class="profile-row"><span class="profile-label">派遣先</span><input type="text" id="modal-workplace" style="width:auto;font-size:12px;padding:4px 8px;text-align:right;flex:1"></div>
+    <div class="profile-row"><span class="profile-label">派遣開始日</span><input type="date" id="modal-dispatch-start" style="width:auto;font-size:12px;padding:4px 8px"></div>
     <div class="profile-row"><span class="profile-label">現契約期間</span><input type="text" id="modal-contract" style="width:auto;font-size:12px;padding:4px 8px;text-align:right"></div>
     <div class="profile-row"><span class="profile-label">個人抵触日</span><input type="date" id="modal-restriction" style="width:auto;font-size:12px;padding:4px 8px"></div><div class="profile-row"><span class="profile-label">有給取得日</span><input type="date" id="modal-paid-leave-date" style="width:auto;font-size:12px;padding:4px 8px"></div>
           <div class="profile-row"><span class="profile-label">付与日数</span><input type="number" id="modal-paid-leave-days" placeholder="自動計算" style="width:80px;font-size:12px;padding:4px 8px"> <span style="font-size:12px;color:#888">日</span></div>
-    <div class="profile-row"><span class="profile-label">基礎年金番号</span><span class="profile-val" id="modal-pension"></span></div>
-    <div class="profile-row"><span class="profile-label">雇用保険番号</span><span class="profile-val" id="modal-insurance"></span></div>
-    <div class="profile-row"><span class="profile-label">備考</span><span class="profile-val" id="modal-note"></span></div>
+    <div class="profile-row"><span class="profile-label">基礎年金番号</span><input type="text" id="modal-pension" placeholder="例：1234-567890" style="width:auto;font-size:12px;padding:4px 8px;text-align:right;flex:1"></div>
+    <div class="profile-row"><span class="profile-label">雇用保険番号</span><input type="text" id="modal-insurance" placeholder="例：1234-567890-1" style="width:auto;font-size:12px;padding:4px 8px;text-align:right;flex:1"></div>
+    <div class="profile-row"><span class="profile-label">備考</span><input type="text" id="modal-note" placeholder="メモなど" style="width:auto;font-size:12px;padding:4px 8px;text-align:right;flex:1"></div>
     <div class="profile-row"><span class="profile-label">次回付与日</span><span class="profile-val" id="modal-next-grant-date" style="color:#534AB7;font-weight:600">-</span></div>
     <div id="modal-next-grant-alert" style="display:none;background:#fee2e2;border-radius:8px;padding:8px 12px;font-size:12px;color:#991b1b;font-weight:700;margin-bottom:8px"></div>
     <div class="profile-row"><span class="profile-label">有給対象外</span><label style="display:flex;align-items:center;gap:6px;cursor:pointer"><input type="checkbox" id="modal-paid-leave-exempt" style="width:16px;height:16px;accent-color:#534AB7"><span style="font-size:12px;color:#666">チェックするとスタッフ画面の有給情報が非表示になります</span></label></div>
@@ -1627,7 +1627,12 @@ async function saveStaffProfile(){
     const workMins=document.getElementById('modal-work-mins').value!==''?parseInt(document.getElementById('modal-work-mins').value):0;
     const workMinutesPerDay=(workHours!==null)?(workHours*60+workMins):null;
     const staffStatus=document.getElementById('modal-status').value;
-    const{error}=await supabaseClient.from('staffs').update({status:staffStatus,restriction_date:restrictionDate,contract_end_date:contractEnd,paid_leave_grant_date:paidLeaveDate,paid_leave_grant_days:paidLeaveDays,paid_leave_exempt:paidLeaveExempt,paid_leave_remaining:paidLeaveRemaining,work_minutes_per_day:workMinutesPerDay}).eq('employee_id',empId);
+    const workplace=document.getElementById('modal-workplace').value||null;
+    const dispatchStart=document.getElementById('modal-dispatch-start').value||null;
+    const pensionNumber=document.getElementById('modal-pension').value||null;
+    const insuranceNumber=document.getElementById('modal-insurance').value||null;
+    const staffNote=document.getElementById('modal-note').value||null;
+    const{error}=await supabaseClient.from('staffs').update({status:staffStatus,workplace:workplace,dispatch_start_date:dispatchStart,restriction_date:restrictionDate,contract_end_date:contractEnd,paid_leave_grant_date:paidLeaveDate,paid_leave_grant_days:paidLeaveDays,paid_leave_exempt:paidLeaveExempt,paid_leave_remaining:paidLeaveRemaining,work_minutes_per_day:workMinutesPerDay,pension_number:pensionNumber,insurance_number:insuranceNumber,note:staffNote}).eq('employee_id',empId);
     if(error){alert('保存失敗：'+error.message);return;}
     alert('保存しました！');
     closeModal('staff-profile');
@@ -1759,10 +1764,10 @@ async function openStaffDetail(empId){
     document.getElementById('modal-name').textContent=data.name||'';
     document.getElementById('modal-empid').textContent='社員番号:'+(data.employee_id||'');
     document.getElementById('modal-avatar').textContent=data.name?data.name.replace(' ','').slice(0,2):'';
-    document.getElementById('modal-workplace').textContent=data.workplace||'';
+    document.getElementById('modal-workplace').value=data.workplace||'';
     var stSel=document.getElementById('modal-status');
     if(stSel)stSel.value=data.status||'稼働中';
-    document.getElementById('modal-dispatch-start').textContent=data.dispatch_start_date||'';
+    document.getElementById('modal-dispatch-start').value=data.dispatch_start_date||'';
     document.getElementById('modal-contract').value=data.contract_end_date||'';
     document.getElementById('modal-restriction').value=data.restriction_date||'';
     // 有給取得日・付与日数：保存値がなければ自動計算して表示
@@ -1804,9 +1809,9 @@ async function openStaffDetail(empId){
         if(nextAlertEl)nextAlertEl.style.display='none';
       }
     }
-    document.getElementById('modal-pension').textContent=data.pension_number||'';
-    document.getElementById('modal-insurance').textContent=data.insurance_number||'';
-    document.getElementById('modal-note').textContent=data.note||'';
+    document.getElementById('modal-pension').value=data.pension_number||'';
+    document.getElementById('modal-insurance').value=data.insurance_number||'';
+    document.getElementById('modal-note').value=data.note||'';
     document.getElementById('modal-paid-leave-exempt').checked=data.paid_leave_exempt||false;
     // 有給残日数
     var remEl=document.getElementById('modal-paid-leave-remaining');
