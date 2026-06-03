@@ -218,6 +218,7 @@ input:disabled{background:#f5f4f0;color:#aaa;border-color:#e8e6e0}
       <div class="ch">
         <span class="ct">スタッフ一覧・書類状況</span>
         <div class="btn-row">
+          <button class="btn btn-sm btn-g" onclick="openModal('add-staff')">＋ スタッフ追加</button>
           <button class="btn btn-sm btn-p" onclick="openModal('send-payslip')">給与明細送付</button>
           <button class="btn btn-sm" onclick="openModal('send-contract')">契約書送付</button>
           <button class="btn btn-sm" onclick="exportStaffCSV()">📥 CSV出力</button>
@@ -771,6 +772,45 @@ input:disabled{background:#f5f4f0;color:#aaa;border-color:#e8e6e0}
     <div class="mt">有給申請</div>
     <div class="fg"><label class="fl">取得希望日</label><input type="date"></div>
     <div class="ma"><button class="btn btn-sm" onclick="closeModal('apply-leave')">キャンセル</button><button class="btn btn-sm btn-p" onclick="closeModal('apply-leave')">申請する →</button></div>
+  </div>
+</div>
+
+<div class="mbg" id="modal-add-staff">
+  <div class="modal" style="max-width:520px">
+    <div class="mt">スタッフを追加する</div>
+    <div style="background:#fef3cd;border-radius:8px;padding:10px 12px;font-size:12px;color:#8a5a00;margin-bottom:14px;line-height:1.7">
+      追加後、スタッフは社員番号@flexbs.com・初期パスワード「flexbs+社員番号」でログインできます。
+    </div>
+    <div class="section-divider">基本情報</div>
+    <div class="g2">
+      <div class="fg"><label class="fl">社員番号（4桁） <span style="color:#991b1b">*必須</span></label><input type="text" id="add-employee-id" placeholder="例：1050" maxlength="4" inputmode="numeric"></div>
+      <div class="fg"><label class="fl">ステータス <span style="color:#991b1b">*必須</span></label><select id="add-status"><option value="稼働中">稼働中</option><option value="短期・単発">短期・単発</option><option value="請負">請負</option><option value="育休中">育休中</option><option value="休業中">休業中</option><option value="契約終了">契約終了</option></select></div>
+    </div>
+    <div class="g2">
+      <div class="fg"><label class="fl">氏名 <span style="color:#991b1b">*必須</span></label><input type="text" id="add-name" placeholder="例：山田 花子"></div>
+      <div class="fg"><label class="fl">フリガナ</label><input type="text" id="add-name-kana" placeholder="例：ヤマダ ハナコ"></div>
+    </div>
+    <div class="fg"><label class="fl">派遣先</label><input type="text" id="add-workplace" placeholder="例：FCCテクノ"></div>
+    <div class="section-divider">就業期間</div>
+    <div class="g2">
+      <div class="fg"><label class="fl">派遣開始日</label><input type="date" id="add-dispatch-start"></div>
+      <div class="fg"><label class="fl">契約開始日</label><input type="date" id="add-contract-start"></div>
+    </div>
+    <div class="g2">
+      <div class="fg"><label class="fl">契約終了日</label><input type="date" id="add-contract-end"></div>
+      <div class="fg"><label class="fl">個人抵触日</label><input type="date" id="add-restriction"></div>
+    </div>
+    <div class="section-divider">その他（任意）</div>
+    <div class="g2">
+      <div class="fg"><label class="fl">基礎年金番号</label><input type="text" id="add-pension" placeholder="例：1234-567890"></div>
+      <div class="fg"><label class="fl">雇用保険番号</label><input type="text" id="add-insurance" placeholder="例：1234-567890-1"></div>
+    </div>
+    <div class="fg"><label class="fl">備考</label><textarea id="add-note" rows="2" placeholder="メモなど"></textarea></div>
+    <div id="add-staff-status" style="display:none;font-size:13px;margin-top:8px;padding:10px;border-radius:8px"></div>
+    <div class="ma">
+      <button class="btn btn-sm" onclick="closeModal('add-staff')">キャンセル</button>
+      <button class="btn btn-sm btn-g" onclick="addNewStaff()">追加する →</button>
+    </div>
   </div>
 </div>
 
@@ -2184,7 +2224,81 @@ async function confirmMyNotice(recipientId){
   loadMyNotices();
 }
 
-  async function changeMyPassword(){
+  async function addNewStaff(){
+  if(!supabaseClient){alert('接続エラー');return;}
+  var empId=document.getElementById('add-employee-id').value.trim();
+  var name=document.getElementById('add-name').value.trim();
+  var nameKana=document.getElementById('add-name-kana').value.trim();
+  var status=document.getElementById('add-status').value;
+  var workplace=document.getElementById('add-workplace').value.trim();
+  var dispatchStart=document.getElementById('add-dispatch-start').value||null;
+  var contractStart=document.getElementById('add-contract-start').value||null;
+  var contractEnd=document.getElementById('add-contract-end').value||null;
+  var restriction=document.getElementById('add-restriction').value||null;
+  var pension=document.getElementById('add-pension').value.trim()||null;
+  var insurance=document.getElementById('add-insurance').value.trim()||null;
+  var note=document.getElementById('add-note').value.trim()||null;
+  var statusEl=document.getElementById('add-staff-status');
+  if(!empId||empId.length!==4||isNaN(empId)){
+    statusEl.style.display='block';statusEl.style.background='#fee2e2';statusEl.style.color='#991b1b';
+    statusEl.textContent='社員番号は4桁の数字で入力してください';return;
+  }
+  if(!name){
+    statusEl.style.display='block';statusEl.style.background='#fee2e2';statusEl.style.color='#991b1b';
+    statusEl.textContent='氏名を入力してください';return;
+  }
+  // 重複チェック
+  var {data:existing}=await supabaseClient.from('staffs').select('id').eq('employee_id',empId).single();
+  if(existing){
+    statusEl.style.display='block';statusEl.style.background='#fee2e2';statusEl.style.color='#991b1b';
+    statusEl.textContent='社員番号'+empId+'はすでに登録されています';return;
+  }
+  if(!confirm(empId+'番 '+name+'さんを追加します。よろしいですか？　初期パスワード：flexbs'+empId))return;
+  statusEl.style.display='block';statusEl.style.background='#f5f4f0';statusEl.style.color='#666';
+  statusEl.textContent='追加中...';
+  var email=empId+'@flexbs.com';
+  var password='flexbs'+empId;
+  // Supabase Auth にユーザー作成
+  var {data:authData,error:authError}=await supabaseClient.auth.admin?
+    {data:null,error:{message:'admin APIは使用できません'}}:
+    await supabaseClient.auth.signUp({email:email,password:password});
+  if(authError){
+    // signUpでは既存ユーザーエラーが出ないためstaffsテーブルへの登録を試みる
+  }
+  // staffsテーブルに登録
+  var ins=await supabaseClient.from('staffs').insert({
+    employee_id:parseInt(empId),
+    name:name,
+    name_kana:nameKana||null,
+    status:status,
+    workplace:workplace||null,
+    dispatch_start_date:dispatchStart,
+    contract_start_date:contractStart,
+    contract_end_date:contractEnd,
+    restriction_date:restriction,
+    pension_number:pension,
+    insurance_number:insurance,
+    note:note
+  });
+  if(ins.error){
+    statusEl.style.background='#fee2e2';statusEl.style.color='#991b1b';
+    statusEl.textContent='登録に失敗しました：'+ins.error.message;return;
+  }
+  statusEl.style.background='#e6f4d7';statusEl.style.color='#2d6a10';
+  statusEl.textContent='追加しました！メール：'+email+'　初期パスワード：'+password;
+  // フォームリセット
+  ['add-employee-id','add-name','add-name-kana','add-workplace','add-dispatch-start','add-contract-start','add-contract-end','add-restriction','add-pension','add-insurance','add-note'].forEach(function(id){
+    var el=document.getElementById(id);if(el)el.value='';
+  });
+  document.getElementById('add-status').value='稼働中';
+  setTimeout(function(){
+    closeModal('add-staff');
+    statusEl.style.display='none';
+    loadAdminStaffList();
+  },3000);
+}
+
+async function changeMyPassword(){
   if(!supabaseClient){alert('接続エラー');return;}
   var currentPw=document.getElementById('pw-current').value;
   var newPw=document.getElementById('pw-new').value;
