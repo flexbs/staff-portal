@@ -674,6 +674,8 @@ input:disabled{background:#f5f4f0;color:#aaa;border-color:#e8e6e0}
     <div class="profile-row"><span class="profile-label">次回付与日</span><span class="profile-val" id="modal-next-grant-date" style="color:#534AB7;font-weight:600">-</span></div>
     <div id="modal-next-grant-alert" style="display:none;background:#fee2e2;border-radius:8px;padding:8px 12px;font-size:12px;color:#991b1b;font-weight:700;margin-bottom:8px"></div>
     <div class="profile-row"><span class="profile-label">有給対象外</span><label style="display:flex;align-items:center;gap:6px;cursor:pointer"><input type="checkbox" id="modal-paid-leave-exempt" style="width:16px;height:16px;accent-color:#534AB7"><span style="font-size:12px;color:#666">チェックするとスタッフ画面の有給情報が非表示になります</span></label></div>
+    <div class="profile-row"><span class="profile-label">有給残日数</span><input type="number" id="modal-paid-leave-remaining" placeholder="未入力" step="0.5" min="0" style="width:80px;font-size:12px;padding:4px 8px"> <span style="font-size:12px;color:#888">日（7/1時点の残日数を入力）</span></div>
+    <div class="profile-row"><span class="profile-label">所定労働時間</span><input type="number" id="modal-work-hours" placeholder="7" min="0" max="12" style="width:50px;font-size:12px;padding:4px 8px"> <span style="font-size:12px;color:#888">時間</span> <input type="number" id="modal-work-mins" placeholder="0" min="0" max="59" style="width:50px;font-size:12px;padding:4px 8px;margin-left:6px"> <span style="font-size:12px;color:#888">分</span></div>
     <div class="ma"><button class="btn btn-sm" onclick="closeModal('staff-profile')">閉じる</button><button class="btn btn-sm btn-p" onclick="saveStaffProfile()">保存する →</button></div>
   </div>
 </div>
@@ -1576,7 +1578,11 @@ async function saveStaffProfile(){
     const paidLeaveDate=document.getElementById('modal-paid-leave-date').value||null;
     const paidLeaveDays=document.getElementById('modal-paid-leave-days').value?parseInt(document.getElementById('modal-paid-leave-days').value):null;
     const paidLeaveExempt=document.getElementById('modal-paid-leave-exempt').checked;
-    const{error}=await supabaseClient.from('staffs').update({restriction_date:restrictionDate,contract_end_date:contractEnd,paid_leave_grant_date:paidLeaveDate,paid_leave_grant_days:paidLeaveDays,paid_leave_exempt:paidLeaveExempt}).eq('employee_id',empId);
+    const paidLeaveRemaining=document.getElementById('modal-paid-leave-remaining').value!==''?parseFloat(document.getElementById('modal-paid-leave-remaining').value):null;
+    const workHours=document.getElementById('modal-work-hours').value!==''?parseInt(document.getElementById('modal-work-hours').value):null;
+    const workMins=document.getElementById('modal-work-mins').value!==''?parseInt(document.getElementById('modal-work-mins').value):0;
+    const workMinutesPerDay=(workHours!==null)?(workHours*60+workMins):null;
+    const{error}=await supabaseClient.from('staffs').update({restriction_date:restrictionDate,contract_end_date:contractEnd,paid_leave_grant_date:paidLeaveDate,paid_leave_grant_days:paidLeaveDays,paid_leave_exempt:paidLeaveExempt,paid_leave_remaining:paidLeaveRemaining,work_minutes_per_day:workMinutesPerDay}).eq('employee_id',empId);
     if(error){alert('保存失敗：'+error.message);return;}
     alert('保存しました！');
     closeModal('staff-profile');
@@ -1755,6 +1761,15 @@ async function openStaffDetail(empId){
     document.getElementById('modal-insurance').textContent=data.insurance_number||'';
     document.getElementById('modal-note').textContent=data.note||'';
     document.getElementById('modal-paid-leave-exempt').checked=data.paid_leave_exempt||false;
+    // 有給残日数
+    var remEl=document.getElementById('modal-paid-leave-remaining');
+    if(remEl)remEl.value=(data.paid_leave_remaining!==null&&data.paid_leave_remaining!==undefined)?data.paid_leave_remaining:'';
+    // 所定労働時間
+    var wmpd=data.work_minutes_per_day||null;
+    var whEl=document.getElementById('modal-work-hours');
+    var wmEl=document.getElementById('modal-work-mins');
+    if(whEl)whEl.value=wmpd!==null?Math.floor(wmpd/60):'';
+    if(wmEl)wmEl.value=wmpd!==null?wmpd%60:'';
     openModal('staff-profile');
   }catch(e){alert('エラー:'+e.message);}
 }
