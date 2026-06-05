@@ -2260,7 +2260,7 @@ async function confirmMyNotice(recipientId){
     statusEl.textContent='氏名を入力してください';return;
   }
   // 重複チェック
-  var {data:existing}=await supabaseClient.from('staffs').select('id').eq('employee_id',empId).single();
+  var {data:existing}=await supabaseClient.from('staffs').select('id').eq('employee_id',parseInt(empId)).maybeSingle();
   if(existing){
     statusEl.style.display='block';statusEl.style.background='#fee2e2';statusEl.style.color='#991b1b';
     statusEl.textContent='社員番号'+empId+'はすでに登録されています';return;
