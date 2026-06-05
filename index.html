@@ -2270,13 +2270,23 @@ async function confirmMyNotice(recipientId){
   statusEl.textContent='追加中...';
   var email=empId+'@flexbs.com';
   var password='flexbs'+empId;
-  // Supabase Auth にユーザー作成
-  var {data:authData,error:authError}=await supabaseClient.auth.admin?
-    {data:null,error:{message:'admin APIは使用できません'}}:
-    await supabaseClient.auth.signUp({email:email,password:password});
-  if(authError){
-    // signUpでは既存ユーザーエラーが出ないためstaffsテーブルへの登録を試みる
+  // Edge Function でAuthユーザーを作成
+  statusEl.textContent='アカウント作成中...';
+  var funcRes=await fetch('https://wafarcqisrwzlkectrdo.supabase.co/functions/v1/create-user',{
+    method:'POST',
+    headers:{
+      'Content-Type':'application/json',
+      'Authorization':'Bearer '+SUPABASE_KEY,
+      'apikey':SUPABASE_KEY
+    },
+    body:JSON.stringify({email:email,password:password})
+  });
+  var funcData=await funcRes.json();
+  if(!funcRes.ok&&funcData.error&&!funcData.error.includes('already been registered')){
+    statusEl.style.background='#fee2e2';statusEl.style.color='#991b1b';
+    statusEl.textContent='アカウント作成に失敗しました：'+funcData.error;return;
   }
+  statusEl.textContent='スタッフ情報を登録中...';
   // staffsテーブルに登録
   var ins=await supabaseClient.from('staffs').insert({
     employee_id:parseInt(empId),
