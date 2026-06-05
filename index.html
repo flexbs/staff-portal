@@ -2270,21 +2270,22 @@ async function confirmMyNotice(recipientId){
   statusEl.textContent='追加中...';
   var email=empId+'@flexbs.com';
   var password='flexbs'+empId;
-  // SQL Function でAuthユーザーを作成
+  // Edge Function でAuthユーザーを作成
   statusEl.textContent='アカウント作成中...';
-  var authResult=await supabaseClient.rpc('create_auth_user',{user_email:email,user_password:password});
-  if(authResult.error){
-    var errMsg=authResult.error.message||'作成失敗';
-    if(!errMsg.includes('duplicate')){
+  try{
+    var funcRes=await fetch('https://wafarcqisrwzlkectrdo.supabase.co/functions/v1/create-user',{
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({email:email,password:password})
+    });
+    var funcData=await funcRes.json();
+    if(!funcRes.ok&&funcData.error_code!=='email_exists'){
       statusEl.style.background='#fee2e2';statusEl.style.color='#991b1b';
-      statusEl.textContent='アカウント作成に失敗しました：'+errMsg;return;
+      statusEl.textContent='アカウント作成に失敗しました：'+(funcData.message||funcData.error||'不明なエラー');return;
     }
-  }
-  if(authResult.data&&authResult.data.success===false){
-    if(!authResult.data.error||!authResult.data.error.includes('duplicate')){
-      statusEl.style.background='#fee2e2';statusEl.style.color='#991b1b';
-      statusEl.textContent='アカウント作成に失敗しました：'+(authResult.data.error||'不明なエラー');return;
-    }
+  }catch(e){
+    statusEl.style.background='#fee2e2';statusEl.style.color='#991b1b';
+    statusEl.textContent='アカウント作成に失敗しました：'+e.message;return;
   }
   statusEl.textContent='スタッフ情報を登録中...';
   // staffsテーブルに登録
