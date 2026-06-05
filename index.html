@@ -1616,7 +1616,7 @@ async function sendContract(){
 }
 async function saveStaffProfile(){
   try{
-    const empId=document.getElementById('modal-empid').textContent.replace('社員番号：','');
+    const empId=document.getElementById('modal-empid').textContent.replace('社員番号：','').replace('社員番号:','').trim();
     const restrictionDate=document.getElementById('modal-restriction').value||null;
     const contractEnd=document.getElementById('modal-contract').value||null;
     const paidLeaveDate=document.getElementById('modal-paid-leave-date').value||null;
