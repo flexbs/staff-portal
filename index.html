@@ -959,7 +959,6 @@ async function doLogin(type){
     loadAdminMetrics();
   } else {
     loadStaffProfile();
-    checkUnreadNotices();
   }
 }
 
@@ -1123,6 +1122,7 @@ async function loadStaffProfile(){
   var {data,error}=await supabaseClient.from('staffs').select('*').eq('employee_id',empId).single();
   if(error||!data) return;
   myStaffData=data;
+  checkUnreadNotices();
   document.querySelectorAll('.staff-name-display').forEach(el=>el.textContent=data.name+' さん');
   document.querySelectorAll('.staff-workplace-display').forEach(el=>el.textContent='社員番号:'+data.employee_id+' · '+(data.workplace||''));
   document.querySelectorAll('.staff-av').forEach(el=>el.textContent=data.name?data.name.replace(' ','').slice(0,2):'');
