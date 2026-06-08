@@ -391,7 +391,7 @@ input:disabled{background:#f5f4f0;color:#aaa;border-color:#e8e6e0}
 
 <!-- スタッフ画面 -->
 <div id="page-staff" class="page">
-  <div id="notice-unread-banner" style="display:none;align-items:center;gap:10px;background:#fff3cd;border:1px solid #ffc107;border-radius:8px;padding:10px 14px;margin-bottom:12px;font-size:13px;color:#856404"><span id="notice-banner-msg" style="flex:1;line-height:1.6"></span><span style="font-size:11px;color:#856404;white-space:nowrap;cursor:pointer" onclick="var t=document.getElementById('staff-notice-tab');if(t)t.click()">お知らせを確認 →</span></div>
+  <div id="notice-unread-banner" style="display:none;flex-direction:column;gap:6px;background:#fff3cd;border:1px solid #ffc107;border-radius:8px;padding:10px 14px;margin-bottom:12px;font-size:13px;color:#856404"><div id="notice-banner-msg"></div></div>
   <div style="display:flex;align-items:center;gap:12px;margin-bottom:16px">
     <div class="staff-av" style="width:48px;height:48px;border-radius:50%;background:#ede9fe;display:flex;align-items:center;justify-content:center;font-size:15px;font-weight:800;color:#5b21b6;flex-shrink:0"></div>
     <div>
@@ -2171,27 +2171,37 @@ function renderLeaveHistory(reqs,staffMap){
 
 async function checkUnreadNotices(){
   if(!supabaseClient||!myStaffData)return;
-  var msgs=[];
+  var rows=[];
+  var badge=document.getElementById('notice-badge');
+  // お知らせ未確認チェック
   var {data:recs}=await supabaseClient.from('notice_recipients').select('id,confirmed_at').eq('staff_id',myStaffData.id).is('confirmed_at',null);
   var noticeCnt=recs?recs.length:0;
   if(noticeCnt>0){
-    var badge=document.getElementById('notice-badge');
     if(badge){badge.textContent=noticeCnt;badge.style.display='inline';}
-    msgs.push('📢 未確認のお知らせが'+noticeCnt+'件あります');
+    rows.push('<div style="display:flex;justify-content:space-between;align-items:center"><span>\u{1F4E2} \u304A\u77E5\u3089\u305B\u304C'+noticeCnt+'\u4EF6\u672A\u78BA\u8A8D\u3067\u3059</span><span style="font-size:11px;cursor:pointer;text-decoration:underline" onclick="goNoticeTab()">\u78BA\u8A8D\u3059\u308B \u2192</span></div>');
   }else{
-    var badge2=document.getElementById('notice-badge');
-    if(badge2){badge2.style.display='none';badge2.textContent='';}
+    if(badge){badge.style.display='none';badge.textContent='';}
   }
-  var {data:docs}=await supabaseClient.from('documents').select('id,confirmed_at').eq('staff_id',myStaffData.id).is('confirmed_at',null);
-  var docCnt=docs?docs.length:0;
-  if(docCnt>0)msgs.push('📄 未確認の書類が'+docCnt+'件あります');
+  // 書類未確認チェック（種別ごと）
+  var {data:docs}=await supabaseClient.from('documents').select('id,confirmed_at,type').eq('staff_id',myStaffData.id).is('confirmed_at',null).is('cancelled_at',null);
+  if(docs&&docs.length>0){
+    var contractCnt=docs.filter(function(d){return d.type==='contract';}).length;
+    var payslipCnt=docs.filter(function(d){return d.type==='payslip';}).length;
+    var otherCnt=docs.filter(function(d){return d.type!=='contract'&&d.type!=='payslip';}).length;
+    var dl='<span style="font-size:11px;cursor:pointer;text-decoration:underline" onclick="goDocsTab()">'+'\u78BA\u8A8D\u3059\u308B \u2192</span>';
+    if(contractCnt>0)rows.push('<div style="display:flex;justify-content:space-between;align-items:center"><span>\uD83D\uDCC4 \u5C31\u696D\u6761\u4EF6\u660E\u793A\u66F8\u304C'+contractCnt+'\u4EF6\u672A\u78BA\u8A8D\u3067\u3059</span>'+dl+'</div>');
+    if(payslipCnt>0)rows.push('<div style="display:flex;justify-content:space-between;align-items:center"><span>\uD83D\uDCB4 \u7D66\u4E0E\u660E\u7D30\u304C'+payslipCnt+'\u4EF6\u672A\u78BA\u8A8D\u3067\u3059</span>'+dl+'</div>');
+    if(otherCnt>0)rows.push('<div style="display:flex;justify-content:space-between;align-items:center"><span>\uD83D\uDCC4 \u66F8\u985E\u304C'+otherCnt+'\u4EF6\u672A\u78BA\u8A8D\u3067\u3059</span>'+dl+'</div>');
+  }
   var banner=document.getElementById('notice-unread-banner');
   if(!banner)return;
-  if(msgs.length===0){banner.style.display='none';return;}
+  if(rows.length===0){banner.style.display='none';return;}
   var inner=document.getElementById('notice-banner-msg');
-  if(inner)inner.textContent=msgs.join('　　');
+  if(inner)inner.innerHTML=rows.join('<hr style="border:none;border-top:1px solid #e6b800;margin:4px 0">');
   banner.style.display='flex';
 }
+function goNoticeTab(){var t=document.getElementById('staff-notice-tab');if(t)t.click();}
+function goDocsTab(){var tabs=document.querySelectorAll('#page-staff .sub-tab');if(tabs&&tabs[0])tabs[0].click();}
 function clearNoticeBadge(){
   var badge=document.getElementById('notice-badge');
   if(badge){badge.style.display='none';badge.textContent='';}
