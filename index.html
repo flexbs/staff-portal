@@ -1442,11 +1442,11 @@ function printLeaveRequests(){
   var label=sel?sel.options[sel.selectedIndex].text:'';
   var tbody=document.getElementById('admin-leave-tbody');
   if(!tbody)return;
-  // 取消行を除いた行だけ取得
+  // 取消行（ピンク背景・status='cancelled'）を除いた行だけ取得
   var allRows=tbody.querySelectorAll('tr');
   var filteredRows='';
   allRows.forEach(function(tr){
-    if(!tr.innerHTML.includes('取消'))filteredRows+=tr.outerHTML;
+    if(!tr.style.background&&tr.style.cssText.indexOf('fee2e2')===-1&&!tr.innerHTML.includes('line-through'))filteredRows+=tr.outerHTML;
   });
   var rows=filteredRows;
   var w=window.open('','_blank');
