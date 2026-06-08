@@ -1442,7 +1442,13 @@ function printLeaveRequests(){
   var label=sel?sel.options[sel.selectedIndex].text:'';
   var tbody=document.getElementById('admin-leave-tbody');
   if(!tbody)return;
-  var rows=tbody.innerHTML;
+  // 取消行を除いた行だけ取得
+  var allRows=tbody.querySelectorAll('tr');
+  var filteredRows='';
+  allRows.forEach(function(tr){
+    if(!tr.innerHTML.includes('取消'))filteredRows+=tr.outerHTML;
+  });
+  var rows=filteredRows;
   var w=window.open('','_blank');
   w.document.write('<html><head><meta charset="utf-8"><title>有給申請一覧 '+label+'</title>');
   w.document.write('<style>body{font-family:sans-serif;font-size:12px;padding:20px}h2{font-size:16px;margin-bottom:12px}table{width:100%;border-collapse:collapse}th,td{border:1px solid #ccc;padding:6px 8px;text-align:left}th{background:#f5f5f5;font-weight:bold}.bdg{display:inline-block;padding:2px 8px;border-radius:10px;font-size:11px}.bg{background:#d1fae5;color:#065f46}.ba{background:#dbeafe;color:#1e40af}.bz{background:#f3f4f6;color:#6b7280}@media print{button{display:none}}</style>');
