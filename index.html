@@ -391,7 +391,7 @@ input:disabled{background:#f5f4f0;color:#aaa;border-color:#e8e6e0}
 
 <!-- スタッフ画面 -->
 <div id="page-staff" class="page">
-  <div id="notice-unread-banner" onclick="var t=document.getElementById('staff-notice-tab');if(t){t.click();}" style="display:none;align-items:center;gap:10px;background:#fff3cd;border:1px solid #ffc107;border-radius:8px;padding:10px 14px;margin-bottom:12px;cursor:pointer;font-size:13px;color:#856404"><span style="font-size:18px">📢</span><span></span><span style="margin-left:auto;font-size:11px;color:#856404">タップして確認 →</span></div>
+  <div id="notice-unread-banner" style="display:none;align-items:center;gap:10px;background:#fff3cd;border:1px solid #ffc107;border-radius:8px;padding:10px 14px;margin-bottom:12px;font-size:13px;color:#856404"><span id="notice-banner-msg" style="flex:1;line-height:1.6"></span><span style="font-size:11px;color:#856404;white-space:nowrap;cursor:pointer" onclick="var t=document.getElementById('staff-notice-tab');if(t)t.click()">お知らせを確認 →</span></div>
   <div style="display:flex;align-items:center;gap:12px;margin-bottom:16px">
     <div class="staff-av" style="width:48px;height:48px;border-radius:50%;background:#ede9fe;display:flex;align-items:center;justify-content:center;font-size:15px;font-weight:800;color:#5b21b6;flex-shrink:0"></div>
     <div>
@@ -2171,19 +2171,31 @@ function renderLeaveHistory(reqs,staffMap){
 
 async function checkUnreadNotices(){
   if(!supabaseClient||!myStaffData)return;
+  var msgs=[];
   var {data:recs}=await supabaseClient.from('notice_recipients').select('id,confirmed_at').eq('staff_id',myStaffData.id).is('confirmed_at',null);
-  if(!recs||recs.length===0){clearNoticeBadge();return;}
-  var cnt=recs.length;
-  var badge=document.getElementById('notice-badge');
-  if(badge){badge.textContent=cnt;badge.style.display='inline';}
+  var noticeCnt=recs?recs.length:0;
+  if(noticeCnt>0){
+    var badge=document.getElementById('notice-badge');
+    if(badge){badge.textContent=noticeCnt;badge.style.display='inline';}
+    msgs.push('📢 未確認のお知らせが'+noticeCnt+'件あります');
+  }else{
+    var badge2=document.getElementById('notice-badge');
+    if(badge2){badge2.style.display='none';badge2.textContent='';}
+  }
+  var {data:docs}=await supabaseClient.from('documents').select('id,confirmed_at').eq('staff_id',myStaffData.id).is('confirmed_at',null);
+  var docCnt=docs?docs.length:0;
+  if(docCnt>0)msgs.push('📄 未確認の書類が'+docCnt+'件あります');
   var banner=document.getElementById('notice-unread-banner');
-  if(banner){banner.style.display='flex';banner.querySelector('span').textContent='新しいお知らせが'+cnt+'件あります';}
+  if(!banner)return;
+  if(msgs.length===0){banner.style.display='none';return;}
+  var inner=document.getElementById('notice-banner-msg');
+  if(inner)inner.textContent=msgs.join('　　');
+  banner.style.display='flex';
 }
 function clearNoticeBadge(){
   var badge=document.getElementById('notice-badge');
   if(badge){badge.style.display='none';badge.textContent='';}
-  var banner=document.getElementById('notice-unread-banner');
-  if(banner)banner.style.display='none';
+  checkUnreadNotices();
 }
 async function loadMyNotices(){
   var c=document.getElementById('staff-notices-tbody');
