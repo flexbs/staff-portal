@@ -223,6 +223,10 @@ input:disabled{background:#f5f4f0;color:#aaa;border-color:#e8e6e0}
           <button class="btn btn-sm" onclick="exportStaffCSV()">📥 CSV出力</button>
         </div>
       </div>
+      <div style="display:flex;gap:4px;margin-bottom:12px;border-bottom:2px solid #e8e5e0">
+        <button id="docs-tab-payslip" onclick="switchDocsTab('payslip')" style="padding:6px 16px;font-size:13px;font-weight:700;border:none;background:#5b21b6;color:#fff;border-radius:6px 6px 0 0;cursor:pointer">給与明細</button>
+        <button id="docs-tab-contract" onclick="switchDocsTab('contract')" style="padding:6px 16px;font-size:13px;font-weight:400;border:none;background:#e8e5e0;color:#555;border-radius:6px 6px 0 0;cursor:pointer">就業条件明示書</button>
+      </div>
       <div style="margin-bottom:12px;display:flex;align-items:center;gap:8px;flex-wrap:wrap">
         <label style="font-size:13px;color:#555">スタッフ：</label>
         <select id="docs-filter-staff" onchange="filterAdminDocs()" style="padding:6px 10px;border-radius:8px;border:1px solid #d8d6d0;font-size:13px">
@@ -234,10 +238,16 @@ input:disabled{background:#f5f4f0;color:#aaa;border-color:#e8e6e0}
         </select>
       </div>
       <div class="tbl-scroll">
-        <table class="tbl">
-         <thead><tr><th>名前</th><th>ステータス</th><th>社員番号</th><th>派遣先</th><th>給与明細</th><th>就業条件明示書</th><th>確認日時</th><th></th></tr></thead>
+        <table class="tbl" id="docs-table-payslip">
+         <thead><tr><th>名前</th><th>ステータス</th><th>社員番号</th><th>派遣先</th><th>給与明細</th><th>確認日時</th><th></th></tr></thead>
           <tbody id="admin-staff-tbody">
-            <tr><td>読み込み中...</td><td></td><td></td><td></td><td></td><td></td><td></td><td></td></tr>
+            <tr><td>読み込み中...</td><td></td><td></td><td></td><td></td><td></td><td></td></tr>
+          </tbody>
+        </table>
+        <table class="tbl" id="docs-table-contract" style="display:none">
+         <thead><tr><th>名前</th><th>ステータス</th><th>社員番号</th><th>派遣先</th><th>就業条件明示書</th><th>確認日時</th><th></th></tr></thead>
+          <tbody id="admin-contract-tbody">
+            <tr><td>読み込み中...</td><td></td><td></td><td></td><td></td><td></td><td></td></tr>
           </tbody>
         </table>
       </div>
@@ -1267,10 +1277,24 @@ async function loadAdminStaffList(){
     tbody.appendChild(tr);
   });
 }
+function switchDocsTab(tab){
+  var isPayslip = tab === 'payslip';
+  document.getElementById('docs-table-payslip').style.display = isPayslip ? '' : 'none';
+  document.getElementById('docs-table-contract').style.display = isPayslip ? 'none' : '';
+  document.getElementById('docs-tab-payslip').style.background = isPayslip ? '#5b21b6' : '#e8e5e0';
+  document.getElementById('docs-tab-payslip').style.color = isPayslip ? '#fff' : '#555';
+  document.getElementById('docs-tab-payslip').style.fontWeight = isPayslip ? '700' : '400';
+  document.getElementById('docs-tab-contract').style.background = isPayslip ? '#e8e5e0' : '#5b21b6';
+  document.getElementById('docs-tab-contract').style.color = isPayslip ? '#555' : '#fff';
+  document.getElementById('docs-tab-contract').style.fontWeight = isPayslip ? '400' : '700';
+  window._docsCurrentTab = tab;
+  filterAdminDocs();
+}
 function filterAdminDocs(){
   var staffVal=document.getElementById('docs-filter-staff').value;
   var monthVal=document.getElementById('docs-filter-month').value;
-  var tbody=document.getElementById('admin-staff-tbody');
+  var isContract = window._docsCurrentTab === 'contract';
+  var tbody=document.getElementById(isContract ? 'admin-contract-tbody' : 'admin-staff-tbody');
   if(!tbody)return;
   var filtered=_adminStaffAll;
   if(staffVal!=='all')filtered=filtered.filter(s=>s.id===staffVal);
@@ -1280,12 +1304,18 @@ function filterAdminDocs(){
     if(monthVal!=='all')myDocs=myDocs.filter(d=>d.created_at&&d.created_at.startsWith(monthVal));
     var tr=document.createElement('tr');
     var statusBdg=s.status==='稼働中'?'<span class="bdg bg">稼働中</span>':s.status==='契約終了'?'<span class="bdg bz">契約終了</span>':s.status==='育休中'?'<span class="bdg ba">育休中</span>':s.status==='休業中'?'<span class="bdg bo">休業中</span>':s.status==='短期・単発'?'<span class="bdg bb">短期・単発</span>':'<span class="bdg bz">-</span>';
-    var latestContract=myDocs.find(d=>d.type==='contract');
-    var latestPayslip=myDocs.find(d=>d.type==='payslip');
-    var payslipBdg=!latestPayslip?'<span class="bdg bz">未閲覧</span>':(latestPayslip.confirmed_at?'<span class="bdg bg">確認済</span>':'<span class="bdg bo">未確認</span>');
-    var contractBdg=!latestContract?'<span class="bdg bz">未送付</span>':(latestContract.confirmed_at?'<span class="bdg bg">確認済</span>':'<span class="bdg bo">送付済</span>');
-    var confirmedTd=(latestContract&&latestContract.confirmed_at)?'<td style="font-size:11px">'+new Date(latestContract.confirmed_at).toLocaleString('ja-JP',{year:'numeric',month:'2-digit',day:'2-digit',hour:'2-digit',minute:'2-digit'})+'</td>':(latestContract?'<td style="font-size:11px;color:#888">未確認</td>':'<td style="font-size:11px;color:#888">—</td>');
-    tr.innerHTML='<td>'+s.name+'</td><td>'+statusBdg+'</td><td>'+s.employee_id+'</td><td>'+(s.workplace||'')+'</td><td>'+payslipBdg+'</td><td>'+contractBdg+'</td>'+confirmedTd+'<td><button class="btn btn-sm" onclick="openStaffDetail('+s.employee_id+')">詳細</button></td>';
+    var detailBtn='<td><button class="btn btn-sm" onclick="openStaffDetail('+s.employee_id+')">詳細</button></td>';
+    if(isContract){
+      var latestContract=myDocs.find(d=>d.type==='contract');
+      var contractBdg=!latestContract?'<span class="bdg bz">未送付</span>':(latestContract.confirmed_at?'<span class="bdg bg">確認済</span>':'<span class="bdg bo">送付済</span>');
+      var confirmedTd=(latestContract&&latestContract.confirmed_at)?'<td style="font-size:11px">'+new Date(latestContract.confirmed_at).toLocaleString('ja-JP',{year:'numeric',month:'2-digit',day:'2-digit',hour:'2-digit',minute:'2-digit'})+'</td>':(latestContract?'<td style="font-size:11px;color:#888">未確認</td>':'<td style="font-size:11px;color:#888">—</td>');
+      tr.innerHTML='<td>'+s.name+'</td><td>'+statusBdg+'</td><td>'+s.employee_id+'</td><td>'+(s.workplace||'')+'</td><td>'+contractBdg+'</td>'+confirmedTd+detailBtn;
+    } else {
+      var latestPayslip=myDocs.find(d=>d.type==='payslip');
+      var payslipBdg=!latestPayslip?'<span class="bdg bz">未閲覧</span>':(latestPayslip.confirmed_at?'<span class="bdg bg">確認済</span>':'<span class="bdg bo">未確認</span>');
+      var payConfirmedTd=(latestPayslip&&latestPayslip.confirmed_at)?'<td style="font-size:11px">'+new Date(latestPayslip.confirmed_at).toLocaleString('ja-JP',{year:'numeric',month:'2-digit',day:'2-digit',hour:'2-digit',minute:'2-digit'})+'</td>':(latestPayslip?'<td style="font-size:11px;color:#888">未確認</td>':'<td style="font-size:11px;color:#888">—</td>');
+      tr.innerHTML='<td>'+s.name+'</td><td>'+statusBdg+'</td><td>'+s.employee_id+'</td><td>'+(s.workplace||'')+'</td><td>'+payslipBdg+'</td>'+payConfirmedTd+detailBtn;
+    }
     tbody.appendChild(tr);
   });
 }
