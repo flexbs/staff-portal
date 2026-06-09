@@ -2359,16 +2359,16 @@ async function confirmMyNotice(recipientId){
   statusEl.textContent='追加中...';
   var email=empId+'@flexbs.com';
   var password='flexbs'+empId;
-  // Edge Function でAuthユーザーを作成
+  // Vercel APIルートでAuthユーザーを作成
   statusEl.textContent='アカウント作成中...';
   try{
-    var funcRes=await fetch('https://wafarcqisrwzlkectrdo.supabase.co/functions/v1/create-user',{
+    var funcRes=await fetch('/api/create-user',{
       method:'POST',
-      headers:{'Content-Type':'application/json','apikey':SUPABASE_KEY,'Authorization':'Bearer '+SUPABASE_KEY},
+      headers:{'Content-Type':'application/json'},
       body:JSON.stringify({email:email,password:password})
     });
     var funcData=await funcRes.json();
-    if(!funcRes.ok&&funcData.error_code!=='email_exists'){
+    if(!funcRes.ok&&funcData.code!=='email_exists'){
       statusEl.style.background='#fee2e2';statusEl.style.color='#991b1b';
       statusEl.textContent='アカウント作成に失敗しました：'+(funcData.message||funcData.error||'不明なエラー');return;
     }
