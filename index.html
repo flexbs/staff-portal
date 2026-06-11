@@ -2012,7 +2012,7 @@ async function loadMyDocuments(){
       else{st='<span class="bdg bo">署名待ち</span>';pending++;}
       var su='';var rv=await supabaseClient.storage.from(bk).createSignedUrl(d.file_url,3600);if(rv.data&&rv.data.signedUrl)su=rv.data.signedUrl;
       var eid=d.id;
-      var bt=su?'<a class="btn btn-sm" href="'+su+'" target="_blank" rel="noopener" style="text-decoration:none;display:inline-block">表示</a>':'<button class="btn btn-sm">表示</button>';
+      var bt=su?'<a class="btn btn-sm" href="'+su+'" target="_blank" rel="noopener" style="text-decoration:none;display:inline-block">表示</a> <a class="btn btn-sm" href="'+su+'" download style="text-decoration:none;display:inline-block">ダウンロード</a>':'<button class="btn btn-sm">表示</button>';
       if(ns&&!sg){bt+=' <label style="font-size:11px"><input type="checkbox" id="ck-'+eid+'" onchange="toggleDocBtn(this,&quot;s'+eid+'&quot;)"> PDF確認済</label> <button class="btn btn-sm btn-p" id="s'+eid+'" onclick="signMyDocument(&quot;'+eid+'&quot;)" disabled style="opacity:0.4">署名する</button>';}
       else if(!ns&&!sg){bt+=' <label style="font-size:11px"><input type="checkbox" id="ck-'+eid+'" onchange="toggleDocBtn(this,&quot;c'+eid+'&quot;)"> PDF確認済</label> <button class="btn btn-sm btn-p" id="c'+eid+'" onclick="confirmMyDocument(&quot;'+eid+'&quot;)" disabled style="opacity:0.4">確認しました</button>';}
       r+='<tr><td>'+(d.title||ts)+'</td><td style="white-space:nowrap">'+ds+'</td><td>'+st+'</td><td style="white-space:nowrap">'+bt+'</td></tr>';
