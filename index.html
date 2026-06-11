@@ -182,7 +182,7 @@ input:disabled{background:#f5f4f0;color:#aaa;border-color:#e8e6e0}
   </div>
 
   <div class="sub-tabs">
-    <button class="sub-tab active" onclick="showSub('admin','docs',this)">書類管理</button>
+    <button class="sub-tab active" onclick="showSub('admin','docs',this)">書類送付管理</button>
     <button class="sub-tab" onclick="showSub('admin','nyusha',this)">入社手続き</button>
     <button class="sub-tab" onclick="showSub('admin','taisha',this)">退職手続き</button>
 <button class="sub-tab" onclick="showSub('admin','paid',this);loadAdminLeaveRequests();loadAdminPaidLeaveList();loadLeaveHistory()">有給管理</button><button class="sub-tab" onclick="showSub('admin','uploads',this);loadAdminUploads()">書類授受管理</button>    <button class="sub-tab" onclick="showSub('admin','mynumber',this)">マイナンバー管理</button>
@@ -239,13 +239,13 @@ input:disabled{background:#f5f4f0;color:#aaa;border-color:#e8e6e0}
       </div>
       <div class="tbl-scroll">
         <table class="tbl" id="docs-table-payslip">
-         <thead><tr><th>名前</th><th>ステータス</th><th>社員番号</th><th>派遣先</th><th>給与明細</th><th>確認日時</th><th></th></tr></thead>
+         <thead><tr><th>名前</th><th>ステータス</th><th>社員番号</th><th>派遣先</th><th>送付状況</th><th>送付日</th><th></th></tr></thead>
           <tbody id="admin-staff-tbody">
             <tr><td>読み込み中...</td><td></td><td></td><td></td><td></td><td></td><td></td></tr>
           </tbody>
         </table>
         <table class="tbl" id="docs-table-contract" style="display:none">
-         <thead><tr><th>名前</th><th>ステータス</th><th>社員番号</th><th>派遣先</th><th>就業条件明示書</th><th>確認日時</th><th></th></tr></thead>
+         <thead><tr><th>名前</th><th>ステータス</th><th>社員番号</th><th>派遣先</th><th>送付状況</th><th>送付日</th><th></th></tr></thead>
           <tbody id="admin-contract-tbody">
             <tr><td>読み込み中...</td><td></td><td></td><td></td><td></td><td></td><td></td></tr>
           </tbody>
@@ -316,12 +316,18 @@ input:disabled{background:#f5f4f0;color:#aaa;border-color:#e8e6e0}
     <div id="uploads-sent" class="sp" style="display:none">
       <div class="card">
         <div class="ch"><span class="ct">派遣元からスタッフへの送付書類</span></div>
+        <div style="display:flex;gap:4px;margin-bottom:12px;border-bottom:2px solid #e8e5e0">
+          <button id="uploads-tab-payslip" onclick="switchUploadsTab('payslip')" style="padding:6px 16px;font-size:13px;font-weight:700;border:none;background:#5b21b6;color:#fff;border-radius:6px 6px 0 0;cursor:pointer">給与明細</button>
+          <button id="uploads-tab-contract" onclick="switchUploadsTab('contract')" style="padding:6px 16px;font-size:13px;font-weight:400;border:none;background:#e8e5e0;color:#555;border-radius:6px 6px 0 0;cursor:pointer">就業条件明示書</button>
+        </div>
         <div class="tbl-scroll">
-          <table class="tbl">
-<thead><tr><th>名前</th><th>給与</th><th>就業条件明示書</th><th>送付日</th><th>署名・確認</th><th></th><th></th></tr></thead>
-            <tbody id="admin-sent-tbody">
-              <tr><td colspan="5" style="text-align:center;color:#888;padding:20px">読み込み中...</td></tr>
-            </tbody>
+          <table class="tbl" id="uploads-table-payslip">
+            <thead><tr><th>名前</th><th>タイトル</th><th>送付日</th><th>確認状態</th><th>確認日時</th><th>表示</th></tr></thead>
+            <tbody id="admin-sent-payslip-tbody"><tr><td colspan="6" style="text-align:center;color:#888;padding:20px">読み込み中...</td></tr></tbody>
+          </table>
+          <table class="tbl" id="uploads-table-contract" style="display:none">
+            <thead><tr><th>名前</th><th>タイトル</th><th>送付日</th><th>確認状態</th><th>確認日時</th><th>表示</th></tr></thead>
+            <tbody id="admin-sent-contract-tbody"><tr><td colspan="6" style="text-align:center;color:#888;padding:20px">読み込み中...</td></tr></tbody>
           </table>
         </div>
       </div>
@@ -1308,15 +1314,15 @@ function filterAdminDocs(){
     var statusBdg=s.status==='稼働中'?'<span class="bdg bg">稼働中</span>':s.status==='契約終了'?'<span class="bdg bz">契約終了</span>':s.status==='育休中'?'<span class="bdg ba">育休中</span>':s.status==='休業中'?'<span class="bdg bo">休業中</span>':s.status==='短期・単発'?'<span class="bdg bb">短期・単発</span>':'<span class="bdg bz">-</span>';
     var detailBtn='<td><button class="btn btn-sm" onclick="openStaffDetail('+s.employee_id+')">詳細</button></td>';
     if(isContract){
-      var latestContract=myDocs.find(d=>d.type==='contract');
+      var latestContract=myDocs.find(function(d){return d.type==='contract';});
       var contractBdg=!latestContract?'<span class="bdg bz">未送付</span>':(latestContract.confirmed_at?'<span class="bdg bg">確認済</span>':'<span class="bdg bo">送付済</span>');
-      var confirmedTd=(latestContract&&latestContract.confirmed_at)?'<td style="font-size:11px">'+new Date(latestContract.confirmed_at).toLocaleString('ja-JP',{year:'numeric',month:'2-digit',day:'2-digit',hour:'2-digit',minute:'2-digit'})+'</td>':(latestContract?'<td style="font-size:11px;color:#888">未確認</td>':'<td style="font-size:11px;color:#888">—</td>');
-      tr.innerHTML='<td>'+s.name+'</td><td>'+statusBdg+'</td><td>'+s.employee_id+'</td><td>'+(s.workplace||'')+'</td><td>'+contractBdg+'</td>'+confirmedTd+detailBtn;
+      var contractDateTd=latestContract?'<td style="font-size:11px">'+latestContract.created_at.substring(0,10).replace(/-/g,'/')+'</td>':'<td style="font-size:11px;color:#888">—</td>';
+      tr.innerHTML='<td>'+s.name+'</td><td>'+statusBdg+'</td><td>'+s.employee_id+'</td><td>'+(s.workplace||'')+'</td><td>'+contractBdg+'</td>'+contractDateTd+detailBtn;
     } else {
-      var latestPayslip=myDocs.find(d=>d.type==='payslip');
-      var payslipBdg=!latestPayslip?'<span class="bdg bz">未閲覧</span>':(latestPayslip.confirmed_at?'<span class="bdg bg">確認済</span>':'<span class="bdg bo">未確認</span>');
-      var payConfirmedTd=(latestPayslip&&latestPayslip.confirmed_at)?'<td style="font-size:11px">'+new Date(latestPayslip.confirmed_at).toLocaleString('ja-JP',{year:'numeric',month:'2-digit',day:'2-digit',hour:'2-digit',minute:'2-digit'})+'</td>':(latestPayslip?'<td style="font-size:11px;color:#888">未確認</td>':'<td style="font-size:11px;color:#888">—</td>');
-      tr.innerHTML='<td>'+s.name+'</td><td>'+statusBdg+'</td><td>'+s.employee_id+'</td><td>'+(s.workplace||'')+'</td><td>'+payslipBdg+'</td>'+payConfirmedTd+detailBtn;
+      var latestPayslip=myDocs.find(function(d){return d.type==='payslip';});
+      var payslipBdg=!latestPayslip?'<span class="bdg bz">未送付</span>':(latestPayslip.confirmed_at?'<span class="bdg bg">確認済</span>':'<span class="bdg bo">送付済</span>');
+      var payDateTd=latestPayslip?'<td style="font-size:11px">'+latestPayslip.created_at.substring(0,10).replace(/-/g,'/')+'</td>':'<td style="font-size:11px;color:#888">—</td>';
+      tr.innerHTML='<td>'+s.name+'</td><td>'+statusBdg+'</td><td>'+s.employee_id+'</td><td>'+(s.workplace||'')+'</td><td>'+payslipBdg+'</td>'+payDateTd+detailBtn;
     }
     tbody.appendChild(tr);
   });
@@ -1364,31 +1370,46 @@ async function loadAdminMetrics(){
   var c=document.getElementById('unsigned-contract-count');
   if(c)c.textContent=unsignedContract+'件';
 }
+function switchUploadsTab(tab){
+  var isP=tab==='payslip';
+  document.getElementById('uploads-table-payslip').style.display=isP?'':'none';
+  document.getElementById('uploads-table-contract').style.display=isP?'none':'';
+  var tp=document.getElementById('uploads-tab-payslip');
+  var tc=document.getElementById('uploads-tab-contract');
+  if(tp){tp.style.background=isP?'#5b21b6':'#e8e5e0';tp.style.color=isP?'#fff':'#555';tp.style.fontWeight=isP?'700':'400';}
+  if(tc){tc.style.background=isP?'#e8e5e0':'#5b21b6';tc.style.color=isP?'#555':'#fff';tc.style.fontWeight=isP?'400':'700';}
+}
 async function loadAdminUploads(){
   if(!supabaseClient) return;
-  var {data:docs}=await supabaseClient.from('documents').select('*').is('cancelled_at',null).order('created_at',{ascending:false}).limit(50);
+  var {data:docs}=await supabaseClient.from('documents').select('*').is('cancelled_at',null).order('created_at',{ascending:false});
   if(!docs) return;
   var {data:staffs}=await supabaseClient.from('staffs').select('id,name');
   var staffMap={};
-  if(staffs){staffs.forEach(s=>{staffMap[s.id]=s.name;});}
-  var sentTbody=document.getElementById('admin-sent-tbody');
-  if(!sentTbody) return;
-  if(docs.length===0){
-    sentTbody.innerHTML='<tr><td colspan="5" style="text-align:center;color:#888;padding:20px">送付済み書類はまだありません</td></tr>';
-    return;
+  if(staffs){staffs.forEach(function(s){staffMap[s.id]=s.name;});}
+  var payslipDocs=docs.filter(function(d){return d.type==='payslip';});
+  var contractDocs=docs.filter(function(d){return d.type==='contract'||d.requires_signature;});
+  async function buildUploadsRows(targetDocs,tbodyId){
+    var tbody=document.getElementById(tbodyId);
+    if(!tbody)return;
+    if(targetDocs.length===0){tbody.innerHTML='<tr><td colspan="6" style="text-align:center;color:#888;padding:20px">送付済み書類はまだありません</td></tr>';return;}
+    tbody.innerHTML='';
+    for(var i=0;i<targetDocs.length;i++){
+      var d=targetDocs[i];
+      var name=staffMap[d.staff_id]||'(不明)';
+      var dateStr=d.created_at?d.created_at.substring(0,10).replace(/-/g,'/'):'';
+      var bucket=d.type==='payslip'?'payslips':'contracts';
+      var isPayslip=d.type==='payslip';
+      var statusBdg=isPayslip?(d.confirmed_at?'<span class="bdg bg">確認済</span>':'<span class="bdg ba">未確認</span>'):(d.confirmed_at?'<span class="bdg bg">署名済</span>':'<span class="bdg bo">送付済</span>');
+      var confirmedTd=d.confirmed_at?'<td style="font-size:11px">'+new Date(d.confirmed_at).toLocaleString('ja-JP',{year:'numeric',month:'2-digit',day:'2-digit',hour:'2-digit',minute:'2-digit'})+'</td>':'<td style="font-size:11px;color:#888">—</td>';
+      var sUrl='';var rv=await supabaseClient.storage.from(bucket).createSignedUrl(d.file_url,3600);if(rv.data&&rv.data.signedUrl)sUrl=rv.data.signedUrl;
+      var showBtn=sUrl?'<a class="btn btn-sm" href="'+sUrl+'" target="_blank" rel="noopener" style="text-decoration:none;display:inline-block">表示</a>':'<button class="btn btn-sm">表示</button>';
+      var tr=document.createElement('tr');
+      tr.innerHTML='<td>'+name+'</td><td style="font-size:12px">'+(d.title||'')+' </td><td style="white-space:nowrap">'+dateStr+'</td><td>'+statusBdg+'</td>'+confirmedTd+'<td>'+showBtn+'</td>';
+      tbody.appendChild(tr);
+    }
   }
-  sentTbody.innerHTML='';
-  for(var i=0;i<docs.length;i++){var d=docs[i];
-    var name=staffMap[d.staff_id]||'(不明)';
-    var typeStr=d.type==='payslip'?'給与明細':'契約書';
-    var dateStr=d.created_at?d.created_at.substring(0,10).replace(/-/g,'/'):'';
-    var status=d.type==='payslip'?(d.confirmed_at?'<span class="bdg bg">確認済</span>':'<span class="bdg ba">未確認</span>'):(d.confirmed_at?'<span class="bdg bg">署名済</span>':'<span class="bdg bo">署名待ち</span>');
-var bucket=d.type==='payslip'?'payslips':'contracts';
-    var tr=document.createElement('tr');
-var sUrl='';var r=await supabaseClient.storage.from(bucket).createSignedUrl(d.file_url,3600);if(r.data&&r.data.signedUrl)sUrl=r.data.signedUrl;
-tr.innerHTML='<td>'+name+'</td><td>'+(d.type==='payslip'?(d.title||typeStr):'-')+'</td><td>'+(d.type==='contract'?(d.title||typeStr):'-')+'</td><td style="white-space:nowrap">'+dateStr+'</td><td>'+status+'</td><td>'+(sUrl?'<a class="btn btn-sm" href="'+sUrl+'" target="_blank" rel="noopener" style="text-decoration:none;display:inline-block">表示</a>':'<button class="btn btn-sm" onclick="alert(\'PDFを開けませんでした\')">表示</button>')+'</td>'+'<td>'+(d.confirmed_at?'<span style="color:#999;font-size:11px">完了</span>':'<button class="btn btn-sm" style="background:#fee;color:#c00;border:1px solid #c00" onclick="cancelDocument(\''+d.id+'\',\''+d.file_url+'\',\''+(d.type==='payslip'?'payslips':'contracts')+'\')">取り消す</button>')+'</td>';
-                                 sentTbody.appendChild(tr);
-  }
+  await buildUploadsRows(payslipDocs,'admin-sent-payslip-tbody');
+  await buildUploadsRows(contractDocs,'admin-sent-contract-tbody');
 }
 async function cancelDocument(docId,fileUrl,bucket){
   if(!supabaseClient){alert('接続エラーです');return;}
