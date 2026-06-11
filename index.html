@@ -710,6 +710,24 @@ input:disabled{background:#f5f4f0;color:#aaa;border-color:#e8e6e0}
   </div>
 </div>
 
+<!-- 電子交付同意モーダル -->
+<div id="modal-consent" style="display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.6);z-index:9999;align-items:center;justify-content:center">
+  <div style="background:#fff;border-radius:16px;padding:32px;max-width:480px;width:90%;margin:auto;box-shadow:0 8px 32px rgba(0,0,0,0.2)">
+    <div style="text-align:center;margin-bottom:20px">
+      <div style="font-size:40px;margin-bottom:8px">📄</div>
+      <div style="font-size:17px;font-weight:800;color:#1a1a1a">電子交付に関する同意確認</div>
+    </div>
+    <div style="font-size:13px;color:#444;line-height:1.8;margin-bottom:20px;background:#f8f7f5;border-radius:10px;padding:16px">
+      フレックスビジネスサービス株式会社では、以下の書類について電子データにてお送りする場合があります。<br><br>
+      ・給与明細<br>
+      ・就業条件明示書（契約書）<br>
+      ・その他、会社からのお知らせ・書類<br><br>
+      電子データでの受け取りに同意いただける場合は「同意する」ボタンを押してください。
+    </div>
+    <button onclick="submitConsent()" style="width:100%;padding:12px;background:#5b21b6;color:#fff;border:none;border-radius:10px;font-size:15px;font-weight:700;cursor:pointer">同意する</button>
+  </div>
+</div>
+
 <!-- 給与明細送付モーダル -->
 <div class="mbg" id="modal-send-payslip">
   <div class="modal">
@@ -1146,7 +1164,12 @@ async function loadStaffProfile(){
   var {data,error}=await supabaseClient.from('staffs').select('*').eq('employee_id',empId).single();
   if(error||!data) return;
   myStaffData=data;
-  checkUnreadNotices();
+  if(!data.consent_at){
+    var m=document.getElementById('modal-consent');
+    if(m)m.style.display='flex';
+  } else {
+    checkUnreadNotices();
+  }
   document.querySelectorAll('.staff-name-display').forEach(el=>el.textContent=data.name+' さん');
   document.querySelectorAll('.staff-workplace-display').forEach(el=>el.textContent='社員番号:'+data.employee_id+' · '+(data.workplace||''));
   document.querySelectorAll('.staff-av').forEach(el=>el.textContent=data.name?data.name.replace(' ','').slice(0,2):'');
@@ -1999,6 +2022,16 @@ async function loadMyDocuments(){
   await buildArea(payslipDocs,'staff-docs-payslip-area','給与明細はまだありません');
   await buildArea(contractDocs,'staff-docs-contract-area','就業条件明示書はまだありません');
   var pe=document.getElementById('s-pending-docs');if(pe)pe.textContent=pending+'件';
+}
+async function submitConsent(){
+  if(!supabaseClient||!myStaffData)return;
+  var now=new Date().toISOString();
+  var {error}=await supabaseClient.from('staffs').update({consent_at:now}).eq('id',myStaffData.id);
+  if(error){alert('エラーが発生しました。もう一度お試しください。');return;}
+  myStaffData.consent_at=now;
+  var m=document.getElementById('modal-consent');
+  if(m)m.style.display='none';
+  checkUnreadNotices();
 }
 function switchStaffDocsTab(tab){
   var isP=tab==='payslip';
