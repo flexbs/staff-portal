@@ -239,13 +239,13 @@ input:disabled{background:#f5f4f0;color:#aaa;border-color:#e8e6e0}
       </div>
       <div class="tbl-scroll">
         <table class="tbl" id="docs-table-payslip">
-         <thead><tr><th>名前</th><th>ステータス</th><th>社員番号</th><th>派遣先</th><th>送付状況</th><th>送付日</th><th></th></tr></thead>
+         <thead><tr><th>名前</th><th>ステータス</th><th>社員番号</th><th>派遣先</th><th>送付状況</th><th>送付日</th><th>取消</th><th></th></tr></thead>
           <tbody id="admin-staff-tbody">
             <tr><td>読み込み中...</td><td></td><td></td><td></td><td></td><td></td><td></td></tr>
           </tbody>
         </table>
         <table class="tbl" id="docs-table-contract" style="display:none">
-         <thead><tr><th>名前</th><th>ステータス</th><th>社員番号</th><th>派遣先</th><th>送付状況</th><th>送付日</th><th></th></tr></thead>
+         <thead><tr><th>名前</th><th>ステータス</th><th>社員番号</th><th>派遣先</th><th>送付状況</th><th>送付日</th><th>取消</th><th></th></tr></thead>
           <tbody id="admin-contract-tbody">
             <tr><td>読み込み中...</td><td></td><td></td><td></td><td></td><td></td><td></td></tr>
           </tbody>
@@ -1317,12 +1317,14 @@ function filterAdminDocs(){
       var latestContract=myDocs.find(function(d){return d.type==='contract';});
       var contractBdg=!latestContract?'<span class="bdg bz">未送付</span>':(latestContract.confirmed_at?'<span class="bdg bg">確認済</span>':'<span class="bdg bo">送付済</span>');
       var contractDateTd=latestContract?'<td style="font-size:11px">'+latestContract.created_at.substring(0,10).replace(/-/g,'/')+'</td>':'<td style="font-size:11px;color:#888">—</td>';
-      tr.innerHTML='<td>'+s.name+'</td><td>'+statusBdg+'</td><td>'+s.employee_id+'</td><td>'+(s.workplace||'')+'</td><td>'+contractBdg+'</td>'+contractDateTd+detailBtn;
+      var contractCancelTd=latestContract&&!latestContract.confirmed_at?'<td><button class="btn btn-sm" style="background:#fee;color:#c00;border:1px solid #c00" onclick="cancelDocument(&quot;'+latestContract.id+'&quot;,&quot;'+latestContract.file_url+'&quot;,&quot;contracts&quot;)">取消</button></td>':'<td></td>';
+      tr.innerHTML='<td>'+s.name+'</td><td>'+statusBdg+'</td><td>'+s.employee_id+'</td><td>'+(s.workplace||'')+'</td><td>'+contractBdg+'</td>'+contractDateTd+contractCancelTd+detailBtn;
     } else {
       var latestPayslip=myDocs.find(function(d){return d.type==='payslip';});
       var payslipBdg=!latestPayslip?'<span class="bdg bz">未送付</span>':(latestPayslip.confirmed_at?'<span class="bdg bg">確認済</span>':'<span class="bdg bo">送付済</span>');
       var payDateTd=latestPayslip?'<td style="font-size:11px">'+latestPayslip.created_at.substring(0,10).replace(/-/g,'/')+'</td>':'<td style="font-size:11px;color:#888">—</td>';
-      tr.innerHTML='<td>'+s.name+'</td><td>'+statusBdg+'</td><td>'+s.employee_id+'</td><td>'+(s.workplace||'')+'</td><td>'+payslipBdg+'</td>'+payDateTd+detailBtn;
+      var payCancelTd=latestPayslip&&!latestPayslip.confirmed_at?'<td><button class="btn btn-sm" style="background:#fee;color:#c00;border:1px solid #c00" onclick="cancelDocument(&quot;'+latestPayslip.id+'&quot;,&quot;'+latestPayslip.file_url+'&quot;,&quot;payslips&quot;)">取消</button></td>':'<td></td>';
+      tr.innerHTML='<td>'+s.name+'</td><td>'+statusBdg+'</td><td>'+s.employee_id+'</td><td>'+(s.workplace||'')+'</td><td>'+payslipBdg+'</td>'+payDateTd+payCancelTd+detailBtn;
     }
     tbody.appendChild(tr);
   });
