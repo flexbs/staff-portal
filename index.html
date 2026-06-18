@@ -182,13 +182,77 @@ input:disabled{background:#f5f4f0;color:#aaa;border-color:#e8e6e0}
   </div>
 
   <div class="sub-tabs">
-    <button class="sub-tab active" onclick="showSub('admin','docs',this)">書類送付管理</button>
+    <button class="sub-tab active" onclick="showSub('admin','stafflist',this);loadAdminStaffListOnly()">スタッフ一覧</button>
+    <button class="sub-tab" onclick="showSub('admin','docs',this)">書類送付管理</button>
     <button class="sub-tab" onclick="showSub('admin','nyusha',this)">入社手続き</button>
     <button class="sub-tab" onclick="showSub('admin','taisha',this)">退職手続き</button>
-<button class="sub-tab" onclick="showSub('admin','paid',this);loadAdminLeaveRequests();loadAdminPaidLeaveList();loadLeaveHistory()">有給管理</button><button class="sub-tab" onclick="showSub('admin','uploads',this);loadAdminUploads()">書類授受管理</button>    <button class="sub-tab" onclick="showSub('admin','mynumber',this)">マイナンバー管理</button>
+    <button class="sub-tab" onclick="showSub('admin','paid',this);loadAdminLeaveRequests();loadAdminPaidLeaveList();loadLeaveHistory()">有給管理</button>
+    <button class="sub-tab" onclick="showSub('admin','uploads',this);loadAdminUploads()">書類授受管理</button>
+    <button class="sub-tab" onclick="showSub('admin','mynumber',this)">マイナンバー管理</button>
     <button class="sub-tab" onclick="showSub('admin','notice',this);loadAdminNotices()">お知らせ</button>
     <button class="sub-tab" onclick="showSub('admin','kintai',this);loadAdminKintai()">勤怠管理（単発）</button>
     <button class="sub-tab" onclick="showSub('admin','settings',this)">設定</button>
+  </div>
+
+  <!-- ★新設：スタッフ一覧タブ -->
+  <div id="admin-stafflist" class="sp active">
+    <div class="card">
+      <div class="ch">
+        <span class="ct">スタッフ一覧</span>
+        <div class="btn-row">
+          <button class="btn btn-sm" onclick="exportStaffCSV()">📥 CSV出力</button>
+        </div>
+      </div>
+      <div class="tbl-scroll">
+        <table class="tbl">
+          <thead><tr><th>名前</th><th>ステータス</th><th>社員番号</th><th>派遣先</th><th></th></tr></thead>
+          <tbody id="admin-stafflist-tbody">
+            <tr><td colspan="5" style="text-align:center;color:#888;padding:20px">読み込み中...</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <!-- 書類送付管理タブ（スタッフ一覧なし・書類送付状況のみ） -->
+  <div id="admin-docs" class="sp">
+    <div class="card">
+      <div class="ch">
+        <span class="ct">書類送付管理</span>
+        <div class="btn-row">
+          <button class="btn btn-sm btn-p" onclick="openModal('send-payslip')">給与明細送付</button>
+          <button class="btn btn-sm" onclick="openModal('send-contract')">契約書送付</button>
+        </div>
+      </div>
+      <div style="display:flex;gap:4px;margin-bottom:12px;border-bottom:2px solid #e8e5e0">
+        <button id="docs-tab-payslip" onclick="switchDocsTab('payslip')" style="padding:6px 16px;font-size:13px;font-weight:700;border:none;background:#5b21b6;color:#fff;border-radius:6px 6px 0 0;cursor:pointer">給与明細</button>
+        <button id="docs-tab-contract" onclick="switchDocsTab('contract')" style="padding:6px 16px;font-size:13px;font-weight:400;border:none;background:#e8e5e0;color:#555;border-radius:6px 6px 0 0;cursor:pointer">就業条件明示書</button>
+      </div>
+      <div style="margin-bottom:12px;display:flex;align-items:center;gap:8px;flex-wrap:wrap">
+        <label style="font-size:13px;color:#555">スタッフ：</label>
+        <select id="docs-filter-staff" onchange="filterAdminDocs()" style="padding:6px 10px;border-radius:8px;border:1px solid #d8d6d0;font-size:13px">
+          <option value="all">全員</option>
+        </select>
+        <label style="font-size:13px;color:#555">月：</label>
+        <select id="docs-filter-month" onchange="filterAdminDocs()" style="padding:6px 10px;border-radius:8px;border:1px solid #d8d6d0;font-size:13px">
+          <option value="all">すべて</option>
+        </select>
+      </div>
+      <div class="tbl-scroll">
+        <table class="tbl" id="docs-table-payslip">
+          <thead><tr><th>名前</th><th>ステータス</th><th>社員番号</th><th>派遣先</th><th>送付状況</th><th>送付日</th><th>取消</th><th>詳細</th></tr></thead>
+          <tbody id="admin-staff-tbody">
+            <tr><td colspan="8" style="text-align:center;color:#888;padding:20px">読み込み中...</td></tr>
+          </tbody>
+        </table>
+        <table class="tbl" id="docs-table-contract" style="display:none">
+          <thead><tr><th>名前</th><th>ステータス</th><th>社員番号</th><th>派遣先</th><th>送付状況</th><th>送付日</th><th>取消</th><th>詳細</th></tr></thead>
+          <tbody id="admin-contract-tbody">
+            <tr><td colspan="8" style="text-align:center;color:#888;padding:20px">読み込み中...</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
   </div>
 
   <div id="admin-nyusha" class="sp">
@@ -209,47 +273,6 @@ input:disabled{background:#f5f4f0;color:#aaa;border-color:#e8e6e0}
         <div style="font-size:48px;margin-bottom:12px">📤</div>
         <div style="font-size:16px;font-weight:600;color:#555;margin-bottom:8px">準備中</div>
         <div style="font-size:13px;line-height:1.7;color:#aaa">退職手続き機能は現在準備中です。<br>公開まで今しばらくお待ちください。</div>
-      </div>
-    </div>
-  </div>
-
-  <div id="admin-docs" class="sp active">
-    <div class="card">
-      <div class="ch">
-        <span class="ct">スタッフ一覧・書類状況</span>
-        <div class="btn-row">
-          <button class="btn btn-sm btn-p" onclick="openModal('send-payslip')">給与明細送付</button>
-          <button class="btn btn-sm" onclick="openModal('send-contract')">契約書送付</button>
-          <button class="btn btn-sm" onclick="exportStaffCSV()">📥 CSV出力</button>
-        </div>
-      </div>
-      <div style="display:flex;gap:4px;margin-bottom:12px;border-bottom:2px solid #e8e5e0">
-        <button id="docs-tab-payslip" onclick="switchDocsTab('payslip')" style="padding:6px 16px;font-size:13px;font-weight:700;border:none;background:#5b21b6;color:#fff;border-radius:6px 6px 0 0;cursor:pointer">給与明細</button>
-        <button id="docs-tab-contract" onclick="switchDocsTab('contract')" style="padding:6px 16px;font-size:13px;font-weight:400;border:none;background:#e8e5e0;color:#555;border-radius:6px 6px 0 0;cursor:pointer">就業条件明示書</button>
-      </div>
-      <div style="margin-bottom:12px;display:flex;align-items:center;gap:8px;flex-wrap:wrap">
-        <label style="font-size:13px;color:#555">スタッフ：</label>
-        <select id="docs-filter-staff" onchange="filterAdminDocs()" style="padding:6px 10px;border-radius:8px;border:1px solid #d8d6d0;font-size:13px">
-          <option value="all">全員</option>
-        </select>
-        <label style="font-size:13px;color:#555">月：</label>
-        <select id="docs-filter-month" onchange="filterAdminDocs()" style="padding:6px 10px;border-radius:8px;border:1px solid #d8d6d0;font-size:13px">
-          <option value="all">すべて</option>
-        </select>
-      </div>
-      <div class="tbl-scroll">
-        <table class="tbl" id="docs-table-payslip">
-         <thead><tr><th>名前</th><th>ステータス</th><th>社員番号</th><th>派遣先</th><th>送付状況</th><th>送付日</th><th>取消</th><th></th></tr></thead>
-          <tbody id="admin-staff-tbody">
-            <tr><td>読み込み中...</td><td></td><td></td><td></td><td></td><td></td><td></td></tr>
-          </tbody>
-        </table>
-        <table class="tbl" id="docs-table-contract" style="display:none">
-         <thead><tr><th>名前</th><th>ステータス</th><th>社員番号</th><th>派遣先</th><th>送付状況</th><th>送付日</th><th>取消</th><th></th></tr></thead>
-          <tbody id="admin-contract-tbody">
-            <tr><td>読み込み中...</td><td></td><td></td><td></td><td></td><td></td><td></td></tr>
-          </tbody>
-        </table>
       </div>
     </div>
   </div>
@@ -990,7 +1013,6 @@ function saveProvideRecord(){
 
 async function doLogin(type){
   showPage(type,null);
-  // ナビバー切り替え：ログイン後はログアウトボタンのみ
   document.getElementById('nav-login-btn').style.display='none';
   document.getElementById('nav-logout-area').style.display='flex';
   document.getElementById('navRight').style.display= type==='staff' ? 'flex' : 'none';
@@ -1220,9 +1242,6 @@ async function loadStaffProfile(){
   loadMyLeaveRequests();
 }
 
-
-
-
 async function openStaffPdf(filePath,bucket){
   if(!supabaseClient){alert('接続エラー');return;}
   var newTab=window.open('','_blank');
@@ -1262,6 +1281,25 @@ async function signMyDocument(docId){
 
 var _adminStaffAll=[];
 var _adminDocsAll=[];
+
+// ★新関数：スタッフ一覧タブ専用（書類情報なし・シンプル表示）
+async function loadAdminStaffListOnly(){
+  if(!supabaseClient) return;
+  var tbody=document.getElementById('admin-stafflist-tbody');
+  if(!tbody)return;
+  tbody.innerHTML='<tr><td colspan="5" style="text-align:center;color:#888;padding:20px">読み込み中...</td></tr>';
+  var {data,error}=await supabaseClient.from('staffs').select('*').order('name_kana');
+  if(error||!data){tbody.innerHTML='<tr><td colspan="5" style="text-align:center;color:#991b1b;padding:20px">読み込みに失敗しました</td></tr>';return;}
+  var staffOnly=data.filter(s=>s.employee_id>=1000);
+  tbody.innerHTML='';
+  staffOnly.forEach(function(s){
+    var tr=document.createElement('tr');
+    var statusBdg=s.status==='稼働中'?'<span class="bdg bg">稼働中</span>':s.status==='契約終了'?'<span class="bdg bz">契約終了</span>':s.status==='育休中'?'<span class="bdg ba">育休中</span>':s.status==='休業中'?'<span class="bdg bo">休業中</span>':s.status==='短期・単発'?'<span class="bdg bb">短期・単発</span>':s.status==='請負'?'<span class="bdg bp">請負</span>':'<span class="bdg bz">-</span>';
+    tr.innerHTML='<td>'+s.name+'</td><td>'+statusBdg+'</td><td>'+String(s.employee_id).padStart(4,'0')+'</td><td>'+(s.workplace||'')+'</td><td><button class="btn btn-sm" onclick="openStaffDetail('+s.employee_id+')">プロフィール</button></td>';
+    tbody.appendChild(tr);
+  });
+}
+
 async function loadAdminStaffList(){
   if(!supabaseClient) return;
   var {data,error}=await supabaseClient.from('staffs').select('*').order('name_kana');
@@ -1274,13 +1312,11 @@ async function loadAdminStaffList(){
   var optionsHtml='';
   staffOnly.forEach(s=>{optionsHtml+='<option value="'+s.employee_id+'">'+s.name+'('+String(s.employee_id).padStart(4,'0')+')</option>';});
   ['payslip-target','contract-target'].forEach(id=>{var sel=document.getElementById(id);if(sel)sel.innerHTML=optionsHtml;});
-  // スタッフ絞り込みドロップダウンを初期化
   var staffSel=document.getElementById('docs-filter-staff');
   if(staffSel){
     staffSel.innerHTML='<option value="all">全員</option>';
     staffOnly.forEach(s=>{staffSel.innerHTML+='<option value="'+s.id+'">'+s.name+'（'+String(s.employee_id).padStart(4,'0')+'）</option>';});
   }
-  // 月絞り込みドロップダウンを初期化（送付済み書類の月一覧）
   var monthSel=document.getElementById('docs-filter-month');
   if(monthSel){
     var months=new Set();
@@ -1291,23 +1327,12 @@ async function loadAdminStaffList(){
       monthSel.innerHTML+='<option value="'+m+'">'+label+'</option>';
     });
   }
-  var tbody=document.getElementById('admin-staff-tbody');
-  if(!tbody) return;
-  tbody.innerHTML='';
-  staffOnly.forEach(function(s){
-    var tr=document.createElement('tr');
-    var statusBdg=s.status==='稼働中'?'<span class="bdg bg">稼働中</span>':s.status==='契約終了'?'<span class="bdg bz">契約終了</span>':s.status==='育休中'?'<span class="bdg ba">育休中</span>':s.status==='休業中'?'<span class="bdg bo">休業中</span>':s.status==='短期・単発'?'<span class="bdg bb">短期・単発</span>':'<span class="bdg bz">-</span>';
-    var paperBdg=(s.paper_payslip===true && s.paper_contract===true)?'<span class="bdg bo" style="margin-left:4px;font-size:10px">📄全て紙</span>':(s.paper_payslip===true)?'<span class="bdg bo" style="margin-left:4px;font-size:10px">📄給与</span>':(s.paper_contract===true)?'<span class="bdg bo" style="margin-left:4px;font-size:10px">📄契約</span>':'';
-    var myDocs=allDocs?allDocs.filter(d=>d.staff_id===s.id):[];
-      var latestContract=myDocs.find(d=>d.type==='contract');
-      var latestPayslip=myDocs.find(d=>d.type==='payslip');
-      var payslipBdg=!latestPayslip?'<span class="bdg bz">未閲覧</span>':(latestPayslip.confirmed_at?'<span class="bdg bg">確認済</span>':'<span class="bdg bo">未確認</span>');
-      var contractBdg=!latestContract?'<span class="bdg bz">未送付</span>':(latestContract.confirmed_at?'<span class="bdg bg">確認済</span>':'<span class="bdg bo">送付済</span>');
-      var confirmedTd=(latestContract && latestContract.confirmed_at)?'<td style="font-size:11px">'+new Date(latestContract.confirmed_at).toLocaleString('ja-JP',{year:'numeric',month:'2-digit',day:'2-digit',hour:'2-digit',minute:'2-digit'})+'</td>':(latestContract?'<td style="font-size:11px;color:#888">未確認</td>':'<td style="font-size:11px;color:#888">—</td>');
-    tr.innerHTML='<td>'+s.name+'</td><td>'+statusBdg+paperBdg+'</td><td>'+s.employee_id+'</td><td>'+(s.workplace||'')+'</td><td>'+payslipBdg+'</td><td>'+contractBdg+'</td>'+confirmedTd+'<td><button class="btn btn-sm" onclick="openStaffDetail('+s.employee_id+')">詳細</button></td>';
-    tbody.appendChild(tr);
-  });
+  // 書類送付管理タブも初期表示
+  filterAdminDocs();
+  // スタッフ一覧タブも更新
+  loadAdminStaffListOnly();
 }
+
 function switchDocsTab(tab){
   var isPayslip = tab === 'payslip';
   document.getElementById('docs-table-payslip').style.display = isPayslip ? '' : 'none';
@@ -1321,6 +1346,7 @@ function switchDocsTab(tab){
   window._docsCurrentTab = tab;
   filterAdminDocs();
 }
+
 function filterAdminDocs(){
   var staffVal=document.getElementById('docs-filter-staff').value;
   var monthVal=document.getElementById('docs-filter-month').value;
@@ -1335,19 +1361,19 @@ function filterAdminDocs(){
     if(monthVal!=='all')myDocs=myDocs.filter(d=>d.created_at&&d.created_at.startsWith(monthVal));
     var tr=document.createElement('tr');
     var statusBdg=s.status==='稼働中'?'<span class="bdg bg">稼働中</span>':s.status==='契約終了'?'<span class="bdg bz">契約終了</span>':s.status==='育休中'?'<span class="bdg ba">育休中</span>':s.status==='休業中'?'<span class="bdg bo">休業中</span>':s.status==='短期・単発'?'<span class="bdg bb">短期・単発</span>':'<span class="bdg bz">-</span>';
-    var detailBtn='<td><button class="btn btn-sm" onclick="openStaffDetail('+s.employee_id+')">詳細</button></td>';
+    var detailBtn='<td><button class="btn btn-sm btn-p" onclick="openStaffDetail('+s.employee_id+')">詳細</button></td>';
     if(isContract){
       var latestContract=myDocs.find(function(d){return d.type==='contract';});
       var contractBdg=!latestContract?'<span class="bdg bz">未送付</span>':(latestContract.confirmed_at?'<span class="bdg bg">確認済</span>':'<span class="bdg bo">送付済</span>');
       var contractDateTd=latestContract?'<td style="font-size:11px">'+latestContract.created_at.substring(0,10).replace(/-/g,'/')+'</td>':'<td style="font-size:11px;color:#888">—</td>';
       var contractCancelTd=latestContract&&!latestContract.confirmed_at?'<td><button class="btn btn-sm" style="background:#fee;color:#c00;border:1px solid #c00" onclick="cancelDocument(&quot;'+latestContract.id+'&quot;,&quot;'+latestContract.file_url+'&quot;,&quot;contracts&quot;)">取消</button></td>':'<td></td>';
-      tr.innerHTML='<td>'+s.name+'</td><td>'+statusBdg+'</td><td>'+s.employee_id+'</td><td>'+(s.workplace||'')+'</td><td>'+contractBdg+'</td>'+contractDateTd+contractCancelTd+detailBtn;
+      tr.innerHTML='<td>'+s.name+'</td><td>'+statusBdg+'</td><td>'+String(s.employee_id).padStart(4,'0')+'</td><td>'+(s.workplace||'')+'</td><td>'+contractBdg+'</td>'+contractDateTd+contractCancelTd+detailBtn;
     } else {
       var latestPayslip=myDocs.find(function(d){return d.type==='payslip';});
       var payslipBdg=!latestPayslip?'<span class="bdg bz">未送付</span>':(latestPayslip.confirmed_at?'<span class="bdg bg">確認済</span>':'<span class="bdg bo">送付済</span>');
       var payDateTd=latestPayslip?'<td style="font-size:11px">'+latestPayslip.created_at.substring(0,10).replace(/-/g,'/')+'</td>':'<td style="font-size:11px;color:#888">—</td>';
       var payCancelTd=latestPayslip&&!latestPayslip.confirmed_at?'<td><button class="btn btn-sm" style="background:#fee;color:#c00;border:1px solid #c00" onclick="cancelDocument(&quot;'+latestPayslip.id+'&quot;,&quot;'+latestPayslip.file_url+'&quot;,&quot;payslips&quot;)">取消</button></td>':'<td></td>';
-      tr.innerHTML='<td>'+s.name+'</td><td>'+statusBdg+'</td><td>'+s.employee_id+'</td><td>'+(s.workplace||'')+'</td><td>'+payslipBdg+'</td>'+payDateTd+payCancelTd+detailBtn;
+      tr.innerHTML='<td>'+s.name+'</td><td>'+statusBdg+'</td><td>'+String(s.employee_id).padStart(4,'0')+'</td><td>'+(s.workplace||'')+'</td><td>'+payslipBdg+'</td>'+payDateTd+payCancelTd+detailBtn;
     }
     tbody.appendChild(tr);
   });
@@ -1520,7 +1546,6 @@ function printLeaveRequests(){
   var label=sel?sel.options[sel.selectedIndex].text:'';
   var tbody=document.getElementById('admin-leave-tbody');
   if(!tbody)return;
-  // 取消行（ピンク背景・status='cancelled'）を除いた行だけ取得
   var allRows=tbody.querySelectorAll('tr');
   var filteredRows='';
   allRows.forEach(function(tr){
@@ -1586,8 +1611,6 @@ async function sendPayslip(){
   var month=document.getElementById('payslip-month').value;
   var fileInput=document.getElementById('payslip-file');
   var status=document.getElementById('payslip-status');
-   
-   
   if(!fileInput.files||!fileInput.files[0]){alert('PDFファイルを選択してください');return;}
   var targetName=document.getElementById('payslip-target').options[document.getElementById('payslip-target').selectedIndex].text;
   if(!confirm(targetName+'に'+month+'分の給与明細を送付します。よろしいですか？'))return;
@@ -1652,8 +1675,6 @@ async function sendContract(){
   var title=document.getElementById('contract-title').value||'契約書.pdf';
   var fileInput=document.getElementById('contract-file');
   var status=document.getElementById('contract-status');
-      
-    
   if(!fileInput.files||!fileInput.files[0]){alert('PDFファイルを選択してください');return;}
   var targetName=document.getElementById('contract-target').options[document.getElementById('contract-target').selectedIndex].text;
   if(!confirm(targetName+'に就業条件明示書を送付します。よろしいですか？'))return;
@@ -1899,7 +1920,6 @@ async function openStaffDetail(empId){
     document.getElementById('modal-dispatch-start').value=data.dispatch_start_date||'';
     document.getElementById('modal-contract').value=data.contract_end_date||'';
     document.getElementById('modal-restriction').value=data.restriction_date||'';
-    // 有給取得日・付与日数：保存値がなければ自動計算して表示
     let modalGrantDate=data.paid_leave_grant_date||'';
     let modalGrantDays=data.paid_leave_grant_days||'';
     if(!modalGrantDate&&data.dispatch_start_date){
@@ -1915,7 +1935,6 @@ async function openStaffDetail(empId){
     }
     document.getElementById('modal-paid-leave-date').value=modalGrantDate;
     document.getElementById('modal-paid-leave-days').value=modalGrantDays;
-    // 次回付与日を計算して表示
     const nextSteps=[10,11,12,14,16,18,20];
     const nextDays=modalGrantDays?(nextSteps[Math.min(nextSteps.indexOf(Number(modalGrantDays))+1,nextSteps.length-1)]):'-';
     const nextDateEl=document.getElementById('modal-next-grant-date');
@@ -1942,10 +1961,8 @@ async function openStaffDetail(empId){
     document.getElementById('modal-insurance').value=data.insurance_number||'';
     document.getElementById('modal-note').value=data.note||'';
     document.getElementById('modal-paid-leave-exempt').checked=data.paid_leave_exempt||false;
-    // 有給残日数
     var remEl=document.getElementById('modal-paid-leave-remaining');
     if(remEl)remEl.value=(data.paid_leave_remaining!==null&&data.paid_leave_remaining!==undefined)?data.paid_leave_remaining:'';
-    // 所定労働時間
     var wmpd=data.work_minutes_per_day||null;
     var whEl=document.getElementById('modal-work-hours');
     var wmEl=document.getElementById('modal-work-mins');
@@ -2250,7 +2267,6 @@ async function loadLeaveHistory(){
   var staffMap={};
   if(staffs){staffs.forEach(s=>{staffMap[s.id]={name:s.name,employee_id:s.employee_id};});}
   leaveHistoryAll=reqs||[];
-  // フィルタドロップダウンにスタッフを追加
   var sel=document.getElementById('leave-history-filter');
   var uniqueStaffs={};
   leaveHistoryAll.forEach(r=>{
@@ -2261,7 +2277,6 @@ async function loadLeaveHistory(){
   Object.values(uniqueStaffs).sort((a,b)=>a.employee_id-b.employee_id).forEach(s=>{
     sel.innerHTML+='<option value="'+s.id+'">'+s.name+'（'+String(s.employee_id).padStart(4,'0')+'）</option>';
   });
-  // 月ドロップダウン初期化
   var monthSel=document.getElementById('leave-history-month-filter');
   if(monthSel){
     var months=new Set();
@@ -2309,7 +2324,6 @@ async function checkUnreadNotices(){
   if(!supabaseClient||!myStaffData)return;
   var rows=[];
   var badge=document.getElementById('notice-badge');
-  // お知らせ未確認チェック
   var {data:recs}=await supabaseClient.from('notice_recipients').select('id,confirmed_at').eq('staff_id',myStaffData.id).is('confirmed_at',null);
   var noticeCnt=recs?recs.length:0;
   if(noticeCnt>0){
@@ -2318,7 +2332,6 @@ async function checkUnreadNotices(){
   }else{
     if(badge){badge.style.display='none';badge.textContent='';}
   }
-  // 書類未確認チェック（種別ごと）
   var {data:docs}=await supabaseClient.from('documents').select('id,confirmed_at,type').eq('staff_id',myStaffData.id).is('confirmed_at',null).is('cancelled_at',null);
   if(docs&&docs.length>0){
     var contractCnt=docs.filter(function(d){return d.type==='contract';}).length;
@@ -2435,7 +2448,6 @@ async function confirmMyNotice(recipientId){
     statusEl.style.display='block';statusEl.style.background='#fee2e2';statusEl.style.color='#991b1b';
     statusEl.textContent='氏名を入力してください';return;
   }
-  // 重複チェック
   var {data:existing}=await supabaseClient.from('staffs').select('id').eq('employee_id',parseInt(empId)).maybeSingle();
   if(existing){
     statusEl.style.display='block';statusEl.style.background='#fee2e2';statusEl.style.color='#991b1b';
@@ -2446,7 +2458,6 @@ async function confirmMyNotice(recipientId){
   statusEl.textContent='追加中...';
   var email=empId+'@flexbs.com';
   var password='flexbs'+empId;
-  // Vercel APIルートでAuthユーザーを作成
   statusEl.textContent='アカウント作成中...';
   try{
     var funcRes=await fetch('/api/create-user',{
@@ -2464,7 +2475,6 @@ async function confirmMyNotice(recipientId){
     statusEl.textContent='アカウント作成に失敗しました：'+e.message;return;
   }
   statusEl.textContent='スタッフ情報を登録中...';
-  // staffsテーブルに登録
   var ins=await supabaseClient.from('staffs').insert({
     employee_id:parseInt(empId),
     name:name,
@@ -2485,7 +2495,6 @@ async function confirmMyNotice(recipientId){
   }
   statusEl.style.background='#e6f4d7';statusEl.style.color='#2d6a10';
   statusEl.textContent='追加しました！メール：'+email+'　初期パスワード：'+password;
-  // フォームリセット
   ['add-employee-id','add-name','add-name-kana','add-workplace','add-dispatch-start','add-contract-start','add-contract-end','add-restriction','add-pension','add-insurance','add-note'].forEach(function(id){
     var el=document.getElementById(id);if(el)el.value='';
   });
