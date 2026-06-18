@@ -884,6 +884,20 @@ input:disabled{background:#f5f4f0;color:#aaa;border-color:#e8e6e0}
   </div>
 </div>
 
+<!-- 書類送付詳細モーダル -->
+<div class="mbg" id="modal-docs-detail">
+  <div class="modal" style="max-width:600px">
+    <div class="mt">送付書類一覧</div>
+    <div id="docs-detail-staff-name" style="font-size:13px;color:#888;margin-bottom:14px;padding-bottom:10px;border-bottom:1px solid #f0efe9"></div>
+    <div id="docs-detail-content">
+      <div style="padding:20px;text-align:center;color:#888">読み込み中...</div>
+    </div>
+    <div class="ma">
+      <button class="btn btn-sm" onclick="closeModal('docs-detail')">閉じる</button>
+    </div>
+  </div>
+</div>
+
 <div class="mbg" id="modal-privacy-modal">
   <div class="modal" style="max-width:500px">
     <div class="mt">個人情報の取り扱いについて</div>
@@ -1361,7 +1375,7 @@ function filterAdminDocs(){
     if(monthVal!=='all')myDocs=myDocs.filter(d=>d.created_at&&d.created_at.startsWith(monthVal));
     var tr=document.createElement('tr');
     var statusBdg=s.status==='稼働中'?'<span class="bdg bg">稼働中</span>':s.status==='契約終了'?'<span class="bdg bz">契約終了</span>':s.status==='育休中'?'<span class="bdg ba">育休中</span>':s.status==='休業中'?'<span class="bdg bo">休業中</span>':s.status==='短期・単発'?'<span class="bdg bb">短期・単発</span>':'<span class="bdg bz">-</span>';
-    var detailBtn='<td><button class="btn btn-sm btn-p" onclick="openStaffDetail('+s.employee_id+')">詳細</button></td>';
+    var detailBtn='<td><button class="btn btn-sm btn-p" onclick="openDocsDetail(\''+s.id+'\',\''+s.name+'\')">詳細</button></td>';
     if(isContract){
       var latestContract=myDocs.find(function(d){return d.type==='contract';});
       var contractBdg=!latestContract?'<span class="bdg bz">未送付</span>':(latestContract.confirmed_at?'<span class="bdg bg">確認済</span>':'<span class="bdg bo">送付済</span>');
@@ -2504,6 +2518,55 @@ async function confirmMyNotice(recipientId){
     statusEl.style.display='none';
     loadAdminStaffList();
   },3000);
+}
+
+async function openDocsDetail(staffId, staffName){
+  if(!supabaseClient){alert('接続エラー');return;}
+  openModal('docs-detail');
+  var nameEl=document.getElementById('docs-detail-staff-name');
+  if(nameEl)nameEl.textContent=staffName+' さんの送付書類';
+  var c=document.getElementById('docs-detail-content');
+  c.innerHTML='<div style="padding:20px;text-align:center;color:#888">読み込み中...</div>';
+  var {data:docs,error}=await supabaseClient.from('documents').select('*').eq('staff_id',staffId).is('cancelled_at',null).order('created_at',{ascending:false});
+  if(error){c.innerHTML='<div style="padding:20px;text-align:center;color:#991b1b">読み込みに失敗しました</div>';return;}
+  if(!docs||docs.length===0){
+    c.innerHTML='<div style="padding:40px 20px;text-align:center;color:#888"><div style="font-size:40px;margin-bottom:10px">📄</div><div style="font-size:14px">送付済みの書類はまだありません</div></div>';
+    return;
+  }
+  var rows='';
+  for(var i=0;i<docs.length;i++){
+    var d=docs[i];
+    var typeStr=d.type==='payslip'?'給与明細':'就業条件明示書';
+    var dateStr=d.created_at?d.created_at.substring(0,10).replace(/-/g,'/'):'';
+    var bucket=d.type==='payslip'?'payslips':'contracts';
+    var statusBdg=d.confirmed_at?'<span class="bdg bg">'+(d.requires_signature?'署名済':'確認済')+'</span>':'<span class="bdg bo">'+(d.requires_signature?'署名待ち':'未確認')+'</span>';
+    var confirmedStr=d.confirmed_at?new Date(d.confirmed_at).toLocaleString('ja-JP',{year:'numeric',month:'2-digit',day:'2-digit',hour:'2-digit',minute:'2-digit'}):'—';
+    // 表示URL取得
+    var sUrl='';
+    var rv=await supabaseClient.storage.from(bucket).createSignedUrl(d.file_url,3600);
+    if(rv.data&&rv.data.signedUrl)sUrl=rv.data.signedUrl;
+    var showBtn=sUrl?'<a class="btn btn-sm" href="'+sUrl+'" target="_blank" rel="noopener" style="text-decoration:none;display:inline-block">表示</a>':'<button class="btn btn-sm" disabled style="opacity:0.4">表示</button>';
+    // 取消ボタン（未確認のみ）
+    var cancelBtn=!d.confirmed_at?'<button class="btn btn-sm" style="background:#fee2e2;color:#991b1b;border-color:#fca5a5" onclick="cancelDocFromDetail(\''+d.id+'\',\''+d.file_url+'\',\''+bucket+'\',\''+staffId+'\',\''+staffName+'\')">取消</button>':'<span style="font-size:11px;color:#aaa">—</span>';
+    rows+='<tr><td style="font-size:12px">'+(d.title||typeStr)+'</td><td><span class="bdg '+(d.type==='payslip'?'bb':'bp')+'" style="font-size:10px">'+typeStr+'</span></td><td style="white-space:nowrap;font-size:12px">'+dateStr+'</td><td>'+statusBdg+'</td><td style="font-size:11px;color:#888;white-space:nowrap">'+confirmedStr+'</td><td style="white-space:nowrap">'+showBtn+'</td><td>'+cancelBtn+'</td></tr>';
+  }
+  c.innerHTML='<div style="overflow-x:auto"><table style="width:100%;border-collapse:collapse"><thead><tr style="text-align:left;color:#888;font-size:11px"><th style="padding:7px 6px">タイトル</th><th style="padding:7px 6px">種別</th><th style="padding:7px 6px">送付日</th><th style="padding:7px 6px">状況</th><th style="padding:7px 6px">確認日時</th><th style="padding:7px 6px">表示</th><th style="padding:7px 6px">取消</th></tr></thead><tbody>'+rows+'</tbody></table></div>';
+}
+
+async function cancelDocFromDetail(docId,fileUrl,bucket,staffId,staffName){
+  if(!supabaseClient){alert('接続エラー');return;}
+  if(!confirm('この書類の送付を取り消します。スタッフ画面からも見えなくなります。よろしいですか？'))return;
+  var canceller=myStaffData?(myStaffData.name||'管理者'):'管理者';
+  var now=new Date().toISOString();
+  var u=await supabaseClient.from('documents').update({cancelled_at:now,cancelled_by:canceller}).eq('id',docId);
+  if(u.error){alert('取り消しに失敗しました：'+u.error.message);return;}
+  await supabaseClient.storage.from(bucket).remove([fileUrl]);
+  alert('取り消しました。');
+  // モーダルを更新
+  openDocsDetail(staffId,staffName);
+  // 一覧も更新
+  loadAdminStaffList();
+  loadAdminMetrics();
 }
 
 async function changeMyPassword(){
