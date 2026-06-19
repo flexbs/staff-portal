@@ -3,7 +3,105 @@
   <head>
   <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2">
+// ========== 書類提出機能 ==========
+var _categoryLabels = {delay:'遅延証明書', employment:'就労証明書（保育所・学童）', other:'その他'};
+
+async function submitStaffUpload(){
+  if(!supabaseClient||!myStaffData){alert('ログイン情報が取得できません');return;}
+  var category = document.getElementById('upload-category').value;
+  var fileInput = document.getElementById('upload-file');
+  var note = document.getElementById('upload-note').value;
+  var statusEl = document.getElementById('upload-status');
+  if(!fileInput.files||!fileInput.files[0]){
+    statusEl.style.display='block';statusEl.style.background='#fee2e2';statusEl.style.color='#991b1b';
+    statusEl.textContent='ファイルを選択してください';return;
+  }
+  var file = fileInput.files[0];
+  if(file.size > 10*1024*1024){
+    statusEl.style.display='block';statusEl.style.background='#fee2e2';statusEl.style.color='#991b1b';
+    statusEl.textContent='ファイルサイズは10MB以内にしてください';return;
+  }
+  if(!confirm('提出します。よろしいですか？'))return;
+  statusEl.style.display='block';statusEl.style.background='#f5f4f0';statusEl.style.color='#666';
+  statusEl.textContent='アップロード中...';
+  var ext = file.name.split('.').pop();
+  var filePath = myStaffData.employee_id+'/'+category+'_'+Date.now()+'.'+ext;
+  var up = await supabaseClient.storage.from('staff-uploads').upload(filePath, file);
+  if(up.error){statusEl.style.background='#fee2e2';statusEl.style.color='#991b1b';statusEl.textContent='アップロードに失敗しました：'+up.error.message;return;}
+  var ins = await supabaseClient.from('staff_uploads').insert({staff_id:myStaffData.id,category:category,file_url:filePath,file_name:file.name,note:note||null,status:'pending'});
+  if(ins.error){statusEl.style.background='#fee2e2';statusEl.style.color='#991b1b';statusEl.textContent='登録に失敗しました：'+ins.error.message;return;}
+  statusEl.style.background='#e6f4d7';statusEl.style.color='#2d6a10';
+  statusEl.textContent='提出しました！担当者が確認します。';
+  fileInput.value='';
+  document.getElementById('upload-note').value='';
+  loadMyUploads();
+}
+
+async function loadMyUploads(){
+  var c = document.getElementById('my-uploads-list-container');
+  if(!c||!supabaseClient||!myStaffData)return;
+  c.innerHTML='<div class="ch"><span class="ct">提出済み書類</span></div><div style="padding:20px;text-align:center;color:#888">読み込み中...</div>';
+  var res = await supabaseClient.from('staff_uploads').select('*').eq('staff_id',myStaffData.id).order('created_at',{ascending:false}).limit(30);
+  var data=res.data, error=res.error;
+  if(error||!data||data.length===0){
+    c.innerHTML='<div class="ch"><span class="ct">提出済み書類</span></div><div style="padding:40px 20px;text-align:center;color:#888"><div style="font-size:40px;margin-bottom:10px">📄</div><div style="font-size:14px">提出済みの書類はまだありません</div></div>';
+    return;
+  }
+  var rows='';
+  data.forEach(function(r){
+    var catLabel=_categoryLabels[r.category]||r.category||'その他';
+    var dateStr=r.created_at?r.created_at.substring(0,10).replace(/-/g,'/'):'';
+    var statusBdg=r.status==='checked'?'<span class="bdg bg">受理済</span>':'<span class="bdg ba">確認待ち</span>';
+    rows+='<tr><td>'+catLabel+'</td><td style="font-size:12px">'+(r.file_name||'')+'</td><td style="font-size:11px;color:#888">'+(r.note||'-')+'</td><td>'+statusBdg+'</td><td style="white-space:nowrap;font-size:11px;color:#888">'+dateStr+'</td></tr>';
+  });
+  c.innerHTML='<div class="ch"><span class="ct">提出済み書類</span></div><div style="overflow-x:auto"><table style="width:100%;border-collapse:collapse"><thead><tr style="text-align:left;color:#888;font-size:12px"><th style="padding:8px">種類</th><th style="padding:8px">ファイル名</th><th style="padding:8px">備考</th><th style="padding:8px">状態</th><th style="padding:8px">提出日</th></tr></thead><tbody>'+rows+'</tbody></table></div>';
+}
+
+async function loadAdminStaffUploads(){
+  if(!supabaseClient)return;
+  var tbody=document.getElementById('admin-uploads-tbody');
+  if(!tbody)return;
+  tbody.innerHTML='<tr><td colspan="6" style="text-align:center;color:#888;padding:20px">読み込み中...</td></tr>';
+  var res=await supabaseClient.from('staff_uploads').select('*').order('created_at',{ascending:false}).limit(100);
+  var data=res.data, error=res.error;
+  if(error){tbody.innerHTML='<tr><td colspan="6" style="text-align:center;color:#991b1b;padding:20px">読み込みに失敗しました</td></tr>';return;}
+  if(!data||data.length===0){tbody.innerHTML='<tr><td colspan="6" style="text-align:center;color:#888;padding:40px 20px"><div style="font-size:40px;margin-bottom:10px">📥</div><div style="font-size:15px;font-weight:600;color:#555;margin-bottom:6px">まだ提出書類はありません</div></td></tr>';return;}
+  var res2=await supabaseClient.from('staffs').select('id,name,employee_id');
+  var staffs=res2.data||[];
+  var staffMap={};
+  staffs.forEach(function(s){staffMap[s.id]={name:s.name,employee_id:s.employee_id};});
+  tbody.innerHTML='';
+  for(var i=0;i<data.length;i++){
+    var r=data[i];
+    var sInfo=staffMap[r.staff_id]||{name:'(不明)',employee_id:''};
+    var catLabel=_categoryLabels[r.category]||r.category||'その他';
+    var dateStr=r.created_at?r.created_at.substring(0,10).replace(/-/g,'/'):'';
+    var statusBdg=r.status==='checked'?'<span class="bdg bg">受理済</span>':'<span class="bdg ba">確認待ち</span>';
+    var sUrl='';
+    var rv=await supabaseClient.storage.from('staff-uploads').createSignedUrl(r.file_url,3600);
+    if(rv.data&&rv.data.signedUrl)sUrl=rv.data.signedUrl;
+    var viewBtn=sUrl?'<a class="btn btn-sm" href="'+sUrl+'" target="_blank" rel="noopener" style="text-decoration:none;display:inline-block">表示</a>':'';
+    var checkBtn=r.status!=='checked'?('<button class="btn btn-sm btn-g" onclick="checkStaffUpload('+JSON.stringify(r.id)+')">受理</button>'):'';
+    var tr=document.createElement('tr');
+    tr.innerHTML='<td>'+sInfo.name+'<br><span style="font-size:11px;color:#888">'+String(sInfo.employee_id).padStart(4,'0')+'</span></td><td>'+catLabel+'</td><td style="font-size:12px">'+(r.note||'-')+'</td><td style="white-space:nowrap;font-size:11px">'+dateStr+'</td><td>'+statusBdg+'</td><td style="white-space:nowrap">'+viewBtn+' '+checkBtn+'</td>';
+    tbody.appendChild(tr);
+  }
+}
+
+async function checkStaffUpload(id){
+  if(!supabaseClient)return;
+  if(!confirm('この書類を受理済みにしますか？'))return;
+  var now=new Date().toISOString();
+  var checker=myStaffData?(myStaffData.name||'管理者'):'管理者';
+  var r=await supabaseClient.from('staff_uploads').update({status:'checked',checked_at:now,checked_by:checker}).eq('id',id);
+  if(r.error){alert('更新に失敗しました：'+r.error.message);return;}
+  alert('受理しました！');
+  loadAdminStaffUploads();
+}
+// ========== 書類提出機能ここまで ==========
+
+</script>
 <title>派遣スタッフポータル</title>
 <style>
 *{box-sizing:border-box;margin:0;padding:0}
@@ -187,7 +285,7 @@ input:disabled{background:#f5f4f0;color:#aaa;border-color:#e8e6e0}
     <button class="sub-tab" onclick="showSub('admin','nyusha',this)">入社手続き</button>
     <button class="sub-tab" onclick="showSub('admin','taisha',this)">退職手続き</button>
     <button class="sub-tab" onclick="showSub('admin','paid',this);loadAdminLeaveRequests();loadAdminPaidLeaveList();loadLeaveHistory()">有給管理</button>
-    <button class="sub-tab" onclick="showSub('admin','uploads',this);loadAdminUploads()">書類授受管理</button>
+    <button class="sub-tab" onclick="showSub('admin','uploads',this);loadAdminUploads();loadAdminStaffUploads()">書類授受管理</button>
     <button class="sub-tab" onclick="showSub('admin','mynumber',this)">マイナンバー管理</button>
     <button class="sub-tab" onclick="showSub('admin','notice',this);loadAdminNotices()">お知らせ</button>
     <button class="sub-tab" onclick="showSub('admin','kintai',this);loadAdminKintai()">勤怠管理（単発）</button>
@@ -331,7 +429,7 @@ input:disabled{background:#f5f4f0;color:#aaa;border-color:#e8e6e0}
           <table class="tbl">
             <thead><tr><th>名前</th><th>手続き区分</th><th>書類種別</th><th>提出日</th><th>状態</th><th></th></tr></thead>
             <tbody id="admin-uploads-tbody">
-<tr><td colspan="6" style="text-align:center;color:#888;padding:40px 20px"><div style="font-size:40px;margin-bottom:10px">📥</div><div style="font-size:15px;font-weight:600;color:#555;margin-bottom:6px">もうすぐ公開</div><div style="font-size:13px;line-height:1.6">スタッフからの提出書類を受け取る機能は<br>現在準備中です。公開まで今しばらくお待ちください。</div></td></tr>            </tbody>
+<tr><td colspan="6" style="text-align:center;color:#888;padding:20px">読み込み中...</td></tr>            </tbody>
           </table>
         </div>
       </div>
@@ -451,6 +549,7 @@ input:disabled{background:#f5f4f0;color:#aaa;border-color:#e8e6e0}
     <button class="sub-tab" id="staff-tab-kintai" onclick="showSub('staff','skintai',this);loadMyKintai()" style="display:none">勤怠</button>
     <button class="sub-tab" id="staff-tab-spaid" onclick="showSub('staff','spaid',this)">有給</button>
     <button class="sub-tab" id="staff-notice-tab" onclick="showSub('staff','snotice',this);loadMyNotices();clearNoticeBadge()">お知らせ<span id="notice-badge" style="display:none;background:#e53e3e;color:#fff;border-radius:10px;font-size:10px;font-weight:700;padding:1px 6px;margin-left:4px;vertical-align:middle"></span></button>
+    <button class="sub-tab" onclick="showSub('staff','ssubmit',this);loadMyUploads()">書類提出</button>
     <button class="sub-tab" onclick="showSub('staff','supload',this)">アップロード</button>
     <button class="sub-tab" onclick="showSub('staff','sprofile',this)">プロフィール</button>
     <button class="sub-tab" onclick="showSub('staff','sqa',this)">Q&A</button>
@@ -548,7 +647,41 @@ input:disabled{background:#f5f4f0;color:#aaa;border-color:#e8e6e0}
   <div class="tbl-scroll" id="staff-notices-container"><table class="tbl"><thead><tr><th>タイトル</th><th>受信日</th><th>状態</th><th></th></tr></thead><tbody id="staff-notices-tbody"><tr><td colspan="4" style="text-align:center;color:#888;padding:20px">読み込み中...</td></tr></tbody></table></div>
     </div>
   </div>
-<div id="staff-supload" class="sp">
+<div id="staff-ssubmit" class="sp">
+    <div class="card">
+      <div class="ch"><span class="ct">書類提出</span></div>
+      <div style="background:#fef3cd;border-radius:8px;padding:10px 12px;font-size:12px;color:#8a5a00;margin-bottom:14px;line-height:1.7">
+        遅延証明書・就労証明書などをこちらからアップロードしてください。<br>
+        担当者が確認後、受理の記録を行います。
+      </div>
+      <div class="fg">
+        <label class="fl">書類の種類 <span style="color:#991b1b">*必須</span></label>
+        <select id="upload-category">
+          <option value="delay">遅延証明書</option>
+          <option value="employment">就労証明書（保育所・学童など）</option>
+          <option value="other">その他</option>
+        </select>
+      </div>
+      <div class="fg">
+        <label class="fl">ファイル <span style="color:#991b1b">*必須</span>（PDF・画像OK）</label>
+        <input type="file" id="upload-file" accept=".pdf,.jpg,.jpeg,.png,.gif,.webp">
+      </div>
+      <div class="fg">
+        <label class="fl">備考（任意）</label>
+        <textarea id="upload-note" rows="2" placeholder="例：2026年6月5日分の遅延証明書です"></textarea>
+      </div>
+      <div id="upload-status" style="display:none;font-size:13px;margin-top:8px;padding:10px;border-radius:8px"></div>
+      <div style="text-align:right;margin-top:14px">
+        <button class="btn btn-p" onclick="submitStaffUpload()">提出する →</button>
+      </div>
+    </div>
+    <div class="card" id="my-uploads-list-container">
+      <div class="ch"><span class="ct">提出済み書類</span></div>
+      <div style="padding:20px;text-align:center;color:#888;font-size:13px">読み込み中...</div>
+    </div>
+  </div>
+
+  <div id="staff-supload" class="sp">
     <div class="card">
       <div class="ch"><span class="ct">アップロード</span></div>
       <div style="padding:40px 20px;text-align:center;color:#888"><div style="font-size:48px;margin-bottom:12px">📤</div><div style="font-size:16px;font-weight:600;color:#555;margin-bottom:8px">もうすぐ公開</div><div style="font-size:13px;line-height:1.7">入社・退社書類のアップロード機能は<br>現在準備中です。公開まで今しばらくお待ちください。</div></div>
