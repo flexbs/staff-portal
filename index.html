@@ -3050,7 +3050,7 @@ async function loadAdminTaisha(){
       return signed+' '+d.title;
     }).join('<br>');
     var tr = document.createElement('tr');
-    var detailBtn = '<button class="btn btn-sm" onclick="openResignDetail('+JSON.stringify(staffId)+')">詳細</button>';
+    var detailBtn = '<button class="btn btn-sm" data-staff-id="'+staffId+'" onclick="openResignDetail(this.dataset.staffId)">詳細</button>';
     tr.innerHTML = '<td>'+sInfo.name+'<br><span style="font-size:11px;color:#888">'+String(sInfo.employee_id).padStart(4,'0')+'</span></td>'
       +'<td style="white-space:nowrap">'+dateStr+'</td>'
       +'<td style="font-size:12px">'+patternLabel+'</td>'
@@ -3128,7 +3128,8 @@ async function loadMyResignDocs(){
     }
         var pdfBtn = '';
     if(d.file_url){
-      pdfBtn = '<button class="btn btn-sm" style="margin-top:8px;margin-right:6px" data-pdf-url="'+d.file_url.replace(/"/g,'&quot;')+'" onclick="openResignPdf(this.dataset.pdfUrl)">PDFを表示</button>';
+      pdfBtn = '<button class="btn btn-sm" style="margin-top:8px;margin-right:6px" data-pdf-url="'+d.file_url.replace(/"/g,'&quot;')+'" onclick="openResignPdf(this.dataset.pdfUrl)">PDFを表示</button>'
+        +'<button class="btn btn-sm" style="margin-top:8px;margin-right:6px" data-pdf-url="'+d.file_url.replace(/"/g,'&quot;')+'" onclick="downloadResignPdf(this.dataset.pdfUrl,'+JSON.stringify(d.title)+')">ダウンロード</button>';
     }
     html += '<div style="border:1px solid '+(signed?'#b3d98a':'#f0efe9')+';border-radius:10px;padding:14px;margin-bottom:10px;background:'+(signed?'#f0fae6':'#fff')+'">';
     html += '<div style="display:flex;justify-content:space-between;align-items:center"><span style="font-size:14px;font-weight:700">'+d.title+'</span>'+statusBdg+'</div>';
@@ -3188,6 +3189,18 @@ async function submitResignSign(){
     loadMyResignDocs();
   }, 1000);
 }
+async function downloadResignPdf(fileUrl, title){
+  if(!supabaseClient){alert('接続エラー');return;}
+  var r = await supabaseClient.storage.from('resignation-docs').createSignedUrl(fileUrl, 3600);
+  if(r.error||!r.data){alert('ダウンロードできませんでした');return;}
+  var a = document.createElement('a');
+  a.href = r.data.signedUrl;
+  a.download = (title||'退職書類')+'.pdf';
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+}
+
 // ========== 退職手続き機能ここまで ==========
 
 
