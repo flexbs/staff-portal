@@ -3122,13 +3122,13 @@ async function loadMyResignDocs(){
     if(isRules){
       btnHtml = '<div style="font-size:12px;color:#666;margin-top:8px">※ 内容をお読みください（署名不要）</div>';
     } else if(!signed){
-      var signOnclick = 'openResignSign('+JSON.stringify(d.id)+','+JSON.stringify(d.title)+','+JSON.stringify(d.file_url||'')+')';
-      btnHtml = '<button class="btn btn-sm btn-p" style="margin-top:8px" onclick="'+signOnclick+'">署名する →</button>';
+      btnHtml = '<button class="btn btn-sm btn-p" style="margin-top:8px" '
+        +'data-doc-id="'+d.id+'" data-doc-title="'+d.title.replace(/"/g,'&quot;')+'" data-doc-url="'+(d.file_url||'').replace(/"/g,'&quot;')+'" '
+        +'onclick="openResignSign(this.dataset.docId,this.dataset.docTitle,this.dataset.docUrl)">署名する →</button>';
     }
         var pdfBtn = '';
     if(d.file_url){
-      var pdfOnclick = 'openResignPdf('+JSON.stringify(d.file_url)+')';
-      pdfBtn = '<button class="btn btn-sm" style="margin-top:8px;margin-right:6px" onclick="'+pdfOnclick+'">PDFを表示</button>';
+      pdfBtn = '<button class="btn btn-sm" style="margin-top:8px;margin-right:6px" data-pdf-url="'+d.file_url.replace(/"/g,'&quot;')+'" onclick="openResignPdf(this.dataset.pdfUrl)">PDFを表示</button>';
     }
     html += '<div style="border:1px solid '+(signed?'#b3d98a':'#f0efe9')+';border-radius:10px;padding:14px;margin-bottom:10px;background:'+(signed?'#f0fae6':'#fff')+'">';
     html += '<div style="display:flex;justify-content:space-between;align-items:center"><span style="font-size:14px;font-weight:700">'+d.title+'</span>'+statusBdg+'</div>';
@@ -3154,8 +3154,7 @@ function openResignSign(docId, title, fileUrl){
   var pdfBtn = document.getElementById('resign-sign-pdf-btn');
   if(pdfBtn){
     if(fileUrl&&fileUrl!=='null'){
-      var pdfOnclick2 = 'openResignPdf('+JSON.stringify(fileUrl)+')';
-      pdfBtn.innerHTML = '<button class="btn btn-sm" onclick="'+pdfOnclick2+'">📄 PDFを表示する</button><div style="font-size:12px;color:#888;margin-top:4px">先にPDFの内容をご確認ください</div>';
+      pdfBtn.innerHTML = '<button class="btn btn-sm" data-pdf-url="'+fileUrl.replace(/"/g,'&quot;')+'" onclick="openResignPdf(this.dataset.pdfUrl)">📄 PDFを表示する</button><div style="font-size:12px;color:#888;margin-top:4px">先にPDFの内容をご確認ください</div>';
     } else {
       pdfBtn.innerHTML = '';
     }
