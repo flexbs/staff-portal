@@ -132,6 +132,20 @@ var _resignPatterns = {
 
 var _currentResignDocId = null;
 
+
+async function openResignModal(){
+  openModal('send-resignation');
+  // リセット
+  document.getElementById('resign-date').value='';
+  document.getElementById('resign-pattern').value='';
+  var listArea=document.getElementById('resign-doc-list');
+  var fileArea=document.getElementById('resign-file-area');
+  if(listArea)listArea.style.display='none';
+  if(fileArea)fileArea.style.display='none';
+  var statusEl=document.getElementById('resign-status');
+  if(statusEl)statusEl.style.display='none';
+  await loadResignTargetList();
+}
 async function loadResignTargetList(){
   if(!supabaseClient)return;
   var sel = document.getElementById('resign-target');
@@ -151,11 +165,10 @@ function onResignTargetChange(){
 
 function updateResignDocList(){
   var pattern = document.getElementById('resign-pattern').value;
-  var target = document.getElementById('resign-target').value;
   var listArea = document.getElementById('resign-doc-list');
   var fileArea = document.getElementById('resign-file-area');
   var fileInputs = document.getElementById('resign-file-inputs');
-  if(!pattern || !target){
+  if(!pattern){
     listArea.style.display = 'none';
     fileArea.style.display = 'none';
     return;
@@ -658,7 +671,7 @@ input:disabled{background:#f5f4f0;color:#aaa;border-color:#e8e6e0}
     <div class="card">
       <div class="ch">
         <span class="ct">退職手続き</span>
-        <button class="btn btn-sm btn-p" onclick="openModal('send-resignation');loadResignTargetList()">＋ 退職書類を送付する</button>
+        <button class="btn btn-sm btn-p" onclick="openResignModal()">＋ 退職書類を送付する</button>
       </div>
       <div style="background:#fef3cd;border-radius:8px;padding:10px 12px;font-size:12px;color:#8a5a00;margin-bottom:14px;line-height:1.7">
         退職書類をスタッフに送付します。スタッフはポータルから署名できます。
