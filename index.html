@@ -2986,7 +2986,7 @@ async function sendResignDocs(){
     if(!isRules){
       var fi2 = document.getElementById('resign-file-'+doc.key);
       var file = fi2.files[0];
-      var filePath = target+'/resign_'+doc.key+'_'+Date.now()+'.pdf';
+      var filePath = String(target).replace(/\s/g,'')+'/'+'resign_'+doc.key+'_'+Date.now()+'.pdf';
       var up = await supabaseClient.storage.from('resignation-docs').upload(filePath, file);
       if(up.error){errors.push(doc.name+':'+up.error.message);continue;}
       fileUrl = filePath;
