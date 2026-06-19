@@ -1016,6 +1016,19 @@ input:disabled{background:#f5f4f0;color:#aaa;border-color:#e8e6e0}
   </div>
 </div>
 
+<!-- 退職書類詳細モーダル -->
+<div class="mbg" id="modal-resign-detail">
+  <div class="modal" style="max-width:560px">
+    <div class="mt">退職書類詳細</div>
+    <div id="resign-detail-content">
+      <div style="padding:20px;text-align:center;color:#888">読み込み中...</div>
+    </div>
+    <div class="ma">
+      <button class="btn btn-sm" onclick="closeModal('resign-detail')">閉じる</button>
+    </div>
+  </div>
+</div>
+
 <div class="mbg" id="modal-privacy-modal">
   <div class="modal" style="max-width:500px">
     <div class="mt">個人情報の取り扱いについて</div>
@@ -3050,7 +3063,36 @@ async function loadAdminTaisha(){
 }
 
 async function openResignDetail(staffId){
-  alert('詳細機能は準備中です');
+  if(!supabaseClient)return;
+  // 詳細モーダルを開く（notice-detailモーダルを流用）
+  openModal('resign-detail');
+  var c = document.getElementById('resign-detail-content');
+  if(!c)return;
+  c.innerHTML='<div style="padding:20px;text-align:center;color:#888">読み込み中...</div>';
+  var {data:docs,error} = await supabaseClient.from('resignation_documents').select('*').eq('staff_id',staffId).is('cancelled_at',null).order('created_at',{ascending:false});
+  if(error||!docs||docs.length===0){c.innerHTML='<div style="padding:20px;text-align:center;color:#991b1b">読み込みに失敗しました</div>';return;}
+  var {data:sRow} = await supabaseClient.from('staffs').select('name,employee_id').eq('id',staffId).single();
+  var sName = sRow?sRow.name:'(不明)';
+  var html2 = '<div style="font-size:14px;font-weight:700;margin-bottom:14px;padding-bottom:10px;border-bottom:1px solid #f0efe9">'+sName+'さんの退職書類</div>';
+  for(var i=0;i<docs.length;i++){
+    var d=docs[i];
+    var signed=d.signed_at;
+    var statusBdg=signed?'<span class="bdg bg">署名済</span>':d.document_type==='rules'?'<span class="bdg bz">署名不要</span>':'<span class="bdg bo">署名待ち</span>';
+    var signedInfo=signed?'<div style="font-size:11px;color:#888;margin-top:4px">署名日時：'+new Date(d.signed_at).toLocaleString('ja-JP')+'　氏名：'+d.signed_name+'</div>':'';
+    var viewBtn='';
+    if(d.file_url){
+      var rv=await supabaseClient.storage.from('resignation-docs').createSignedUrl(d.file_url,3600);
+      if(rv.data&&rv.data.signedUrl){
+        viewBtn='<a class="btn btn-sm" href="'+rv.data.signedUrl+'" target="_blank" rel="noopener" style="text-decoration:none;display:inline-block;margin-top:8px">PDFを表示</a>';
+      }
+    }
+    html2+='<div style="border:1px solid '+(signed?'#b3d98a':'#f0efe9')+';border-radius:10px;padding:14px;margin-bottom:10px;background:'+(signed?'#f0fae6':'#fff')+'">';
+    html2+='<div style="display:flex;justify-content:space-between;align-items:center"><span style="font-size:13px;font-weight:700">'+d.title+'</span>'+statusBdg+'</div>';
+    html2+=signedInfo;
+    html2+=viewBtn;
+    html2+='</div>';
+  }
+  c.innerHTML=html2;
 }
 
 async function loadMyResignDocs(){
