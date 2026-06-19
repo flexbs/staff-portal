@@ -134,16 +134,18 @@ var _currentResignDocId = null;
 
 
 async function openResignModal(){
-  openModal('send-resignation');
-  // リセット
-  document.getElementById('resign-date').value='';
-  document.getElementById('resign-pattern').value='';
+  // まずリセット
+  var d=document.getElementById('resign-date');if(d)d.value='';
+  var p=document.getElementById('resign-pattern');if(p)p.value='';
   var listArea=document.getElementById('resign-doc-list');
   var fileArea=document.getElementById('resign-file-area');
   if(listArea)listArea.style.display='none';
   if(fileArea)fileArea.style.display='none';
   var statusEl=document.getElementById('resign-status');
   if(statusEl)statusEl.style.display='none';
+  // モーダルを開く
+  openModal('send-resignation');
+  // スタッフ一覧を読み込む
   await loadResignTargetList();
 }
 async function loadResignTargetList(){
