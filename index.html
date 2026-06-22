@@ -185,12 +185,12 @@ input:disabled{background:#f5f4f0;color:#aaa;border-color:#e8e6e0}
     <button class="sub-tab active" onclick="showSub('admin','stafflist',this);loadAdminStaffListOnly()">スタッフ一覧</button>
     <button class="sub-tab" onclick="showSub('admin','docs',this)">書類送付管理</button>
     <button class="sub-tab" onclick="showSub('admin','nyusha',this)">入社手続き</button>
-    <button class="sub-tab" onclick="showSub('admin','taisha',this);loadAdminTaisha()">退職手続き</button>
+    <button class="sub-tab" onclick="showSub('admin','taisha',this)">退職手続き</button>
     <button class="sub-tab" onclick="showSub('admin','paid',this);loadAdminLeaveRequests();loadAdminPaidLeaveList();loadLeaveHistory()">有給管理</button>
-    <button class="sub-tab" onclick="showSub('admin','uploads',this);loadAdminUploads();loadAdminStaffUploads()">書類授受管理</button>
-    <button class="sub-tab" onclick="showSub('admin','mynumber',this)">マイナンバー</button>
+    <button class="sub-tab" onclick="showSub('admin','uploads',this);loadAdminUploads()">書類授受管理</button>
+    <button class="sub-tab" onclick="showSub('admin','mynumber',this)">マイナンバー管理</button>
     <button class="sub-tab" onclick="showSub('admin','notice',this);loadAdminNotices()">お知らせ</button>
-    <button class="sub-tab" onclick="showSub('admin','kintai',this);loadAdminKintai()">勤怠（単発）</button>
+    <button class="sub-tab" onclick="showSub('admin','kintai',this);loadAdminKintai()">勤怠管理（単発）</button>
     <button class="sub-tab" onclick="showSub('admin','settings',this)">設定</button>
   </div>
 
@@ -268,20 +268,11 @@ input:disabled{background:#f5f4f0;color:#aaa;border-color:#e8e6e0}
 
   <div id="admin-taisha" class="sp">
     <div class="card">
-      <div class="ch">
-        <span class="ct">退職手続き</span>
-        <button class="btn btn-sm btn-p" onclick="openResignModal()">＋ 退職書類を送付する</button>
-      </div>
-      <div style="background:#fef3cd;border-radius:8px;padding:10px 12px;font-size:12px;color:#8a5a00;margin-bottom:14px;line-height:1.7">
-        退職書類をスタッフに送付します。スタッフはポータルから署名できます。
-      </div>
-      <div class="tbl-scroll">
-        <table class="tbl">
-          <thead><tr><th>名前</th><th>退職日</th><th>パターン</th><th>書類</th><th>署名状況</th><th>送付日</th><th></th></tr></thead>
-          <tbody id="admin-taisha-tbody">
-            <tr><td colspan="7" style="text-align:center;color:#888;padding:20px">読み込み中...</td></tr>
-          </tbody>
-        </table>
+      <div class="ch"><span class="ct">退職手続き</span></div>
+      <div style="padding:40px 20px;text-align:center;color:#888">
+        <div style="font-size:48px;margin-bottom:12px">📤</div>
+        <div style="font-size:16px;font-weight:600;color:#555;margin-bottom:8px">準備中</div>
+        <div style="font-size:13px;line-height:1.7;color:#aaa">退職手続き機能は現在準備中です。<br>公開まで今しばらくお待ちください。</div>
       </div>
     </div>
   </div>
@@ -338,9 +329,9 @@ input:disabled{background:#f5f4f0;color:#aaa;border-color:#e8e6e0}
         <div class="ch"><span class="ct">スタッフから受け取った書類</span></div>
         <div class="tbl-scroll">
           <table class="tbl">
-            <thead><tr><th>名前</th><th>書類の種類</th><th>備考</th><th>提出日</th><th>状態</th><th></th></tr></thead>
+            <thead><tr><th>名前</th><th>手続き区分</th><th>書類種別</th><th>提出日</th><th>状態</th><th></th></tr></thead>
             <tbody id="admin-uploads-tbody">
-<tr><td colspan="6" style="text-align:center;color:#888;padding:20px">読み込み中...</td></tr>            </tbody>
+<tr><td colspan="6" style="text-align:center;color:#888;padding:40px 20px"><div style="font-size:40px;margin-bottom:10px">📥</div><div style="font-size:15px;font-weight:600;color:#555;margin-bottom:6px">もうすぐ公開</div><div style="font-size:13px;line-height:1.6">スタッフからの提出書類を受け取る機能は<br>現在準備中です。公開まで今しばらくお待ちください。</div></td></tr>            </tbody>
           </table>
         </div>
       </div>
@@ -460,8 +451,6 @@ input:disabled{background:#f5f4f0;color:#aaa;border-color:#e8e6e0}
     <button class="sub-tab" id="staff-tab-kintai" onclick="showSub('staff','skintai',this);loadMyKintai()" style="display:none">勤怠</button>
     <button class="sub-tab" id="staff-tab-spaid" onclick="showSub('staff','spaid',this)">有給</button>
     <button class="sub-tab" id="staff-notice-tab" onclick="showSub('staff','snotice',this);loadMyNotices();clearNoticeBadge()">お知らせ<span id="notice-badge" style="display:none;background:#e53e3e;color:#fff;border-radius:10px;font-size:10px;font-weight:700;padding:1px 6px;margin-left:4px;vertical-align:middle"></span></button>
-    <button class="sub-tab" onclick="showSub('staff','ssubmit',this);loadMyUploads()">書類提出</button>
-    <button class="sub-tab" id="staff-tab-resign" onclick="showSub('staff','sresign',this);loadMyResignDocs()" style="display:none">退職書類</button>
     <button class="sub-tab" onclick="showSub('staff','supload',this)">アップロード</button>
     <button class="sub-tab" onclick="showSub('staff','sprofile',this)">プロフィール</button>
     <button class="sub-tab" onclick="showSub('staff','sqa',this)">Q&A</button>
@@ -559,54 +548,7 @@ input:disabled{background:#f5f4f0;color:#aaa;border-color:#e8e6e0}
   <div class="tbl-scroll" id="staff-notices-container"><table class="tbl"><thead><tr><th>タイトル</th><th>受信日</th><th>状態</th><th></th></tr></thead><tbody id="staff-notices-tbody"><tr><td colspan="4" style="text-align:center;color:#888;padding:20px">読み込み中...</td></tr></tbody></table></div>
     </div>
   </div>
-<div id="staff-ssubmit" class="sp">
-    <div class="card">
-      <div class="ch"><span class="ct">書類提出</span></div>
-      <div style="background:#fef3cd;border-radius:8px;padding:10px 12px;font-size:12px;color:#8a5a00;margin-bottom:14px;line-height:1.7">
-        遅延証明書・就労証明書などをこちらからアップロードしてください。<br>
-        担当者が確認後、受理の記録を行います。
-      </div>
-      <div class="fg">
-        <label class="fl">書類の種類 <span style="color:#991b1b">*必須</span></label>
-        <select id="upload-category">
-          <option value="delay">遅延証明書</option>
-          <option value="employment">就労証明書（保育所・学童など）</option>
-          <option value="other">その他</option>
-        </select>
-      </div>
-      <div class="fg">
-        <label class="fl">ファイル <span style="color:#991b1b">*必須</span>（PDF・画像OK）</label>
-        <input type="file" id="upload-file" accept=".pdf,.jpg,.jpeg,.png,.gif,.webp">
-      </div>
-      <div class="fg">
-        <label class="fl">備考（任意）</label>
-        <textarea id="upload-note" rows="2" placeholder="例：2026年6月5日分の遅延証明書です"></textarea>
-      </div>
-      <div id="upload-status" style="display:none;font-size:13px;margin-top:8px;padding:10px;border-radius:8px"></div>
-      <div style="text-align:right;margin-top:14px">
-        <button class="btn btn-p" onclick="submitStaffUpload()">提出する →</button>
-      </div>
-    </div>
-    <div class="card" id="my-uploads-list-container">
-      <div class="ch"><span class="ct">提出済み書類</span></div>
-      <div style="padding:20px;text-align:center;color:#888;font-size:13px">読み込み中...</div>
-    </div>
-  </div>
-
-  <div id="staff-sresign" class="sp">
-    <div class="card">
-      <div class="ch"><span class="ct">退職書類</span></div>
-      <div style="background:#fef3cd;border-radius:8px;padding:10px 12px;font-size:12px;color:#8a5a00;margin-bottom:14px;line-height:1.7">
-        会社から送付された退職書類をご確認の上、署名してください。<br>
-        全ての書類への署名が完了したら担当者にご連絡ください。
-      </div>
-      <div id="my-resign-docs-area">
-        <div style="padding:20px;text-align:center;color:#888;font-size:13px">読み込み中...</div>
-      </div>
-    </div>
-  </div>
-
-  <div id="staff-supload" class="sp">
+<div id="staff-supload" class="sp">
     <div class="card">
       <div class="ch"><span class="ct">アップロード</span></div>
       <div style="padding:40px 20px;text-align:center;color:#888"><div style="font-size:48px;margin-bottom:12px">📤</div><div style="font-size:16px;font-weight:600;color:#555;margin-bottom:8px">もうすぐ公開</div><div style="font-size:13px;line-height:1.7">入社・退社書類のアップロード機能は<br>現在準備中です。公開まで今しばらくお待ちください。</div></div>
@@ -773,7 +715,7 @@ input:disabled{background:#f5f4f0;color:#aaa;border-color:#e8e6e0}
       <div style="width:44px;height:44px;border-radius:50%;background:#ede9fe;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:700;color:#5b21b6" id="modal-avatar"></div>
       <div><div style="font-size:15px;font-weight:700" id="modal-name"></div><div style="font-size:12px;color:#888;margin-top:2px" id="modal-empid"></div></div>
     </div>
-    <div class="profile-row"><span class="profile-label">ステータス</span><select id="modal-status" style="width:auto;font-size:12px;padding:4px 8px"><option value="稼働中">稼働中</option><option value="短期・単発">短期・単発</option><option value="請負">請負</option><option value="育休中">育休中</option><option value="休業中">休業中</option><option value="退職手続き中">退職手続き中</option><option value="退職手続き中">退職手続き中</option><option value="契約終了">契約終了</option></select></div>
+    <div class="profile-row"><span class="profile-label">ステータス</span><select id="modal-status" style="width:auto;font-size:12px;padding:4px 8px"><option value="稼働中">稼働中</option><option value="短期・単発">短期・単発</option><option value="請負">請負</option><option value="育休中">育休中</option><option value="休業中">休業中</option><option value="契約終了">契約終了</option></select></div>
     <div class="profile-row"><span class="profile-label">派遣先</span><input type="text" id="modal-workplace" style="width:auto;font-size:12px;padding:4px 8px;text-align:right;flex:1"></div>
     <div class="profile-row"><span class="profile-label">派遣開始日</span><input type="date" id="modal-dispatch-start" style="width:auto;font-size:12px;padding:4px 8px"></div>
     <div class="profile-row"><span class="profile-label">現契約期間</span><input type="text" id="modal-contract" style="width:auto;font-size:12px;padding:4px 8px;text-align:right"></div>
@@ -912,7 +854,7 @@ input:disabled{background:#f5f4f0;color:#aaa;border-color:#e8e6e0}
     <div class="section-divider">基本情報</div>
     <div class="g2">
       <div class="fg"><label class="fl">社員番号（4桁） <span style="color:#991b1b">*必須</span></label><input type="text" id="add-employee-id" placeholder="例：1050" maxlength="4" inputmode="numeric"></div>
-      <div class="fg"><label class="fl">ステータス <span style="color:#991b1b">*必須</span></label><select id="add-status"><option value="稼働中">稼働中</option><option value="短期・単発">短期・単発</option><option value="請負">請負</option><option value="育休中">育休中</option><option value="休業中">休業中</option><option value="退職手続き中">退職手続き中</option><option value="退職手続き中">退職手続き中</option><option value="契約終了">契約終了</option></select></div>
+      <div class="fg"><label class="fl">ステータス <span style="color:#991b1b">*必須</span></label><select id="add-status"><option value="稼働中">稼働中</option><option value="短期・単発">短期・単発</option><option value="請負">請負</option><option value="育休中">育休中</option><option value="休業中">休業中</option><option value="契約終了">契約終了</option></select></div>
     </div>
     <div class="g2">
       <div class="fg"><label class="fl">氏名 <span style="color:#991b1b">*必須</span></label><input type="text" id="add-name" placeholder="例：山田 花子"></div>
@@ -952,79 +894,6 @@ input:disabled{background:#f5f4f0;color:#aaa;border-color:#e8e6e0}
     </div>
     <div class="ma">
       <button class="btn btn-sm" onclick="closeModal('docs-detail')">閉じる</button>
-    </div>
-  </div>
-</div>
-
-<!-- 退職書類送付モーダル -->
-<div class="mbg" id="modal-send-resignation">
-  <div class="modal" style="max-width:540px">
-    <div class="mt">退職書類を送付する</div>
-    <div class="fg">
-      <label class="fl">対象スタッフ <span style="color:#991b1b">*必須</span></label>
-      <select id="resign-target" onchange="onResignTargetChange()"><option value="">選択してください</option></select>
-    </div>
-    <div class="fg">
-      <label class="fl">退職日 <span style="color:#991b1b">*必須</span></label>
-      <input type="date" id="resign-date">
-    </div>
-    <div class="fg">
-      <label class="fl">退職パターン <span style="color:#991b1b">*必須</span></label>
-      <select id="resign-pattern" onchange="updateResignDocList()">
-        <option value="">選択してください</option>
-        <option value="muiki">無期雇用</option>
-        <option value="途中退職">派遣契約（途中退職）</option>
-        <option value="契約満了">派遣契約（契約満了）</option>
-      </select>
-    </div>
-    <div id="resign-doc-list" style="display:none;background:#f5f4f0;border-radius:10px;padding:12px 14px;margin-bottom:12px;font-size:13px">
-      <div style="font-weight:700;color:#1a1a1a;margin-bottom:8px">送付する書類（3点）</div>
-      <div id="resign-doc-names" style="color:#555;line-height:2"></div>
-    </div>
-    <div id="resign-file-area" style="display:none">
-      <div class="section-divider">PDFファイルをアップロード</div>
-      <div id="resign-file-inputs"></div>
-    </div>
-    <div id="resign-status" style="display:none;font-size:13px;margin-top:8px;padding:10px;border-radius:8px"></div>
-    <div class="ma">
-      <button class="btn btn-sm" onclick="closeModal('send-resignation')">キャンセル</button>
-      <button class="btn btn-sm btn-p" onclick="sendResignDocs()">送付する →</button>
-    </div>
-  </div>
-</div>
-
-<!-- 退職書類署名モーダル -->
-<div class="mbg" id="modal-resign-sign">
-  <div class="modal" style="max-width:480px">
-    <div class="mt" id="resign-sign-title">書類に署名する</div>
-    <div style="background:#fef3cd;border-radius:8px;padding:10px 12px;font-size:12px;color:#8a5a00;margin-bottom:14px;line-height:1.7">
-      PDFをよくお読みいただき、内容に同意の上、お名前を入力して署名してください。
-    </div>
-    <div id="resign-sign-pdf-btn" style="margin-bottom:14px"></div>
-    <div class="fg">
-      <label class="fl">お名前を入力してください <span style="color:#991b1b">*必須</span></label>
-      <input type="text" id="resign-sign-name" placeholder="例：山田 花子">
-    </div>
-    <div style="background:#f5f4f0;border-radius:8px;padding:10px 12px;font-size:12px;color:#666;margin-bottom:14px;line-height:1.7">
-      上記のお名前の入力をもって、本書類の内容に同意したものとみなします。
-    </div>
-    <div id="resign-sign-status" style="display:none;font-size:13px;margin-top:8px;padding:10px;border-radius:8px"></div>
-    <div class="ma">
-      <button class="btn btn-sm" onclick="closeModal('resign-sign')">キャンセル</button>
-      <button class="btn btn-sm btn-p" onclick="submitResignSign()">署名する →</button>
-    </div>
-  </div>
-</div>
-
-<!-- 退職書類詳細モーダル -->
-<div class="mbg" id="modal-resign-detail">
-  <div class="modal" style="max-width:560px">
-    <div class="mt">退職書類詳細</div>
-    <div id="resign-detail-content">
-      <div style="padding:20px;text-align:center;color:#888">読み込み中...</div>
-    </div>
-    <div class="ma">
-      <button class="btn btn-sm" onclick="closeModal('resign-detail')">閉じる</button>
     </div>
   </div>
 </div>
@@ -1166,7 +1035,6 @@ async function doLogin(type){
     loadAdminUploads();
     loadAdminLeaveRequests();
     loadAdminMetrics();
-    loadResignTargetList();
   } else {
     loadStaffProfile();
   }
@@ -1364,10 +1232,6 @@ async function loadStaffProfile(){
   var kintaiTab=document.getElementById('staff-tab-kintai');
   if(kintaiTab){
     kintaiTab.style.display=(data.status==='短期・単発')?'':'none';
-  }
-  var resignTab=document.getElementById('staff-tab-resign');
-  if(resignTab){
-    resignTab.style.display=(data.status==='退職手続き中')?'':'none';
   }
   var statusBadge=document.getElementById('staff-status-badge');
     if(statusBadge){
@@ -2658,15 +2522,26 @@ async function confirmMyNotice(recipientId){
 
 async function openDocsDetail(staffId, staffName){
   if(!supabaseClient){alert('接続エラー');return;}
+  // 現在のタブ（payslip or contract）を取得
+  var currentTab = window._docsCurrentTab || 'payslip';
+  var isContract = currentTab === 'contract';
+  var tabLabel = isContract ? '就業条件明示書' : '給与明細';
   openModal('docs-detail');
   var nameEl=document.getElementById('docs-detail-staff-name');
-  if(nameEl)nameEl.textContent=staffName+' さんの送付書類';
+  if(nameEl)nameEl.textContent=staffName+' さんの送付書類（'+tabLabel+'）';
   var c=document.getElementById('docs-detail-content');
   c.innerHTML='<div style="padding:20px;text-align:center;color:#888">読み込み中...</div>';
-  var {data:docs,error}=await supabaseClient.from('documents').select('*').eq('staff_id',staffId).is('cancelled_at',null).order('created_at',{ascending:false});
+  // タブに合わせてフィルタリング
+  var query=supabaseClient.from('documents').select('*').eq('staff_id',staffId).is('cancelled_at',null).order('created_at',{ascending:false});
+  if(isContract){
+    query=query.eq('type','contract');
+  } else {
+    query=query.eq('type','payslip');
+  }
+  var {data:docs,error}=await query;
   if(error){c.innerHTML='<div style="padding:20px;text-align:center;color:#991b1b">読み込みに失敗しました</div>';return;}
   if(!docs||docs.length===0){
-    c.innerHTML='<div style="padding:40px 20px;text-align:center;color:#888"><div style="font-size:40px;margin-bottom:10px">📄</div><div style="font-size:14px">送付済みの書類はまだありません</div></div>';
+    c.innerHTML='<div style="padding:40px 20px;text-align:center;color:#888"><div style="font-size:40px;margin-bottom:10px">📄</div><div style="font-size:14px">送付済みの'+tabLabel+'はまだありません</div></div>';
     return;
   }
   var rows='';
@@ -2677,12 +2552,10 @@ async function openDocsDetail(staffId, staffName){
     var bucket=d.type==='payslip'?'payslips':'contracts';
     var statusBdg=d.confirmed_at?'<span class="bdg bg">'+(d.requires_signature?'署名済':'確認済')+'</span>':'<span class="bdg bo">'+(d.requires_signature?'署名待ち':'未確認')+'</span>';
     var confirmedStr=d.confirmed_at?new Date(d.confirmed_at).toLocaleString('ja-JP',{year:'numeric',month:'2-digit',day:'2-digit',hour:'2-digit',minute:'2-digit'}):'—';
-    // 表示URL取得
     var sUrl='';
     var rv=await supabaseClient.storage.from(bucket).createSignedUrl(d.file_url,3600);
     if(rv.data&&rv.data.signedUrl)sUrl=rv.data.signedUrl;
     var showBtn=sUrl?'<a class="btn btn-sm" href="'+sUrl+'" target="_blank" rel="noopener" style="text-decoration:none;display:inline-block">表示</a>':'<button class="btn btn-sm" disabled style="opacity:0.4">表示</button>';
-    // 取消ボタン（未確認のみ）
     var cancelBtn=!d.confirmed_at?'<button class="btn btn-sm" style="background:#fee2e2;color:#991b1b;border-color:#fca5a5" onclick="cancelDocFromDetail(\''+d.id+'\',\''+d.file_url+'\',\''+bucket+'\',\''+staffId+'\',\''+staffName+'\')">取消</button>':'<span style="font-size:11px;color:#aaa">—</span>';
     rows+='<tr><td style="font-size:12px">'+(d.title||typeStr)+'</td><td><span class="bdg '+(d.type==='payslip'?'bb':'bp')+'" style="font-size:10px">'+typeStr+'</span></td><td style="white-space:nowrap;font-size:12px">'+dateStr+'</td><td>'+statusBdg+'</td><td style="font-size:11px;color:#888;white-space:nowrap">'+confirmedStr+'</td><td style="white-space:nowrap">'+showBtn+'</td><td>'+cancelBtn+'</td></tr>';
   }
@@ -2759,449 +2632,6 @@ async function changeMyPassword(){
     location.reload();
   },2000);
 }
-
-// ========== 書類提出機能 ==========
-var _categoryLabels = {delay:'遅延証明書', employment:'就労証明書（保育所・学童）', other:'その他'};
-
-async function submitStaffUpload(){
-  if(!supabaseClient||!myStaffData){alert('ログイン情報が取得できません');return;}
-  var category = document.getElementById('upload-category').value;
-  var fileInput = document.getElementById('upload-file');
-  var note = document.getElementById('upload-note').value;
-  var statusEl = document.getElementById('upload-status');
-  if(!fileInput.files||!fileInput.files[0]){
-    statusEl.style.display='block';statusEl.style.background='#fee2e2';statusEl.style.color='#991b1b';
-    statusEl.textContent='ファイルを選択してください';return;
-  }
-  var file = fileInput.files[0];
-  if(file.size > 10*1024*1024){
-    statusEl.style.display='block';statusEl.style.background='#fee2e2';statusEl.style.color='#991b1b';
-    statusEl.textContent='ファイルサイズは10MB以内にしてください';return;
-  }
-  if(!confirm('提出します。よろしいですか？'))return;
-  statusEl.style.display='block';statusEl.style.background='#f5f4f0';statusEl.style.color='#666';
-  statusEl.textContent='アップロード中...';
-  var ext = file.name.split('.').pop();
-  var filePath = myStaffData.employee_id+'/'+category+'_'+Date.now()+'.'+ext;
-  var up = await supabaseClient.storage.from('staff-uploads').upload(filePath, file);
-  if(up.error){statusEl.style.background='#fee2e2';statusEl.style.color='#991b1b';statusEl.textContent='アップロードに失敗しました：'+up.error.message;return;}
-  var ins = await supabaseClient.from('staff_uploads').insert({staff_id:myStaffData.id,category:category,file_url:filePath,file_name:file.name,note:note||null,status:'pending'});
-  if(ins.error){statusEl.style.background='#fee2e2';statusEl.style.color='#991b1b';statusEl.textContent='登録に失敗しました：'+ins.error.message;return;}
-  statusEl.style.background='#e6f4d7';statusEl.style.color='#2d6a10';
-  statusEl.textContent='提出しました！担当者が確認します。';
-  fileInput.value='';
-  document.getElementById('upload-note').value='';
-  loadMyUploads();
-}
-
-async function loadMyUploads(){
-  var c = document.getElementById('my-uploads-list-container');
-  if(!c||!supabaseClient||!myStaffData)return;
-  c.innerHTML='<div class="ch"><span class="ct">提出済み書類</span></div><div style="padding:20px;text-align:center;color:#888">読み込み中...</div>';
-  var res = await supabaseClient.from('staff_uploads').select('*').eq('staff_id',myStaffData.id).order('created_at',{ascending:false}).limit(30);
-  var data=res.data, error=res.error;
-  if(error||!data||data.length===0){
-    c.innerHTML='<div class="ch"><span class="ct">提出済み書類</span></div><div style="padding:40px 20px;text-align:center;color:#888"><div style="font-size:40px;margin-bottom:10px">📄</div><div style="font-size:14px">提出済みの書類はまだありません</div></div>';
-    return;
-  }
-  var rows='';
-  data.forEach(function(r){
-    var catLabel=_categoryLabels[r.category]||r.category||'その他';
-    var dateStr=r.created_at?r.created_at.substring(0,10).replace(/-/g,'/'):'';
-    var statusBdg=r.status==='checked'?'<span class="bdg bg">受理済</span>':'<span class="bdg ba">確認待ち</span>';
-    rows+='<tr><td>'+catLabel+'</td><td style="font-size:12px">'+(r.file_name||'')+'</td><td style="font-size:11px;color:#888">'+(r.note||'-')+'</td><td>'+statusBdg+'</td><td style="white-space:nowrap;font-size:11px;color:#888">'+dateStr+'</td></tr>';
-  });
-  c.innerHTML='<div class="ch"><span class="ct">提出済み書類</span></div><div style="overflow-x:auto"><table style="width:100%;border-collapse:collapse"><thead><tr style="text-align:left;color:#888;font-size:12px"><th style="padding:8px">種類</th><th style="padding:8px">ファイル名</th><th style="padding:8px">備考</th><th style="padding:8px">状態</th><th style="padding:8px">提出日</th></tr></thead><tbody>'+rows+'</tbody></table></div>';
-}
-
-async function loadAdminStaffUploads(){
-  if(!supabaseClient)return;
-  var tbody=document.getElementById('admin-uploads-tbody');
-  if(!tbody)return;
-  tbody.innerHTML='<tr><td colspan="6" style="text-align:center;color:#888;padding:20px">読み込み中...</td></tr>';
-  var res=await supabaseClient.from('staff_uploads').select('*').order('created_at',{ascending:false}).limit(100);
-  var data=res.data, error=res.error;
-  if(error){tbody.innerHTML='<tr><td colspan="6" style="text-align:center;color:#991b1b;padding:20px">読み込みに失敗しました</td></tr>';return;}
-  if(!data||data.length===0){tbody.innerHTML='<tr><td colspan="6" style="text-align:center;color:#888;padding:40px 20px"><div style="font-size:40px;margin-bottom:10px">📥</div><div style="font-size:15px;font-weight:600;color:#555;margin-bottom:6px">まだ提出書類はありません</div></td></tr>';return;}
-  var res2=await supabaseClient.from('staffs').select('id,name,employee_id');
-  var staffs=res2.data||[];
-  var staffMap={};
-  staffs.forEach(function(s){staffMap[s.id]={name:s.name,employee_id:s.employee_id};});
-  tbody.innerHTML='';
-  for(var i=0;i<data.length;i++){
-    var r=data[i];
-    var sInfo=staffMap[r.staff_id]||{name:'(不明)',employee_id:''};
-    var catLabel=_categoryLabels[r.category]||r.category||'その他';
-    var dateStr=r.created_at?r.created_at.substring(0,10).replace(/-/g,'/'):'';
-    var statusBdg=r.status==='checked'?'<span class="bdg bg">受理済</span>':'<span class="bdg ba">確認待ち</span>';
-    var sUrl='';
-    var rv=await supabaseClient.storage.from('staff-uploads').createSignedUrl(r.file_url,3600);
-    if(rv.data&&rv.data.signedUrl)sUrl=rv.data.signedUrl;
-    var viewBtn=sUrl?'<a class="btn btn-sm" href="'+sUrl+'" target="_blank" rel="noopener" style="text-decoration:none;display:inline-block">表示</a>':'';
-    var checkBtn=r.status!=='checked'?('<button class="btn btn-sm btn-g" onclick="checkStaffUpload('+JSON.stringify(r.id)+')">受理</button>'):'';
-    var tr=document.createElement('tr');
-    tr.innerHTML='<td>'+sInfo.name+'<br><span style="font-size:11px;color:#888">'+String(sInfo.employee_id).padStart(4,'0')+'</span></td><td>'+catLabel+'</td><td style="font-size:12px">'+(r.note||'-')+'</td><td style="white-space:nowrap;font-size:11px">'+dateStr+'</td><td>'+statusBdg+'</td><td style="white-space:nowrap">'+viewBtn+' '+checkBtn+'</td>';
-    tbody.appendChild(tr);
-  }
-}
-
-async function checkStaffUpload(id){
-  if(!supabaseClient)return;
-  if(!confirm('この書類を受理済みにしますか？'))return;
-  var now=new Date().toISOString();
-  var checker=myStaffData?(myStaffData.name||'管理者'):'管理者';
-  var r=await supabaseClient.from('staff_uploads').update({status:'checked',checked_at:now,checked_by:checker}).eq('id',id);
-  if(r.error){alert('更新に失敗しました：'+r.error.message);return;}
-  alert('受理しました！');
-  loadAdminStaffUploads();
-}
-// ========== 書類提出機能ここまで ==========
-
-
-// ========== 退職手続き機能 ==========
-var _resignPatterns = {
-  muiki: {
-    label: '無期雇用',
-    docs: [
-      {key:'resign_wish', name:'退職願（無期雇用）'},
-      {key:'pledge', name:'退職時の誓約書'},
-      {key:'rules', name:'終了に伴う就業規則'}
-    ]
-  },
-  途中退職: {
-    label: '派遣契約（途中退職）',
-    docs: [
-      {key:'resign_wish', name:'退職願（契約期間途中退職用）'},
-      {key:'pledge', name:'退職時の誓約書'},
-      {key:'rules', name:'終了に伴う就業規則'}
-    ]
-  },
-  契約満了: {
-    label: '派遣契約（契約満了）',
-    docs: [
-      {key:'end_notice', name:'雇用契約終了通知書'},
-      {key:'pledge', name:'退職時の誓約書'},
-      {key:'rules', name:'終了に伴う就業規則'}
-    ]
-  }
-};
-
-var _currentResignDocId = null;
-
-
-async function openResignModal(){
-  // まずリセット
-  var d=document.getElementById('resign-date');if(d)d.value='';
-  var p=document.getElementById('resign-pattern');if(p)p.value='';
-  var listArea=document.getElementById('resign-doc-list');
-  var fileArea=document.getElementById('resign-file-area');
-  if(listArea)listArea.style.display='none';
-  if(fileArea)fileArea.style.display='none';
-  var statusEl=document.getElementById('resign-status');
-  if(statusEl)statusEl.style.display='none';
-  // モーダルを開く
-  openModal('send-resignation');
-  // スタッフ一覧を読み込む
-  await loadResignTargetList();
-}
-async function loadResignTargetList(){
-  if(!supabaseClient)return;
-  var sel = document.getElementById('resign-target');
-  if(!sel)return;
-  var {data} = await supabaseClient.from('staffs').select('id,name,employee_id,phone').order('name_kana');
-  if(!data)return;
-  var staffOnly = data.filter(s => s.employee_id >= 1000);
-  sel.innerHTML = '<option value="">選択してください</option>';
-  staffOnly.forEach(function(s){
-    sel.innerHTML += '<option value="'+s.employee_id+'" data-id="'+s.id+'" data-phone="'+(s.phone||'')+'">'+s.name+'（'+String(s.employee_id).padStart(4,'0')+'）</option>';
-  });
-}
-
-function onResignTargetChange(){
-  updateResignDocList();
-}
-
-function updateResignDocList(){
-  var pattern = document.getElementById('resign-pattern').value;
-  var listArea = document.getElementById('resign-doc-list');
-  var fileArea = document.getElementById('resign-file-area');
-  var fileInputs = document.getElementById('resign-file-inputs');
-  if(!pattern){
-    listArea.style.display = 'none';
-    fileArea.style.display = 'none';
-    return;
-  }
-  var p = _resignPatterns[pattern];
-  if(!p){return;}
-  var namesHtml = '';
-  var fileHtml = '';
-  p.docs.forEach(function(d, i){
-    namesHtml += '📄 ' + d.name + '<br>';
-    var isRules = d.key === 'rules';
-    if(isRules){
-      fileHtml += '<div class="fg"><label class="fl">'+d.name+'</label><div style="background:#e6f4d7;border-radius:8px;padding:8px 12px;font-size:12px;color:#2d6a10">ファイル不要（内容は固定です）</div></div>';
-    } else {
-      fileHtml += '<div class="fg"><label class="fl">'+d.name+' <span style="color:#991b1b">*必須</span></label><input type="file" id="resign-file-'+d.key+'" accept=".pdf"></div>';
-    }
-  });
-  document.getElementById('resign-doc-names').innerHTML = namesHtml;
-  fileInputs.innerHTML = fileHtml;
-  listArea.style.display = 'block';
-  fileArea.style.display = 'block';
-}
-
-async function sendResignDocs(){
-  if(!supabaseClient){alert('接続エラー');return;}
-  var target = document.getElementById('resign-target').value;
-  var resignDate = document.getElementById('resign-date').value;
-  var pattern = document.getElementById('resign-pattern').value;
-  var statusEl = document.getElementById('resign-status');
-  if(!target){statusEl.style.display='block';statusEl.style.background='#fee2e2';statusEl.style.color='#991b1b';statusEl.textContent='対象スタッフを選択してください';return;}
-  if(!resignDate){statusEl.style.display='block';statusEl.style.background='#fee2e2';statusEl.style.color='#991b1b';statusEl.textContent='退職日を入力してください';return;}
-  if(!pattern){statusEl.style.display='block';statusEl.style.background='#fee2e2';statusEl.style.color='#991b1b';statusEl.textContent='退職パターンを選択してください';return;}
-  var p = _resignPatterns[pattern];
-  var nonRulesDocs = p.docs.filter(function(d){return d.key !== 'rules';});
-  for(var i=0;i<nonRulesDocs.length;i++){
-    var fi = document.getElementById('resign-file-'+nonRulesDocs[i].key);
-    if(!fi||!fi.files||!fi.files[0]){
-      statusEl.style.display='block';statusEl.style.background='#fee2e2';statusEl.style.color='#991b1b';
-      statusEl.textContent=nonRulesDocs[i].name+'のPDFを選択してください';return;
-    }
-  }
-  var targetOpt = document.getElementById('resign-target').options[document.getElementById('resign-target').selectedIndex];
-  var targetName = targetOpt.text;
-  if(!confirm(targetName.split('（')[0]+'さんに退職書類（3点）を送付します。よろしいですか？'))return;
-  statusEl.style.display='block';statusEl.style.background='#f5f4f0';statusEl.style.color='#666';
-  statusEl.textContent='送付中...';
-  var sRow = await supabaseClient.from('staffs').select('id').eq('employee_id', parseInt(target)).single();
-  if(!sRow.data){statusEl.style.background='#fee2e2';statusEl.style.color='#991b1b';statusEl.textContent='スタッフが見つかりません';return;}
-  var staffUuid = sRow.data.id;
-  // ステータスを退職手続き中に更新
-  await supabaseClient.from('staffs').update({status:'退職手続き中', resignation_date:resignDate}).eq('id', staffUuid);
-  var errors = [];
-  for(var j=0;j<p.docs.length;j++){
-    var doc = p.docs[j];
-    var isRules = doc.key === 'rules';
-    var fileUrl = null;
-    if(!isRules){
-      var fi2 = document.getElementById('resign-file-'+doc.key);
-      var file = fi2.files[0];
-      var filePath = String(target).replace(/\s/g,'')+'/'+'resign_'+doc.key+'_'+Date.now()+'.pdf';
-      var up = await supabaseClient.storage.from('resignation-docs').upload(filePath, file);
-      if(up.error){errors.push(doc.name+':'+up.error.message);continue;}
-      fileUrl = filePath;
-    }
-    var ins = await supabaseClient.from('resignation_documents').insert({
-      staff_id: staffUuid,
-      pattern: pattern,
-      resignation_date: resignDate,
-      document_type: doc.key,
-      title: doc.name,
-      file_url: fileUrl
-    });
-    if(ins.error){errors.push(doc.name+':'+ins.error.message);}
-  }
-  if(errors.length > 0){
-    statusEl.style.background='#fee2e2';statusEl.style.color='#991b1b';
-    statusEl.textContent='一部エラー：'+errors.join('、');return;
-  }
-  statusEl.style.background='#e6f4d7';statusEl.style.color='#2d6a10';
-  statusEl.textContent='送付完了！スタッフのポータルに表示されます。';
-  setTimeout(function(){
-    closeModal('send-resignation');
-    statusEl.style.display='none';
-    loadAdminTaisha();
-    loadAdminStaffList();
-  }, 1500);
-}
-
-async function loadAdminTaisha(){
-  if(!supabaseClient)return;
-  var tbody = document.getElementById('admin-taisha-tbody');
-  if(!tbody)return;
-  tbody.innerHTML='<tr><td colspan="7" style="text-align:center;color:#888;padding:20px">読み込み中...</td></tr>';
-  var {data:docs, error} = await supabaseClient.from('resignation_documents').select('*').is('cancelled_at',null).order('created_at',{ascending:false});
-  if(error){tbody.innerHTML='<tr><td colspan="7" style="text-align:center;color:#991b1b;padding:20px">読み込みに失敗しました</td></tr>';return;}
-  if(!docs||docs.length===0){
-    tbody.innerHTML='<tr><td colspan="7" style="text-align:center;color:#888;padding:40px 20px"><div style="font-size:40px;margin-bottom:10px">📤</div><div style="font-size:14px">退職手続き中のスタッフはいません</div></td></tr>';
-    return;
-  }
-  var {data:staffs} = await supabaseClient.from('staffs').select('id,name,employee_id');
-  var staffMap = {};
-  if(staffs){staffs.forEach(function(s){staffMap[s.id]={name:s.name,employee_id:s.employee_id};});}
-  // スタッフごとにグループ化
-  var grouped = {};
-  docs.forEach(function(d){
-    if(!grouped[d.staff_id]){grouped[d.staff_id]={docs:[],resignation_date:d.resignation_date,pattern:d.pattern,created_at:d.created_at};}
-    grouped[d.staff_id].docs.push(d);
-  });
-  tbody.innerHTML='';
-  Object.keys(grouped).forEach(function(staffId){
-    var g = grouped[staffId];
-    var sInfo = staffMap[staffId]||{name:'(不明)',employee_id:''};
-    var totalDocs = g.docs.length;
-    var signedDocs = g.docs.filter(function(d){return d.signed_at;}).length;
-    var signBdg = signedDocs===totalDocs?'<span class="bdg bg">署名完了</span>':'<span class="bdg ba">'+signedDocs+'/'+totalDocs+'署名済</span>';
-    var patternLabel = _resignPatterns[g.pattern]?_resignPatterns[g.pattern].label:(g.pattern||'-');
-    var dateStr = g.resignation_date?g.resignation_date.replace(/-/g,'/'):'未設定';
-    var sentStr = g.created_at?g.created_at.substring(0,10).replace(/-/g,'/'):'';
-    var docNames = g.docs.map(function(d){
-      var signed = d.signed_at?'✅':'⬜';
-      return signed+' '+d.title;
-    }).join('<br>');
-    var tr = document.createElement('tr');
-    var detailBtn = '<button class="btn btn-sm" data-staff-id="'+staffId+'" onclick="openResignDetail(this.dataset.staffId)">詳細</button>';
-    tr.innerHTML = '<td>'+sInfo.name+'<br><span style="font-size:11px;color:#888">'+String(sInfo.employee_id).padStart(4,'0')+'</span></td>'
-      +'<td style="white-space:nowrap">'+dateStr+'</td>'
-      +'<td style="font-size:12px">'+patternLabel+'</td>'
-      +'<td style="font-size:12px;line-height:1.8">'+docNames+'</td>'
-      +'<td>'+signBdg+'</td>'
-      +'<td style="white-space:nowrap;font-size:11px;color:#888">'+sentStr+'</td>'
-      +'<td>'+detailBtn+'</td>';
-    tbody.appendChild(tr);
-  });
-}
-
-async function openResignDetail(staffId){
-  if(!supabaseClient)return;
-  // 詳細モーダルを開く（notice-detailモーダルを流用）
-  openModal('resign-detail');
-  var c = document.getElementById('resign-detail-content');
-  if(!c)return;
-  c.innerHTML='<div style="padding:20px;text-align:center;color:#888">読み込み中...</div>';
-  var {data:docs,error} = await supabaseClient.from('resignation_documents').select('*').eq('staff_id',staffId).is('cancelled_at',null).order('created_at',{ascending:false});
-  if(error||!docs||docs.length===0){c.innerHTML='<div style="padding:20px;text-align:center;color:#991b1b">読み込みに失敗しました</div>';return;}
-  var {data:sRow} = await supabaseClient.from('staffs').select('name,employee_id').eq('id',staffId).single();
-  var sName = sRow?sRow.name:'(不明)';
-  var html2 = '<div style="font-size:14px;font-weight:700;margin-bottom:14px;padding-bottom:10px;border-bottom:1px solid #f0efe9">'+sName+'さんの退職書類</div>';
-  for(var i=0;i<docs.length;i++){
-    var d=docs[i];
-    var signed=d.signed_at;
-    var statusBdg=signed?'<span class="bdg bg">署名済</span>':d.document_type==='rules'?'<span class="bdg bz">署名不要</span>':'<span class="bdg bo">署名待ち</span>';
-    var signedInfo=signed?'<div style="font-size:11px;color:#888;margin-top:4px">署名日時：'+new Date(d.signed_at).toLocaleString('ja-JP')+'　氏名：'+d.signed_name+'</div>':'';
-    var viewBtn='';
-    if(d.file_url){
-      var rv=await supabaseClient.storage.from('resignation-docs').createSignedUrl(d.file_url,3600);
-      if(rv.data&&rv.data.signedUrl){
-        viewBtn='<a class="btn btn-sm" href="'+rv.data.signedUrl+'" target="_blank" rel="noopener" style="text-decoration:none;display:inline-block;margin-top:8px">PDFを表示</a>';
-      }
-    }
-    html2+='<div style="border:1px solid '+(signed?'#b3d98a':'#f0efe9')+';border-radius:10px;padding:14px;margin-bottom:10px;background:'+(signed?'#f0fae6':'#fff')+'">';
-    html2+='<div style="display:flex;justify-content:space-between;align-items:center"><span style="font-size:13px;font-weight:700">'+d.title+'</span>'+statusBdg+'</div>';
-    html2+=signedInfo;
-    html2+=viewBtn;
-    html2+='</div>';
-  }
-  c.innerHTML=html2;
-}
-
-async function loadMyResignDocs(){
-  if(!supabaseClient||!myStaffData)return;
-  var area = document.getElementById('my-resign-docs-area');
-  if(!area)return;
-  area.innerHTML='<div style="padding:20px;text-align:center;color:#888;font-size:13px">読み込み中...</div>';
-  var {data:docs, error} = await supabaseClient.from('resignation_documents').select('*').eq('staff_id',myStaffData.id).is('cancelled_at',null).order('created_at',{ascending:false});
-  if(error||!docs||docs.length===0){
-    area.innerHTML='<div style="padding:40px 20px;text-align:center;color:#888"><div style="font-size:40px;margin-bottom:10px">📄</div><div style="font-size:14px">退職書類はまだ届いていません</div></div>';
-    return;
-  }
-  var signedCount = docs.filter(function(d){return d.signed_at;}).length;
-  var html = '';
-  if(signedCount === docs.length){
-    html += '<div style="background:#e6f4d7;border-radius:8px;padding:10px 12px;font-size:13px;color:#2d6a10;font-weight:700;margin-bottom:14px;text-align:center">✅ 全ての書類への署名が完了しました</div>';
-  } else {
-    html += '<div style="background:#fef3cd;border-radius:8px;padding:10px 12px;font-size:13px;color:#8a5a00;margin-bottom:14px">署名が必要な書類が '+( docs.length - signedCount)+'件あります。内容をよく確認してから署名してください。</div>';
-  }
-  for(var i=0;i<docs.length;i++){
-    var d = docs[i];
-    var isRules = d.document_type === 'rules';
-    var signed = d.signed_at;
-    var statusBdg = signed?'<span class="bdg bg">署名済</span>':'<span class="bdg bo">署名待ち</span>';
-    var signedInfo = signed?('<div style="font-size:11px;color:#888;margin-top:4px">署名日時：'+new Date(d.signed_at).toLocaleString('ja-JP')+'　氏名：'+d.signed_name+'</div>'):'';
-    var btnHtml = '';
-    if(isRules){
-      btnHtml = '<div style="font-size:12px;color:#666;margin-top:8px">※ 内容をお読みください（署名不要）</div>';
-    } else if(!signed){
-      btnHtml = '<button class="btn btn-sm btn-p" style="margin-top:8px" '
-        +'data-doc-id="'+d.id+'" data-doc-title="'+d.title.replace(/"/g,'&quot;')+'" data-doc-url="'+(d.file_url||'').replace(/"/g,'&quot;')+'" '
-        +'onclick="openResignSign(this.dataset.docId,this.dataset.docTitle,this.dataset.docUrl)">署名する →</button>';
-    }
-        var pdfBtn = '';
-    if(d.file_url){
-      pdfBtn = '<button class="btn btn-sm" style="margin-top:8px;margin-right:6px" data-pdf-url="'+d.file_url.replace(/"/g,'&quot;')+'" onclick="openResignPdf(this.dataset.pdfUrl)">PDFを表示</button>'
-        +'<button class="btn btn-sm" style="margin-top:8px;margin-right:6px" data-pdf-url="'+d.file_url.replace(/"/g,'&quot;')+'" onclick="downloadResignPdf(this.dataset.pdfUrl,'+JSON.stringify(d.title)+')">ダウンロード</button>';
-    }
-    html += '<div style="border:1px solid '+(signed?'#b3d98a':'#f0efe9')+';border-radius:10px;padding:14px;margin-bottom:10px;background:'+(signed?'#f0fae6':'#fff')+'">';
-    html += '<div style="display:flex;justify-content:space-between;align-items:center"><span style="font-size:14px;font-weight:700">'+d.title+'</span>'+statusBdg+'</div>';
-    html += signedInfo;
-    html += '<div style="margin-top:8px">'+pdfBtn+btnHtml+'</div>';
-    html += '</div>';
-  }
-  area.innerHTML = html;
-}
-
-async function openResignPdf(fileUrl){
-  if(!supabaseClient){alert('接続エラー');return;}
-  var newTab = window.open('','_blank');
-  var r = await supabaseClient.storage.from('resignation-docs').createSignedUrl(fileUrl, 3600);
-  if(r.error||!r.data){if(newTab)newTab.close();alert('PDFを開けませんでした');return;}
-  if(newTab){newTab.location.href=r.data.signedUrl;}
-}
-
-function openResignSign(docId, title, fileUrl){
-  _currentResignDocId = docId;
-  var titleEl = document.getElementById('resign-sign-title');
-  if(titleEl)titleEl.textContent = title;
-  var pdfBtn = document.getElementById('resign-sign-pdf-btn');
-  if(pdfBtn){
-    if(fileUrl&&fileUrl!=='null'){
-      pdfBtn.innerHTML = '<button class="btn btn-sm" data-pdf-url="'+fileUrl.replace(/"/g,'&quot;')+'" onclick="openResignPdf(this.dataset.pdfUrl)">📄 PDFを表示する</button><div style="font-size:12px;color:#888;margin-top:4px">先にPDFの内容をご確認ください</div>';
-    } else {
-      pdfBtn.innerHTML = '';
-    }
-  }
-  var nameEl = document.getElementById('resign-sign-name');
-  if(nameEl)nameEl.value = '';
-  var statusEl = document.getElementById('resign-sign-status');
-  if(statusEl)statusEl.style.display='none';
-  openModal('resign-sign');
-}
-
-async function submitResignSign(){
-  if(!supabaseClient||!myStaffData){alert('接続エラー');return;}
-  if(!_currentResignDocId){alert('エラーが発生しました');return;}
-  var name = document.getElementById('resign-sign-name').value.trim();
-  var statusEl = document.getElementById('resign-sign-status');
-  if(!name){
-    statusEl.style.display='block';statusEl.style.background='#fee2e2';statusEl.style.color='#991b1b';
-    statusEl.textContent='お名前を入力してください';return;
-  }
-  if(!confirm('「'+name+'」の名前で署名します。よろしいですか？'))return;
-  statusEl.style.display='block';statusEl.style.background='#f5f4f0';statusEl.style.color='#666';
-  statusEl.textContent='署名中...';
-  var now = new Date().toISOString();
-  var r = await supabaseClient.from('resignation_documents').update({signed_at:now, signed_name:name}).eq('id',_currentResignDocId);
-  if(r.error){statusEl.style.background='#fee2e2';statusEl.style.color='#991b1b';statusEl.textContent='署名に失敗しました：'+r.error.message;return;}
-  statusEl.style.background='#e6f4d7';statusEl.style.color='#2d6a10';
-  statusEl.textContent='署名しました！';
-  setTimeout(function(){
-    closeModal('resign-sign');
-    loadMyResignDocs();
-  }, 1000);
-}
-async function downloadResignPdf(fileUrl, title){
-  if(!supabaseClient){alert('接続エラー');return;}
-  var r = await supabaseClient.storage.from('resignation-docs').createSignedUrl(fileUrl, 3600);
-  if(r.error||!r.data){alert('ダウンロードできませんでした');return;}
-  var a = document.createElement('a');
-  a.href = r.data.signedUrl;
-  a.download = (title||'退職書類')+'.pdf';
-  document.body.appendChild(a);
-  a.click();
-  document.body.removeChild(a);
-}
-
-// ========== 退職手続き機能ここまで ==========
-
-
 </script>
+</body>
+</html>
