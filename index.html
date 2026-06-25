@@ -1242,7 +1242,7 @@ async function submitKintai(){
     await fetch('https://api.resend.com/emails',{
       method:'POST',
       headers:{'Authorization':'Bearer re_PXazJFc9_CnQGtqhy37RdEWDe2v65GaCs','Content-Type':'application/json'},
-      body:JSON.stringify({from:'フレックスビジネスサービス <noreply@flexbs.com>',to:['junichi.kaneko.5870@i-bp.co.jp'],subject:'【勤怠確認】'+myStaffData.name+'さんの勤怠申請（'+date+'）',html:emailBody})
+      body:JSON.stringify({from:'フレックスビジネスサービス <noreply@flexbs.com>',to:['wakamatsu@flexbs.com'],subject:'【勤怠確認】'+myStaffData.name+'さんの勤怠申請（'+date+'）',html:emailBody})
     });
   }catch(mailErr){console.log('メール送信エラー:',mailErr);}
   document.getElementById('kintai-date').value='';
