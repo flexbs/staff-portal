@@ -203,6 +203,14 @@ input:disabled{background:#f5f4f0;color:#aaa;border-color:#e8e6e0}
           <button class="btn btn-sm" onclick="exportStaffCSV()">📥 CSV出力</button>
         </div>
       </div>
+      <div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:12px">
+        <button id="sf-btn-all" onclick="filterStaffList('全員')" style="padding:5px 14px;font-size:12px;border:1.5px solid #5b21b6;border-radius:20px;background:#5b21b6;color:#fff;cursor:pointer;font-weight:700">全員</button>
+        <button id="sf-btn-稼働中" onclick="filterStaffList('稼働中')" style="padding:5px 14px;font-size:12px;border:1.5px solid #d1d5db;border-radius:20px;background:#fff;color:#333;cursor:pointer">稼働中</button>
+        <button id="sf-btn-短期単発" onclick="filterStaffList('短期・単発')" style="padding:5px 14px;font-size:12px;border:1.5px solid #d1d5db;border-radius:20px;background:#fff;color:#333;cursor:pointer">短期・単発</button>
+        <button id="sf-btn-育休中" onclick="filterStaffList('育休中')" style="padding:5px 14px;font-size:12px;border:1.5px solid #d1d5db;border-radius:20px;background:#fff;color:#333;cursor:pointer">育休中</button>
+        <button id="sf-btn-契約終了" onclick="filterStaffList('契約終了')" style="padding:5px 14px;font-size:12px;border:1.5px solid #d1d5db;border-radius:20px;background:#fff;color:#333;cursor:pointer">契約終了</button>
+        <button id="sf-btn-管理者" onclick="filterStaffList('管理者')" style="padding:5px 14px;font-size:12px;border:1.5px solid #d1d5db;border-radius:20px;background:#fff;color:#333;cursor:pointer">管理者</button>
+      </div>
       <div class="tbl-scroll">
         <table class="tbl">
           <thead><tr><th>名前</th><th>ステータス</th><th>社員番号</th><th>派遣先</th><th></th></tr></thead>
@@ -1383,6 +1391,8 @@ async function signMyDocument(docId){
 
 var _adminStaffAll=[];
 var _adminDocsAll=[];
+var _staffListOnly=[];
+var _currentStaffFilter='全員';
 
 // ★新関数：スタッフ一覧タブ専用（書類情報なし・シンプル表示）
 async function loadAdminStaffListOnly(){
@@ -1392,11 +1402,32 @@ async function loadAdminStaffListOnly(){
   tbody.innerHTML='<tr><td colspan="5" style="text-align:center;color:#888;padding:20px">読み込み中...</td></tr>';
   var {data,error}=await supabaseClient.from('staffs').select('*').order('name_kana');
   if(error||!data){tbody.innerHTML='<tr><td colspan="5" style="text-align:center;color:#991b1b;padding:20px">読み込みに失敗しました</td></tr>';return;}
-  var staffOnly=data.filter(s=>s.employee_id>=1000);
+  _staffListOnly=data.filter(s=>s.employee_id>=1000);
+  _currentStaffFilter='全員';
+  renderStaffListOnly(_staffListOnly);
+}
+
+function filterStaffList(filter){
+  _currentStaffFilter=filter;
+  var ids={'全員':'sf-btn-all','稼働中':'sf-btn-稼働中','短期・単発':'sf-btn-短期単発','育休中':'sf-btn-育休中','契約終了':'sf-btn-契約終了','管理者':'sf-btn-管理者'};
+  Object.keys(ids).forEach(function(b){
+    var el=document.getElementById(ids[b]);
+    if(!el)return;
+    if(b===filter){el.style.background='#5b21b6';el.style.color='#fff';el.style.borderColor='#5b21b6';el.style.fontWeight='700';}
+    else{el.style.background='#fff';el.style.color='#333';el.style.borderColor='#d1d5db';el.style.fontWeight='400';}
+  });
+  var filtered=filter==='全員'?_staffListOnly:_staffListOnly.filter(s=>s.status===filter);
+  renderStaffListOnly(filtered);
+}
+
+function renderStaffListOnly(list){
+  var tbody=document.getElementById('admin-stafflist-tbody');
+  if(!tbody)return;
   tbody.innerHTML='';
-  staffOnly.forEach(function(s){
+  if(!list||list.length===0){tbody.innerHTML='<tr><td colspan="5" style="text-align:center;color:#888;padding:20px">該当するスタッフがいません</td></tr>';return;}
+  list.forEach(function(s){
     var tr=document.createElement('tr');
-    var statusBdg=s.status==='稼働中'?'<span class="bdg bg">稼働中</span>':s.status==='契約終了'?'<span class="bdg bz">契約終了</span>':s.status==='育休中'?'<span class="bdg ba">育休中</span>':s.status==='休業中'?'<span class="bdg bo">休業中</span>':s.status==='短期・単発'?'<span class="bdg bb">短期・単発</span>':s.status==='請負'?'<span class="bdg bp">請負</span>':'<span class="bdg bz">-</span>';
+    var statusBdg=s.status==='稼働中'?'<span class="bdg bg">稼働中</span>':s.status==='契約終了'?'<span class="bdg bz">契約終了</span>':s.status==='育休中'?'<span class="bdg ba">育休中</span>':s.status==='休業中'?'<span class="bdg bo">休業中</span>':s.status==='短期・単発'?'<span class="bdg bb">短期・単発</span>':s.status==='請負'?'<span class="bdg bp">請負</span>':s.status==='管理者'?'<span class="bdg" style="background:#7c3aed;color:#fff">管理者</span>':'<span class="bdg bz">-</span>';
     tr.innerHTML='<td>'+s.name+'</td><td>'+statusBdg+'</td><td>'+String(s.employee_id).padStart(4,'0')+'</td><td>'+(s.workplace||'')+'</td><td><button class="btn btn-sm" onclick="openStaffDetail('+s.employee_id+')">プロフィール</button></td>';
     tbody.appendChild(tr);
   });
@@ -1410,7 +1441,8 @@ async function loadAdminStaffList(){
   var staffOnly=data.filter(s=>s.employee_id>=1000);
   _adminStaffAll=staffOnly;
   _adminDocsAll=allDocs||[];
-  var sc=document.getElementById('staff-count');if(sc)sc.textContent=staffOnly.length+'名';
+  var activeStaff=staffOnly.filter(s=>s.status==='稼働中'||s.status==='短期・単発'||s.status==='育休中');
+  var sc=document.getElementById('staff-count');if(sc)sc.textContent=activeStaff.length+'名';
   var optionsHtml='';
   staffOnly.forEach(s=>{optionsHtml+='<option value="'+s.employee_id+'">'+s.name+'('+String(s.employee_id).padStart(4,'0')+')</option>';});
   ['payslip-target','contract-target'].forEach(id=>{var sel=document.getElementById(id);if(sel)sel.innerHTML=optionsHtml;});
