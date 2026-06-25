@@ -1012,13 +1012,39 @@ const ADMIN_EMAILS=['0001@flexbs.com','0002@flexbs.com','0003@flexbs.com','0004@
 var supabaseClient=null;
 var myStaffData=null;
 
-window.addEventListener('load',function(){
+window.addEventListener('load',async function(){
   try{
     if(typeof supabase!=='undefined'){
       supabaseClient=supabase.createClient(SUPABASE_URL,SUPABASE_KEY);
       console.log('Supabase connected!');
     }
   } catch(e){ console.log('Supabase error:',e); }
+  // 承認リンクの処理
+  var params=new URLSearchParams(window.location.search);
+  var token=params.get('approve');
+  if(token&&supabaseClient){
+    document.body.innerHTML='<div style="font-family:sans-serif;max-width:500px;margin:80px auto;text-align:center;padding:40px;border-radius:16px;box-shadow:0 4px 24px rgba(0,0,0,0.1)"><div style="font-size:48px;margin-bottom:16px">⏳</div><div style="font-size:18px;color:#666">承認処理中...</div></div>';
+    var {data,error}=await supabaseClient.from('kintai_records').select('*').eq('approval_token',token).single();
+    if(error||!data){
+      document.body.innerHTML='<div style="font-family:sans-serif;max-width:500px;margin:80px auto;text-align:center;padding:40px;border-radius:16px;box-shadow:0 4px 24px rgba(0,0,0,0.1)"><div style="font-size:48px;margin-bottom:16px">❌</div><div style="font-size:18px;color:#991b1b">無効なリンクです</div></div>';
+      return;
+    }
+    if(data.approved_at){
+      document.body.innerHTML='<div style="font-family:sans-serif;max-width:500px;margin:80px auto;text-align:center;padding:40px;border-radius:16px;box-shadow:0 4px 24px rgba(0,0,0,0.1)"><div style="font-size:48px;margin-bottom:16px">✅</div><div style="font-size:22px;font-weight:bold;color:#2d6a10;margin-bottom:8px">承認済みです</div><div style="color:#666">この勤怠申請はすでに承認されています。</div></div>';
+      return;
+    }
+    var now=new Date().toISOString();
+    var upd=await supabaseClient.from('kintai_records').update({status:'approved',approved_at:now,approved_by:'派遣先担当者'}).eq('approval_token',token);
+    if(upd.error){
+      document.body.innerHTML='<div style="font-family:sans-serif;max-width:500px;margin:80px auto;text-align:center;padding:40px;border-radius:16px;box-shadow:0 4px 24px rgba(0,0,0,0.1)"><div style="font-size:48px;margin-bottom:16px">❌</div><div style="font-size:18px;color:#991b1b">承認に失敗しました</div></div>';
+      return;
+    }
+    var {data:staffData}=await supabaseClient.from('staffs').select('name').eq('id',data.staff_id).single();
+    var staffName=staffData?staffData.name:'スタッフ';
+    var workH=Math.floor(data.work_minutes/60);var workM=data.work_minutes%60;
+    var workStr=workH+'時間'+(workM>0?workM+'分':'');
+    document.body.innerHTML='<div style="font-family:sans-serif;max-width:500px;margin:80px auto;text-align:center;padding:40px;border-radius:16px;box-shadow:0 4px 24px rgba(0,0,0,0.1)"><div style="font-size:48px;margin-bottom:16px">✅</div><div style="font-size:22px;font-weight:bold;color:#2d6a10;margin-bottom:16px">承認しました</div><table style="border-collapse:collapse;width:100%;text-align:left;margin-bottom:16px"><tr><td style="padding:8px;border:1px solid #ddd;background:#f9f9f9;width:120px">氏名</td><td style="padding:8px;border:1px solid #ddd">'+staffName+'</td></tr><tr><td style="padding:8px;border:1px solid #ddd;background:#f9f9f9">勤務日</td><td style="padding:8px;border:1px solid #ddd">'+data.work_date+'</td></tr><tr><td style="padding:8px;border:1px solid #ddd;background:#f9f9f9">始業</td><td style="padding:8px;border:1px solid #ddd">'+data.start_time+'</td></tr><tr><td style="padding:8px;border:1px solid #ddd;background:#f9f9f9">終業</td><td style="padding:8px;border:1px solid #ddd">'+data.end_time+'</td></tr><tr><td style="padding:8px;border:1px solid #ddd;background:#f9f9f9">実労働</td><td style="padding:8px;border:1px solid #ddd">'+workStr+'</td></tr></table><div style="color:#888;font-size:13px">このページは閉じていただいて構いません。</div></div>';
+  }
 });
 
 async function doLoginSupabase(){
@@ -1186,9 +1212,39 @@ async function submitKintai(){
   if(workMin<=0){statusEl.style.display='block';statusEl.style.background='#fee2e2';statusEl.style.color='#991b1b';statusEl.textContent='終業時間が始業時間より前になっています';return;}
   if(!confirm(date+'の勤怠を申請します。よろしいですか？'))return;
   statusEl.style.display='block';statusEl.style.background='#f5f4f0';statusEl.style.color='#666';statusEl.textContent='申請中...';
-  var ins=await supabaseClient.from('kintai_records').insert({staff_id:myStaffData.id,work_date:date,start_time:start,end_time:end,break_minutes:breakMin,work_minutes:workMin,note:note||null,status:'pending'});
+  var approvalToken=Math.random().toString(36).substring(2)+Math.random().toString(36).substring(2);
+  var ins=await supabaseClient.from('kintai_records').insert({staff_id:myStaffData.id,work_date:date,start_time:start,end_time:end,break_minutes:breakMin,work_minutes:workMin,note:note||null,status:'pending',approval_token:approvalToken}).select().single();
   if(ins.error){statusEl.style.background='#fee2e2';statusEl.style.color='#991b1b';statusEl.textContent='申請に失敗しました:'+ins.error.message;return;}
   statusEl.style.background='#e6f4d7';statusEl.style.color='#2d6a10';statusEl.textContent='申請しました！担当者が確認します。';
+  // 派遣先へメール通知
+  try{
+    var workH2=Math.floor(workMin/60);var workM2=workMin%60;
+    var workStr2=workH2+'時間'+(workM2>0?workM2+'分':'');
+    var approvalUrl='https://staff-portal-taupe.vercel.app/?approve='+approvalToken;
+    var emailBody='<div style="font-family:sans-serif;max-width:600px;margin:0 auto;padding:20px">';
+    emailBody+='<h2 style="color:#5b21b6">勤怠申請のご確認</h2>';
+    emailBody+='<p>お世話になっております。フレックスビジネスサービス株式会社です。</p>';
+    emailBody+='<p>以下のスタッフより勤怠申請がありましたので、ご確認をお願いいたします。</p>';
+    emailBody+='<table style="border-collapse:collapse;width:100%;margin:16px 0">';
+    emailBody+='<tr><td style="padding:8px;border:1px solid #ddd;background:#f9f9f9;width:120px">氏名</td><td style="padding:8px;border:1px solid #ddd">'+myStaffData.name+'</td></tr>';
+    emailBody+='<tr><td style="padding:8px;border:1px solid #ddd;background:#f9f9f9">勤務日</td><td style="padding:8px;border:1px solid #ddd">'+date+'</td></tr>';
+    emailBody+='<tr><td style="padding:8px;border:1px solid #ddd;background:#f9f9f9">始業時間</td><td style="padding:8px;border:1px solid #ddd">'+start+'</td></tr>';
+    emailBody+='<tr><td style="padding:8px;border:1px solid #ddd;background:#f9f9f9">終業時間</td><td style="padding:8px;border:1px solid #ddd">'+end+'</td></tr>';
+    emailBody+='<tr><td style="padding:8px;border:1px solid #ddd;background:#f9f9f9">休憩時間</td><td style="padding:8px;border:1px solid #ddd">'+breakMin+'分</td></tr>';
+    emailBody+='<tr><td style="padding:8px;border:1px solid #ddd;background:#f9f9f9">実労働時間</td><td style="padding:8px;border:1px solid #ddd">'+workStr2+'</td></tr>';
+    if(note)emailBody+='<tr><td style="padding:8px;border:1px solid #ddd;background:#f9f9f9">備考</td><td style="padding:8px;border:1px solid #ddd">'+note+'</td></tr>';
+    emailBody+='</table>';
+    emailBody+='<div style="text-align:center;margin:24px 0">';
+    emailBody+='<a href="'+approvalUrl+'" style="background:#5b21b6;color:#fff;padding:12px 32px;border-radius:8px;text-decoration:none;font-size:16px;font-weight:bold">✅ 承認する</a>';
+    emailBody+='</div>';
+    emailBody+='<p style="color:#888;font-size:12px">このメールはシステムから自動送信されています。</p>';
+    emailBody+='</div>';
+    await fetch('https://api.resend.com/emails',{
+      method:'POST',
+      headers:{'Authorization':'Bearer re_PXazJFc9_CnQGtqhy37RdEWDe2v65GaCs','Content-Type':'application/json'},
+      body:JSON.stringify({from:'フレックスビジネスサービス <noreply@flexbs.com>',to:['junichi.kaneko.5870@i-bp.co.jp'],subject:'【勤怠確認】'+myStaffData.name+'さんの勤怠申請（'+date+'）',html:emailBody})
+    });
+  }catch(mailErr){console.log('メール送信エラー:',mailErr);}
   document.getElementById('kintai-date').value='';
   document.getElementById('kintai-start').value='';
   document.getElementById('kintai-end').value='';
