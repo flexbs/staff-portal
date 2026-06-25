@@ -1437,7 +1437,7 @@ async function loadAdminStaffList(){
   if(!supabaseClient) return;
   var {data,error}=await supabaseClient.from('staffs').select('*').order('name_kana');
   if(error||!data) return;
-  var {data:allDocs}=await supabaseClient.from('documents').select('staff_id,type,confirmed_at,created_at,title').is('cancelled_at',null).order('created_at',{ascending:false});
+  var {data:allDocs}=await supabaseClient.from('documents').select('id,staff_id,type,confirmed_at,created_at,title,file_url').is('cancelled_at',null).order('created_at',{ascending:false});
   var staffOnly=data.filter(s=>s.employee_id>=1000);
   _adminStaffAll=staffOnly;
   _adminDocsAll=allDocs||[];
