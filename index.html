@@ -1246,15 +1246,16 @@ async function submitKintai(){
     emailBody+='<h2 style="color:#5b21b6">勤怠申請のご確認</h2>';
     emailBody+='<p>お世話になっております。フレックスビジネスサービス株式会社です。</p>';
     emailBody+='<p>以下のスタッフより勤怠申請がありましたので、ご確認をお願いいたします。</p>';
-    emailBody+='<table style="border-collapse:collapse;width:100%;margin:16px 0">';
-    emailBody+='<tr><td style="padding:8px;border:1px solid #ddd;background:#f9f9f9;width:120px">氏名</td><td style="padding:8px;border:1px solid #ddd">'+myStaffData.name+'</td></tr>';
-    emailBody+='<tr><td style="padding:8px;border:1px solid #ddd;background:#f9f9f9">勤務日</td><td style="padding:8px;border:1px solid #ddd">'+date+'</td></tr>';
-    emailBody+='<tr><td style="padding:8px;border:1px solid #ddd;background:#f9f9f9">始業時間</td><td style="padding:8px;border:1px solid #ddd">'+start+'</td></tr>';
-    emailBody+='<tr><td style="padding:8px;border:1px solid #ddd;background:#f9f9f9">終業時間</td><td style="padding:8px;border:1px solid #ddd">'+end+'</td></tr>';
-    emailBody+='<tr><td style="padding:8px;border:1px solid #ddd;background:#f9f9f9">休憩時間</td><td style="padding:8px;border:1px solid #ddd">'+breakMin+'分</td></tr>';
-    emailBody+='<tr><td style="padding:8px;border:1px solid #ddd;background:#f9f9f9">実労働時間</td><td style="padding:8px;border:1px solid #ddd">'+workStr2+'</td></tr>';
-    if(note)emailBody+='<tr><td style="padding:8px;border:1px solid #ddd;background:#f9f9f9">備考</td><td style="padding:8px;border:1px solid #ddd">'+note+'</td></tr>';
-    emailBody+='</table>';
+    var workDate=new Date(date+'T00:00:00');
+　　var weekDays=['日','月','火','水','木','金','土'];
+　　var dowLabel=weekDays[workDate.getDay()];
+　　var monthNum=workDate.getMonth()+1;
+　　var dayNum=workDate.getDate();
+　　var dateLabel=monthNum+'月'+dayNum+'日（'+dowLabel+'）';
+emailBody+='<table style="border-collapse:collapse;width:100%;margin:16px 0;font-size:13px">';
+emailBody+='<thead><tr style="background:#4a5568;color:#fff"><th style="padding:8px;text-align:center;border:1px solid #ccc">日付</th><th style="padding:8px;text-align:center;border:1px solid #ccc">始業</th><th style="padding:8px;text-align:center;border:1px solid #ccc">終業</th><th style="padding:8px;text-align:center;border:1px solid #ccc">休憩</th><th style="padding:8px;text-align:center;border:1px solid #ccc">実労働</th><th style="padding:8px;text-align:center;border:1px solid #ccc">備考</th><th style="padding:8px;text-align:center;border:1px solid #ccc">状況</th></tr></thead>';
+emailBody+='<tbody><tr style="background:#fff"><td style="padding:8px;text-align:center;border:1px solid #ddd">'+dateLabel+'</td><td style="padding:8px;text-align:center;border:1px solid #ddd">'+start+'</td><td style="padding:8px;text-align:center;border:1px solid #ddd">'+end+'</td><td style="padding:8px;text-align:center;border:1px solid #ddd">'+breakMin+'分</td><td style="padding:8px;text-align:center;border:1px solid #ddd;font-weight:bold">'+workStr2+'</td><td style="padding:8px;text-align:center;border:1px solid #ddd">'+(note||'')+'</td><td style="padding:8px;text-align:center;border:1px solid #ddd"><span style="display:inline-block;padding:2px 8px;border-radius:10px;font-size:11px;background:#fef3cd;color:#8a5a00;font-weight:700">確認待ち</span></td></tr></tbody>';
+emailBody+='</table>';
     emailBody+='<div style="text-align:center;margin:24px 0">';
     emailBody+='<a href="'+approvalUrl+'" style="background:#5b21b6;color:#fff;padding:12px 32px;border-radius:8px;text-decoration:none;font-size:16px;font-weight:bold">✅ 承認する</a>';
     emailBody+='</div>';
@@ -3117,6 +3118,168 @@ async function changeMyPassword(){
     await supabaseClient.auth.signOut();
     location.reload();
   },2000);
+}
+  function switchKintaiTab(tab){
+  var isTs=tab==='ts';
+  document.getElementById('kintai-area-ts').style.display=isTs?'block':'none';
+  document.getElementById('kintai-area-list').style.display=isTs?'none':'block';
+  document.getElementById('kintai-tab-ts').style.background=isTs?'#5b21b6':'#e8e5e0';
+  document.getElementById('kintai-tab-ts').style.color=isTs?'#fff':'#555';
+  document.getElementById('kintai-tab-ts').style.fontWeight=isTs?'700':'400';
+  document.getElementById('kintai-tab-list').style.background=isTs?'#e8e5e0':'#5b21b6';
+  document.getElementById('kintai-tab-list').style.color=isTs?'#555':'#fff';
+  document.getElementById('kintai-tab-list').style.fontWeight=isTs?'400':'700';
+  if(!isTs)loadAdminKintai();
+}
+function switchStaffKintaiTab(tab){
+  var isInput=tab==='input';
+  document.getElementById('staff-kintai-area-input').style.display=isInput?'block':'none';
+  document.getElementById('staff-kintai-area-ts').style.display=isInput?'none':'block';
+  document.getElementById('staff-kintai-tab-input').style.background=isInput?'#5b21b6':'#e8e5e0';
+  document.getElementById('staff-kintai-tab-input').style.color=isInput?'#fff':'#555';
+  document.getElementById('staff-kintai-tab-input').style.fontWeight=isInput?'700':'400';
+  document.getElementById('staff-kintai-tab-ts').style.background=isInput?'#e8e5e0':'#5b21b6';
+  document.getElementById('staff-kintai-tab-ts').style.color=isInput?'#555':'#fff';
+  document.getElementById('staff-kintai-tab-ts').style.fontWeight=isInput?'400':'700';
+  if(!isInput){
+    initTsMonthSelect('ts-month-select-staff').then(function(){
+      var sel=document.getElementById('ts-month-select-staff');
+      if(sel&&sel.value)loadTimesheetStaff();
+    });
+  }
+}
+async function initAdminKintai(){
+  await initTsStaffSelect();
+  await initTsMonthSelect('ts-month-select');
+  var staffSel=document.getElementById('ts-staff-select');
+  var monthSel=document.getElementById('ts-month-select');
+  if(staffSel&&staffSel.value&&monthSel&&monthSel.value)loadTimesheetAdmin();
+}
+async function initTsMonthSelect(selId){
+  var sel=document.getElementById(selId);
+  if(!sel||sel.options.length>1)return;
+  var now=new Date();
+  for(var i=1;i>=-5;i--){
+    var d=new Date(now.getFullYear(),now.getMonth()+i,1);
+    var val=d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0');
+    var label=d.getFullYear()+'年'+(d.getMonth()+1)+'月';
+    var opt=document.createElement('option');
+    opt.value=val;opt.textContent=label;
+    if(i===1)opt.selected=true;
+    sel.appendChild(opt);
+  }
+}
+async function initTsStaffSelect(){
+  if(!supabaseClient)return;
+  var sel=document.getElementById('ts-staff-select');
+  if(!sel)return;
+  var {data}=await supabaseClient.from('staffs').select('id,name,employee_id').eq('status','短期・単発').order('name_kana');
+  if(!data||data.length===0){sel.innerHTML='<option value="">短期・単発スタッフがいません</option>';return;}
+  sel.innerHTML='<option value="">スタッフを選択してください</option>';
+  data.forEach(function(s){sel.innerHTML+='<option value="'+s.id+'">'+s.name+'（'+String(s.employee_id).padStart(4,'0')+'）</option>';});
+  if(data.length===1)sel.value=data[0].id;
+}
+async function loadTimesheetAdmin(){
+  if(!supabaseClient)return;
+  var staffSel=document.getElementById('ts-staff-select');
+  var monthSel=document.getElementById('ts-month-select');
+  if(!staffSel||!monthSel)return;
+  var staffId=staffSel.value;
+  var ym=monthSel.value;
+  var area=document.getElementById('admin-timesheet-area');
+  if(!staffId||!ym){if(area)area.innerHTML='<div style="padding:40px 20px;text-align:center;color:#888"><div style="font-size:40px;margin-bottom:10px">📅</div><div style="font-size:14px">スタッフと月を選択してください</div></div>';return;}
+  if(area)area.innerHTML='<div style="padding:20px;text-align:center;color:#888">読み込み中...</div>';
+  var startDate=ym+'-01';
+  var lastDay=new Date(parseInt(ym.split('-')[0]),parseInt(ym.split('-')[1]),0).getDate();
+  var endDate=ym+'-'+String(lastDay).padStart(2,'0');
+  var {data:records}=await supabaseClient.from('kintai_records').select('*').eq('staff_id',staffId).gte('work_date',startDate).lte('work_date',endDate).order('work_date',{ascending:true});
+  var recMap={};
+  if(records){records.forEach(function(r){recMap[r.work_date]=r;});}
+  var staffName=staffSel.options[staffSel.selectedIndex].text.split('（')[0];
+  var ymLabel=ym.replace('-','年')+'月';
+  renderTimesheet(recMap,ym,lastDay,staffName,ymLabel,'admin-timesheet-area',true);
+}
+async function loadTimesheetStaff(){
+  if(!supabaseClient||!myStaffData)return;
+  var monthSel=document.getElementById('ts-month-select-staff');
+  if(!monthSel)return;
+  var ym=monthSel.value;
+  if(!ym)return;
+  var area=document.getElementById('staff-timesheet-area');
+  if(area)area.innerHTML='<div style="padding:20px;text-align:center;color:#888">読み込み中...</div>';
+  var startDate=ym+'-01';
+  var lastDay=new Date(parseInt(ym.split('-')[0]),parseInt(ym.split('-')[1]),0).getDate();
+  var endDate=ym+'-'+String(lastDay).padStart(2,'0');
+  var {data:records}=await supabaseClient.from('kintai_records').select('*').eq('staff_id',myStaffData.id).gte('work_date',startDate).lte('work_date',endDate).order('work_date',{ascending:true});
+  var recMap={};
+  if(records){records.forEach(function(r){recMap[r.work_date]=r;});}
+  var ymLabel=ym.replace('-','年')+'月';
+  renderTimesheet(recMap,ym,lastDay,myStaffData.name,ymLabel,'staff-timesheet-area',false);
+}
+function renderTimesheet(recMap,ym,lastDay,staffName,ymLabel,areaId,isAdmin){
+  var area=document.getElementById(areaId);
+  if(!area)return;
+  var weekDays=['日','月','火','水','木','金','土'];
+  var totalMinutes=0;var workDays=0;var rows='';
+  for(var day=1;day<=lastDay;day++){
+    var dateStr=ym+'-'+String(day).padStart(2,'0');
+    var d=new Date(dateStr+'T00:00:00');
+    var dow=d.getDay();
+    var dowLabel=weekDays[dow];
+    var isWeekend=(dow===0||dow===6);
+    var rowBg=isWeekend?'background:#f9f9f9;':'';
+    var dateColor=dow===0?'color:#e53e3e;':dow===6?'color:#3182ce;':'';
+    var r=recMap[dateStr];
+    if(r){
+      var wH=Math.floor(r.work_minutes/60);var wM=r.work_minutes%60;
+      var workStr=wH+'時間'+(wM>0?wM+'分':'');
+      totalMinutes+=r.work_minutes;workDays++;
+      var statusBdg=r.status==='approved'?'<span style="display:inline-block;padding:2px 8px;border-radius:12px;font-size:11px;font-weight:700;background:#e6f4d7;color:#2d6a10">承認済</span>':'<span style="display:inline-block;padding:2px 8px;border-radius:12px;font-size:11px;font-weight:700;background:#fef3cd;color:#8a5a00">確認待ち</span>';
+      var approveBtn='';
+      if(isAdmin&&r.status==='pending'){approveBtn=' <button class="btn btn-sm btn-g" style="font-size:11px;padding:3px 8px" onclick="approveKintaiFromTs(\''+r.id+'\')">承認</button>';}
+      rows+='<tr style="'+rowBg+'"><td style="text-align:center;'+dateColor+'"><strong>'+day+'</strong><br><span style="font-size:11px;font-weight:400">'+dowLabel+'</span></td><td style="text-align:center">'+r.start_time+'</td><td style="text-align:center">'+r.end_time+'</td><td style="text-align:center">'+r.break_minutes+'分</td><td style="text-align:center;font-weight:600">'+workStr+'</td><td style="text-align:left;font-size:12px;color:#666;padding-left:8px">'+(r.note||'')+'</td><td style="text-align:center">'+statusBdg+approveBtn+'</td></tr>';
+    }else{
+      rows+='<tr style="'+rowBg+'"><td style="text-align:center;'+dateColor+'"><strong>'+day+'</strong><br><span style="font-size:11px;font-weight:400">'+dowLabel+'</span></td><td></td><td></td><td></td><td></td><td></td><td style="text-align:center;color:#ccc;font-size:12px">—</td></tr>';
+    }
+  }
+  var totalH=Math.floor(totalMinutes/60);var totalM=totalMinutes%60;
+  var totalStr=totalH+'時間'+(totalM>0?totalM+'分':'');
+  var printId='ts-print-'+areaId;
+  var html='<div id="'+printId+'">';
+  html+='<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;flex-wrap:wrap;gap:8px"><div><div style="font-size:15px;font-weight:800;color:#1a1a1a">'+ymLabel+'　勤怠タイムシート</div><div style="font-size:12px;color:#888;margin-top:2px">'+staffName+'</div></div><button class="btn btn-sm" onclick="printTimesheet(\''+printId+'\',\''+staffName+'\',\''+ymLabel+'\')">🖨 PDF出力</button></div>';
+  html+='<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:12px"><div style="background:#f5f4f0;border-radius:8px;padding:10px 14px"><div style="font-size:11px;color:#888">勤務日数</div><div style="font-size:18px;font-weight:800">'+workDays+'日</div></div><div style="background:#f5f4f0;border-radius:8px;padding:10px 14px"><div style="font-size:11px;color:#888">合計実労働時間</div><div style="font-size:18px;font-weight:800">'+totalStr+'</div></div></div>';
+  html+='<div style="overflow-x:auto"><table style="width:100%;border-collapse:collapse;font-size:13px"><thead><tr style="background:#4a5568;color:#fff"><th style="padding:9px 8px;text-align:center;width:52px">日付</th><th style="padding:9px 8px;text-align:center">始業</th><th style="padding:9px 8px;text-align:center">終業</th><th style="padding:9px 8px;text-align:center">休憩</th><th style="padding:9px 8px;text-align:center">実労働</th><th style="padding:9px 8px;text-align:left;padding-left:12px">備考</th><th style="padding:9px 8px;text-align:center">状況</th></tr></thead><tbody>'+rows+'</tbody></table></div>';
+  html+='<div style="margin-top:10px;padding:8px 14px;background:#f5f4f0;border-radius:8px;font-size:12px;color:#666;text-align:right" id="'+printId+'-summary">合計：'+workDays+'日勤務　実労働時間合計 '+totalStr+'</div></div>';
+  area.innerHTML=html;
+}
+async function approveKintaiFromTs(id){
+  if(!supabaseClient)return;
+  if(!confirm('この勤怠を承認しますか？'))return;
+  var now=new Date().toISOString();
+  var r=await supabaseClient.from('kintai_records').update({status:'approved',approved_at:now,approved_by:'管理者'}).eq('id',id);
+  if(r.error){alert('承認に失敗しました:'+r.error.message);return;}
+  alert('承認しました！');
+  loadTimesheetAdmin();
+}
+function printTimesheet(printId,staffName,ymLabel){
+  var el=document.getElementById(printId);
+  if(!el){alert('印刷対象が見つかりません');return;}
+  var w=window.open('','_blank');
+  w.document.write('<html><head><meta charset="utf-8"><title>'+ymLabel+' '+staffName+' タイムシート</title><style>body{font-family:"Hiragino Sans","Meiryo",sans-serif;font-size:12px;padding:20px;color:#1a1a1a}h2{font-size:16px;margin-bottom:4px}.sub{font-size:12px;color:#888;margin-bottom:16px}table{width:100%;border-collapse:collapse}th{background:#4a5568;color:#fff;padding:7px 8px;text-align:center;font-size:12px}td{padding:7px 8px;border-bottom:1px solid #e8e6e0;font-size:12px;text-align:center}td.note{text-align:left}tr:nth-child(even){background:#f9f9f9}.summary{margin-top:14px;padding:10px;background:#f5f4f0;font-size:12px;text-align:right}.approved{display:inline-block;padding:2px 8px;border-radius:10px;font-size:11px;background:#e6f4d7;color:#2d6a10;font-weight:700}.pending{display:inline-block;padding:2px 8px;border-radius:10px;font-size:11px;background:#fef3cd;color:#8a5a00;font-weight:700}@media print{button{display:none!important}}</style></head><body>');
+  w.document.write('<h2>'+ymLabel+'　勤怠タイムシート</h2><div class="sub">'+staffName+'</div>');
+  var tbl=el.querySelector('table');
+  if(tbl){
+    var clone=tbl.cloneNode(true);
+    clone.querySelectorAll('button').forEach(function(b){b.remove();});
+    clone.querySelectorAll('tbody tr td:nth-child(6)').forEach(function(td){td.className='note';});
+    clone.querySelectorAll('span').forEach(function(sp){var txt=sp.textContent.trim();if(txt==='承認済')sp.className='approved';else if(txt==='確認待ち')sp.className='pending';});
+    w.document.write(clone.outerHTML);
+  }
+  var sumEl=document.getElementById(printId+'-summary');
+  if(sumEl)w.document.write('<div class="summary">'+sumEl.textContent+'</div>');
+  w.document.write('</body></html>');
+  w.document.close();w.focus();
+  setTimeout(function(){w.print();},600);
 }
 </script>
 </body>
