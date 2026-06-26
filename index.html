@@ -1239,10 +1239,10 @@ async function submitKintai(){
     emailBody+='</div>';
     emailBody+='<p style="color:#888;font-size:12px">このメールはシステムから自動送信されています。</p>';
     emailBody+='</div>';
-    await fetch('https://api.resend.com/emails',{
+    await fetch('https://wafarcqisrwzlkectrdo.supabase.co/functions/v1/send-kintai-mail',{
       method:'POST',
-      headers:{'Authorization':'Bearer re_PXazJFc9_CnQGtqhy37RdEWDe2v65GaCs','Content-Type':'application/json'},
-      body:JSON.stringify({from:'フレックスビジネスサービス <noreply@flexbs.com>',to:['wakamatsu@flexbs.com'],subject:'【勤怠確認】'+myStaffData.name+'さんの勤怠申請（'+date+'）',html:emailBody})
+      headers:{'Authorization':'Bearer '+SUPABASE_KEY,'Content-Type':'application/json'},
+      body:JSON.stringify({to:'wakamatsu@flexbs.com',subject:'【勤怠確認】'+myStaffData.name+'さんの勤怠申請（'+date+'）',html:emailBody})
     });
   }catch(mailErr){console.log('メール送信エラー:',mailErr);}
   document.getElementById('kintai-date').value='';
