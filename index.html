@@ -416,10 +416,30 @@ input:disabled{background:#f5f4f0;color:#aaa;border-color:#e8e6e0}
     </div>
   </div>
 
-  <div id="admin-kintai" class="sp">
-    <div class="card">
-      <div class="ch"><span class="ct">勤怠管理（単発スタッフ）</span><button class="btn btn-sm" onclick="exportKintaiCSV()">📥 CSV出力</button></div>
-      <div class="tbl-scroll"><table class="tbl"><thead><tr><th>名前</th><th>社員番号</th><th>勤務日</th><th>始業</th><th>終業</th><th>休憩</th><th>実労働</th><th>状態</th><th>申請日</th><th></th></tr></thead><tbody id="admin-kintai-tbody"><tr><td colspan="10" style="text-align:center;color:#888;padding:20px">読み込み中...</td></tr></tbody></table></div>
+<div id="admin-kintai" class="sp">
+    <div style="display:flex;gap:4px;margin-bottom:14px;border-bottom:2px solid #e8e5e0">
+      <button id="kintai-tab-ts" onclick="switchKintaiTab('ts')" style="padding:6px 16px;font-size:13px;font-weight:700;border:none;background:#5b21b6;color:#fff;border-radius:6px 6px 0 0;cursor:pointer">📅 タイムシート</button>
+      <button id="kintai-tab-list" onclick="switchKintaiTab('list')" style="padding:6px 16px;font-size:13px;font-weight:400;border:none;background:#e8e5e0;color:#555;border-radius:6px 6px 0 0;cursor:pointer">📋 申請一覧</button>
+    </div>
+    <div id="kintai-area-ts">
+      <div class="card">
+        <div class="ch"><span class="ct">勤怠タイムシート</span></div>
+        <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:14px">
+          <label style="font-size:13px;color:#555">スタッフ：</label>
+          <select id="ts-staff-select" onchange="loadTimesheetAdmin()" style="padding:6px 10px;border-radius:8px;border:1px solid #d8d6d0;font-size:13px;min-width:180px"><option value="">スタッフを選択してください</option></select>
+          <label style="font-size:13px;color:#555">月：</label>
+          <select id="ts-month-select" onchange="loadTimesheetAdmin()" style="padding:6px 10px;border-radius:8px;border:1px solid #d8d6d0;font-size:13px"><option value="">月を選択</option></select>
+        </div>
+        <div id="admin-timesheet-area">
+          <div style="padding:40px 20px;text-align:center;color:#888"><div style="font-size:40px;margin-bottom:10px">📅</div><div style="font-size:14px">スタッフと月を選択してください</div></div>
+        </div>
+      </div>
+    </div>
+    <div id="kintai-area-list" style="display:none">
+      <div class="card">
+        <div class="ch"><span class="ct">勤怠管理（単発スタッフ）</span><button class="btn btn-sm" onclick="exportKintaiCSV()">📥 CSV出力</button></div>
+        <div class="tbl-scroll"><table class="tbl"><thead><tr><th>名前</th><th>社員番号</th><th>勤務日</th><th>始業</th><th>終業</th><th>休憩</th><th>実労働</th><th>状態</th><th>申請日</th><th></th></tr></thead><tbody id="admin-kintai-tbody"><tr><td colspan="10" style="text-align:center;color:#888;padding:20px">読み込み中...</td></tr></tbody></table></div>
+      </div>
     </div>
   </div>
 
