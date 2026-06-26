@@ -3266,7 +3266,7 @@ function renderTimesheet(recMap,ym,lastDay,staffName,ymLabel,areaId,isAdmin){
   var totalStr=totalH+'時間'+(totalM>0?totalM+'分':'');
   var printId='ts-print-'+areaId;
   var html='<div id="'+printId+'">';
-  html+='<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;flex-wrap:wrap;gap:8px"><div><div style="font-size:15px;font-weight:800;color:#1a1a1a">'+ymLabel+'　勤怠タイムシート</div><div style="font-size:12px;color:#888;margin-top:2px">'+staffName+'</div></div><button class="btn btn-sm" onclick="printTimesheet(\''+printId+'\',\''+staffName+'\',\''+ymLabel+'\')">🖨 PDF出力</button><button class="btn btn-sm btn-p" style="margin-left:6px" onclick="sendTimesheetEmail(\''+staffName+'\',\''+ymLabel+'\',recMap,ym,lastDay)">📧 派遣先に送信</button></div>';
+  html+='<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;flex-wrap:wrap;gap:8px"><div><div style="font-size:15px;font-weight:800;color:#1a1a1a">'+ymLabel+'　勤怠タイムシート</div><div style="font-size:12px;color:#888;margin-top:2px">'+staffName+'</div></div><button class="btn btn-sm" onclick="printTimesheet(\''+printId+'\',\''+staffName+'\',\''+ymLabel+'\')">🖨 PDF出力</button><button class="btn btn-sm btn-p" style="margin-left:6px" onclick="sendTimesheetEmail()">📧 派遣先に送信</button></div>';
   html+='<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:12px"><div style="background:#f5f4f0;border-radius:8px;padding:10px 14px"><div style="font-size:11px;color:#888">勤務日数</div><div style="font-size:18px;font-weight:800">'+workDays+'日</div></div><div style="background:#f5f4f0;border-radius:8px;padding:10px 14px"><div style="font-size:11px;color:#888">合計実労働時間</div><div style="font-size:18px;font-weight:800">'+totalStr+'</div></div></div>';
   html+='<div style="overflow-x:auto"><table style="width:100%;border-collapse:collapse;font-size:13px"><thead><tr style="background:#4a5568;color:#fff"><th style="padding:9px 8px;text-align:center;width:52px">日付</th><th style="padding:9px 8px;text-align:center">始業</th><th style="padding:9px 8px;text-align:center">終業</th><th style="padding:9px 8px;text-align:center">休憩</th><th style="padding:9px 8px;text-align:center">実労働</th><th style="padding:9px 8px;text-align:left;padding-left:12px">備考</th><th style="padding:9px 8px;text-align:center">状況</th></tr></thead><tbody>'+rows+'</tbody></table></div>';
   html+='<div style="margin-top:10px;padding:8px 14px;background:#f5f4f0;border-radius:8px;font-size:12px;color:#666;text-align:right" id="'+printId+'-summary">合計：'+workDays+'日勤務　実労働時間合計 '+totalStr+'</div></div>';
@@ -3301,9 +3301,22 @@ function printTimesheet(printId,staffName,ymLabel){
   w.document.close();w.focus();
   setTimeout(function(){w.print();},600);
 }
-async function sendTimesheetEmail(staffName,ymLabel,recMap,ym,lastDay){
+  async function sendTimesheetEmail(){
   if(!supabaseClient)return;
+  var staffSel=document.getElementById('ts-staff-select');
+  var monthSel=document.getElementById('ts-month-select');
+  if(!staffSel||!monthSel||!staffSel.value||!monthSel.value){alert('スタッフと月を選択してください');return;}
+  var staffId=staffSel.value;
+  var ym=monthSel.value;
+  var staffName=staffSel.options[staffSel.selectedIndex].text.split('（')[0];
+  var ymLabel=ym.replace('-','年')+'月';
   if(!confirm(staffName+'さんの'+ymLabel+'のタイムシートを派遣先に送信しますか？'))return;
+  var startDate=ym+'-01';
+  var lastDay=new Date(parseInt(ym.split('-')[0]),parseInt(ym.split('-')[1]),0).getDate();
+  var endDate=ym+'-'+String(lastDay).padStart(2,'0');
+  var {data:records}=await supabaseClient.from('kintai_records').select('*').eq('staff_id',staffId).gte('work_date',startDate).lte('work_date',endDate).order('work_date',{ascending:true});
+  var recMap={};
+  if(records){records.forEach(function(r){recMap[r.work_date]=r;});}
   var weekDays=['日','月','火','水','木','金','土'];
   var rows='';var totalMinutes=0;var workDays=0;
   for(var day=1;day<=lastDay;day++){
@@ -3323,13 +3336,7 @@ async function sendTimesheetEmail(staffName,ymLabel,recMap,ym,lastDay){
   if(workDays===0){alert('この月の勤怠データがありません');return;}
   var totalH=Math.floor(totalMinutes/60);var totalM=totalMinutes%60;
   var totalStr=totalH+'時間'+(totalM>0?totalM+'分':'');
-  var emailBody='<div style="font-family:sans-serif;max-width:700px;margin:0 auto;padding:20px">';
-  emailBody+='<h2 style="color:#4a5568;border-bottom:2px solid #4a5568;padding-bottom:8px">'+ymLabel+'　勤怠タイムシート</h2>';
-  emailBody+='<p style="color:#555;margin-bottom:4px">スタッフ：<strong>'+staffName+'</strong></p>';
-  emailBody+='<p style="color:#555;margin-bottom:16px">お世話になっております。フレックスビジネスサービス株式会社です。<br>'+ymLabel+'の勤怠タイムシートをお送りします。ご確認をお願いいたします。</p>';
-  emailBody+='<table style="border-collapse:collapse;width:100%;margin:16px 0;font-size:13px"><thead><tr style="background:#4a5568;color:#fff"><th style="padding:8px;text-align:center;border:1px solid #ccc">日付</th><th style="padding:8px;text-align:center;border:1px solid #ccc">始業</th><th style="padding:8px;text-align:center;border:1px solid #ccc">終業</th><th style="padding:8px;text-align:center;border:1px solid #ccc">休憩</th><th style="padding:8px;text-align:center;border:1px solid #ccc">実労働</th><th style="padding:8px;text-align:center;border:1px solid #ccc">備考</th><th style="padding:8px;text-align:center;border:1px solid #ccc">状況</th></tr></thead><tbody>'+rows+'</tbody></table>';
-  emailBody+='<div style="background:#f5f4f0;border-radius:8px;padding:10px 14px;font-size:13px;text-align:right;margin-top:8px">合計：'+workDays+'日勤務　実労働時間合計 '+totalStr+'</div>';
-  emailBody+='<p style="color:#888;font-size:12px;margin-top:16px">このメールはシステムから自動送信されています。</p></div>';
+  var emailBody='<div style="font-family:sans-serif;max-width:700px;margin:0 auto;padding:20px"><h2 style="color:#4a5568;border-bottom:2px solid #4a5568;padding-bottom:8px">'+ymLabel+'　勤怠タイムシート</h2><p style="color:#555;margin-bottom:4px">スタッフ：<strong>'+staffName+'</strong></p><p style="color:#555;margin-bottom:16px">お世話になっております。フレックスビジネスサービス株式会社です。<br>'+ymLabel+'の勤怠タイムシートをお送りします。ご確認をお願いいたします。</p><table style="border-collapse:collapse;width:100%;margin:16px 0;font-size:13px"><thead><tr style="background:#4a5568;color:#fff"><th style="padding:8px;text-align:center;border:1px solid #ccc">日付</th><th style="padding:8px;text-align:center;border:1px solid #ccc">始業</th><th style="padding:8px;text-align:center;border:1px solid #ccc">終業</th><th style="padding:8px;text-align:center;border:1px solid #ccc">休憩</th><th style="padding:8px;text-align:center;border:1px solid #ccc">実労働</th><th style="padding:8px;text-align:center;border:1px solid #ccc">備考</th><th style="padding:8px;text-align:center;border:1px solid #ccc">状況</th></tr></thead><tbody>'+rows+'</tbody></table><div style="background:#f5f4f0;border-radius:8px;padding:10px 14px;font-size:13px;text-align:right;margin-top:8px">合計：'+workDays+'日勤務　実労働時間合計 '+totalStr+'</div><p style="color:#888;font-size:12px;margin-top:16px">このメールはシステムから自動送信されています。</p></div>';
   var session=supabaseClient.auth.session?supabaseClient.auth.session():null;
   var accessToken=session&&session.access_token?session.access_token:SUPABASE_KEY;
   try{
@@ -3337,6 +3344,8 @@ async function sendTimesheetEmail(staffName,ymLabel,recMap,ym,lastDay){
     if(res.ok){alert('派遣先にタイムシートを送信しました！');}
     else{alert('送信に失敗しました。もう一度お試しください。');}
   }catch(e){alert('送信エラー：'+e.message);}
+}
+asyn
 }</script>
 </body>
 </html>
