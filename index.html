@@ -501,24 +501,45 @@ input:disabled{background:#f5f4f0;color:#aaa;border-color:#e8e6e0}
     </div>
   </div>
 
-  <div id="staff-skintai" class="sp">
-    <div class="card">
-      <div class="ch"><span class="ct">勤怠入力</span></div>
-      <div style="background:#fef3cd;border-radius:8px;padding:10px 12px;font-size:12px;color:#8a5a00;margin-bottom:14px;line-height:1.7">勤務終了後に入力してください。入力後、派遣先担当者に承認依頼が送信されます。</div>
-      <div class="fg"><label class="fl">勤務日 <span style="color:#991b1b">*必須</span></label><input type="date" id="kintai-date"></div>
-      <div class="g2">
-        <div class="fg"><label class="fl">始業時間 <span style="color:#991b1b">*必須</span></label><input type="time" id="kintai-start"></div>
-        <div class="fg"><label class="fl">終業時間 <span style="color:#991b1b">*必須</span></label><input type="time" id="kintai-end"></div>
+ <div id="staff-skintai" class="sp">
+    <div style="display:flex;gap:4px;margin-bottom:14px;border-bottom:2px solid #e8e5e0">
+      <button id="staff-kintai-tab-input" onclick="switchStaffKintaiTab('input')" style="padding:6px 16px;font-size:13px;font-weight:700;border:none;background:#5b21b6;color:#fff;border-radius:6px 6px 0 0;cursor:pointer">✏️ 申請入力</button>
+      <button id="staff-kintai-tab-ts" onclick="switchStaffKintaiTab('ts')" style="padding:6px 16px;font-size:13px;font-weight:400;border:none;background:#e8e5e0;color:#555;border-radius:6px 6px 0 0;cursor:pointer">📅 タイムシート</button>
+    </div>
+    <div id="staff-kintai-area-input">
+      <div class="card">
+        <div class="ch"><span class="ct">勤怠入力</span></div>
+        <div style="background:#fef3cd;border-radius:8px;padding:10px 12px;font-size:12px;color:#8a5a00;margin-bottom:14px;line-height:1.7">勤務終了後に入力してください。入力後、派遣先担当者に承認依頼が送信されます。</div>
+        <div class="fg"><label class="fl">勤務日 <span style="color:#991b1b">*必須</span></label><input type="date" id="kintai-date"></div>
+        <div class="g2">
+          <div class="fg"><label class="fl">始業時間 <span style="color:#991b1b">*必須</span></label><input type="time" id="kintai-start"></div>
+          <div class="fg"><label class="fl">終業時間 <span style="color:#991b1b">*必須</span></label><input type="time" id="kintai-end"></div>
+        </div>
+        <div class="fg"><label class="fl">休憩時間</label><select id="kintai-break" style="width:auto"><option value="0">なし</option><option value="30">30分</option><option value="45">45分</option><option value="60" selected>60分</option><option value="90">90分</option></select></div>
+        <div class="fg"><label class="fl">備考</label><textarea id="kintai-note" rows="2" placeholder="例：教育訓練など"></textarea></div>
+        <div id="kintai-status" style="display:none;font-size:13px;margin-top:8px;padding:10px;border-radius:8px"></div>
+        <div style="text-align:right;margin-top:14px"><button class="btn btn-p" onclick="submitKintai()">申請する →</button></div>
       </div>
-      <div class="fg"><label class="fl">休憩時間</label><select id="kintai-break" style="width:auto"><option value="0">なし</option><option value="30">30分</option><option value="45">45分</option><option value="60" selected>60分</option><option value="90">90分</option></select></div>
-      <div class="fg"><label class="fl">備考</label><textarea id="kintai-note" rows="2" placeholder="例：教育訓練など"></textarea></div>
-      <div id="kintai-status" style="display:none;font-size:13px;margin-top:8px;padding:10px;border-radius:8px"></div>
-      <div style="text-align:right;margin-top:14px"><button class="btn btn-p" onclick="submitKintai()">申請する →</button></div>
+      <div class="card" id="my-kintai-list-container">
+        <div class="ch"><span class="ct">自分の勤怠履歴</span></div>
+        <div style="padding:20px;text-align:center;color:#888;font-size:13px">読み込み中...</div>
+      </div>
     </div>
-    <div class="card" id="my-kintai-list-container">
-      <div class="ch"><span class="ct">自分の勤怠履歴</span></div>
-      <div style="padding:20px;text-align:center;color:#888;font-size:13px">読み込み中...</div>
+    <div id="staff-kintai-area-ts" style="display:none">
+      <div class="card">
+        <div class="ch"><span class="ct">タイムシート</span></div>
+        <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:14px">
+          <label style="font-size:13px;color:#555">月：</label>
+          <select id="ts-month-select-staff" onchange="loadTimesheetStaff()" style="padding:6px 10px;border-radius:8px;border:1px solid #d8d6d0;font-size:13px">
+            <option value="">月を選択</option>
+          </select>
+        </div>
+        <div id="staff-timesheet-area">
+          <div style="padding:40px 20px;text-align:center;color:#888"><div style="font-size:40px;margin-bottom:10px">📅</div><div style="font-size:14px">月を選択してください</div></div>
+        </div>
+      </div>
     </div>
+  </div>
   </div>
 
   <div id="staff-spaid" class="sp">
