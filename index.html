@@ -3266,11 +3266,12 @@ function renderTimesheet(recMap,ym,lastDay,staffName,ymLabel,areaId,isAdmin){
   var totalStr=totalH+'時間'+(totalM>0?totalM+'分':'');
   var printId='ts-print-'+areaId;
   var html='<div id="'+printId+'">';
-  html+='<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;flex-wrap:wrap;gap:8px"><div><div style="font-size:15px;font-weight:800;color:#1a1a1a">'+ymLabel+'　勤怠タイムシート</div><div style="font-size:12px;color:#888;margin-top:2px">'+staffName+'</div></div><button class="btn btn-sm" onclick="printTimesheet(\''+printId+'\',\''+staffName+'\',\''+ymLabel+'\')">🖨 PDF出力</button><button class="btn btn-sm btn-p" style="margin-left:6px" onclick="sendTimesheetEmail()">📧 派遣先に送信</button></div>';
+  html+='<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;flex-wrap:wrap;gap:8px"><div><div style="font-size:15px;font-weight:800;color:#1a1a1a">'+ymLabel+'　勤怠タイムシート</div><div style="font-size:12px;color:#888;margin-top:2px">'+staffName+'</div></div><button class="btn btn-sm" onclick="printTimesheet()">🖨 PDF出力</button><button class="btn btn-sm btn-p" style="margin-left:6px" onclick="sendTimesheetEmail()">📧 派遣先に送信</button></div>';
   html+='<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:12px"><div style="background:#f5f4f0;border-radius:8px;padding:10px 14px"><div style="font-size:11px;color:#888">勤務日数</div><div style="font-size:18px;font-weight:800">'+workDays+'日</div></div><div style="background:#f5f4f0;border-radius:8px;padding:10px 14px"><div style="font-size:11px;color:#888">合計実労働時間</div><div style="font-size:18px;font-weight:800">'+totalStr+'</div></div></div>';
   html+='<div style="overflow-x:auto"><table style="width:100%;border-collapse:collapse;font-size:13px"><thead><tr style="background:#4a5568;color:#fff"><th style="padding:9px 8px;text-align:center;width:52px">日付</th><th style="padding:9px 8px;text-align:center">始業</th><th style="padding:9px 8px;text-align:center">終業</th><th style="padding:9px 8px;text-align:center">休憩</th><th style="padding:9px 8px;text-align:center">実労働</th><th style="padding:9px 8px;text-align:left;padding-left:12px">備考</th><th style="padding:9px 8px;text-align:center">状況</th></tr></thead><tbody>'+rows+'</tbody></table></div>';
   html+='<div style="margin-top:10px;padding:8px 14px;background:#f5f4f0;border-radius:8px;font-size:12px;color:#666;text-align:right" id="'+printId+'-summary">合計：'+workDays+'日勤務　実労働時間合計 '+totalStr+'</div></div>';
   area.innerHTML=html;
+  window._tsData={recMap:recMap,ym:ym,lastDay:lastDay,staffName:staffName,ymLabel:ymLabel};
 }
 async function approveKintaiFromTs(id){
   if(!supabaseClient)return;
@@ -3281,23 +3282,108 @@ async function approveKintaiFromTs(id){
   alert('承認しました！');
   loadTimesheetAdmin();
 }
-function printTimesheet(printId,staffName,ymLabel){
-  var el=document.getElementById(printId);
-  if(!el){alert('印刷対象が見つかりません');return;}
-  var w=window.open('','_blank');
-  w.document.write('<html><head><meta charset="utf-8"><title>'+ymLabel+' '+staffName+' タイムシート</title><style>body{font-family:"Hiragino Sans","Meiryo",sans-serif;font-size:12px;padding:20px;color:#1a1a1a}h2{font-size:16px;margin-bottom:4px}.sub{font-size:12px;color:#888;margin-bottom:16px}table{width:100%;border-collapse:collapse}th{background:#4a5568;color:#fff;padding:7px 8px;text-align:center;font-size:12px}td{padding:7px 8px;border-bottom:1px solid #e8e6e0;font-size:12px;text-align:center}td.note{text-align:left}tr:nth-child(even){background:#f9f9f9}.summary{margin-top:14px;padding:10px;background:#f5f4f0;font-size:12px;text-align:right}.approved{display:inline-block;padding:2px 8px;border-radius:10px;font-size:11px;background:#e6f4d7;color:#2d6a10;font-weight:700}.pending{display:inline-block;padding:2px 8px;border-radius:10px;font-size:11px;background:#fef3cd;color:#8a5a00;font-weight:700}@media print{button{display:none!important}}</style></head><body>');
-  w.document.write('<h2>'+ymLabel+'　勤怠タイムシート</h2><div class="sub">'+staffName+'</div>');
-  var tbl=el.querySelector('table');
-  if(tbl){
-    var clone=tbl.cloneNode(true);
-    clone.querySelectorAll('button').forEach(function(b){b.remove();});
-    clone.querySelectorAll('tbody tr td:nth-child(6)').forEach(function(td){td.className='note';});
-    clone.querySelectorAll('span').forEach(function(sp){var txt=sp.textContent.trim();if(txt==='承認済')sp.className='approved';else if(txt==='確認待ち')sp.className='pending';});
-    w.document.write(clone.outerHTML);
+function printTimesheet(){
+  var d=window._tsData;
+  if(!d){alert('先にタイムシートを表示してください');return;}
+  var recMap=d.recMap;var ym=d.ym;var lastDay=d.lastDay;var staffName=d.staffName;var ymLabel=d.ymLabel;
+  var weekDays=['日','月','火','水','木','金','土'];
+  var totalMinutes=0;var workDays=0;var rowsHtml='';
+  for(var day=1;day<=lastDay;day++){
+    var dateStr=ym+'-'+String(day).padStart(2,'0');
+    var dt=new Date(dateStr+'T00:00:00');
+    var dow=dt.getDay();
+    var dowLabel=weekDays[dow];
+    var isWeekend=(dow===0||dow===6);
+    var r=recMap[dateStr];
+    var bgColor=isWeekend?'#f5f5f5':'#ffffff';
+    var dateColor=dow===0?'#c0392b':dow===6?'#2980b9':'#1a1a1a';
+    if(r){
+      var wH=Math.floor(r.work_minutes/60);var wM=r.work_minutes%60;
+      var workStr=wH+':'+(wM<10?'0':'')+wM;
+      var startT=r.start_time||'';var endT=r.end_time||'';
+      var breakM=r.break_minutes||0;
+      var breakStr=breakM>0?(Math.floor(breakM/60)+':'+(breakM%60<10?'0':'')+(breakM%60)):'0:00';
+      totalMinutes+=r.work_minutes;workDays++;
+      var approvedMark=r.status==='approved'?'✓':'';
+      rowsHtml+='<tr style="background:'+bgColor+'">'
+        +'<td style="color:'+dateColor+';font-weight:600;text-align:center;border:1px solid #ccc;padding:5px 4px">'+day+'</td>'
+        +'<td style="color:'+dateColor+';text-align:center;border:1px solid #ccc;padding:5px 4px">'+dowLabel+'</td>'
+        +'<td style="text-align:center;border:1px solid #ccc;padding:5px 4px">'+startT+'</td>'
+        +'<td style="text-align:center;border:1px solid #ccc;padding:5px 4px">'+endT+'</td>'
+        +'<td style="text-align:center;border:1px solid #ccc;padding:5px 4px">'+breakStr+'</td>'
+        +'<td style="text-align:center;border:1px solid #ccc;padding:5px 4px;font-weight:600">'+workStr+'</td>'
+        +'<td style="text-align:left;border:1px solid #ccc;padding:5px 6px;font-size:11px">'+(r.note||'')+'</td>'
+        +'<td style="text-align:center;border:1px solid #ccc;padding:5px 4px;font-size:13px">'+approvedMark+'</td>'
+        +'</tr>';
+    }else{
+      rowsHtml+='<tr style="background:'+bgColor+'">'
+        +'<td style="color:'+dateColor+';font-weight:600;text-align:center;border:1px solid #ccc;padding:5px 4px">'+day+'</td>'
+        +'<td style="color:'+dateColor+';text-align:center;border:1px solid #ccc;padding:5px 4px">'+dowLabel+'</td>'
+        +'<td style="border:1px solid #ccc;padding:5px 4px"></td>'
+        +'<td style="border:1px solid #ccc;padding:5px 4px"></td>'
+        +'<td style="border:1px solid #ccc;padding:5px 4px"></td>'
+        +'<td style="border:1px solid #ccc;padding:5px 4px"></td>'
+        +'<td style="border:1px solid #ccc;padding:5px 4px"></td>'
+        +'<td style="border:1px solid #ccc;padding:5px 4px"></td>'
+        +'</tr>';
+    }
   }
-  var sumEl=document.getElementById(printId+'-summary');
-  if(sumEl)w.document.write('<div class="summary">'+sumEl.textContent+'</div>');
-  w.document.write('</body></html>');
+  var totalH=Math.floor(totalMinutes/60);var totalM=totalMinutes%60;
+  var totalStr=totalH+':'+(totalM<10?'0':'')+totalM;
+  var w=window.open('','_blank');
+  var html='<!DOCTYPE html><html><head><meta charset="utf-8"><title>'+ymLabel+' '+staffName+' タイムシート</title>'
+    +'<style>'
+    +'*{box-sizing:border-box;margin:0;padding:0}'
+    +'body{font-family:"Hiragino Sans","Meiryo","MS Gothic",sans-serif;font-size:11px;color:#1a1a1a;padding:16px 20px}'
+    +'.title{font-size:16px;font-weight:900;text-align:center;letter-spacing:2px;margin-bottom:6px}'
+    +'.period{font-size:12px;text-align:center;margin-bottom:14px;color:#333}'
+    +'.info-block{margin-bottom:14px;border:1px solid #aaa;padding:8px 12px;font-size:11px;line-height:1.9}'
+    +'.info-row{display:flex;gap:24px}'
+    +'.info-label{color:#555;min-width:64px}'
+    +'.ins-block{margin-bottom:14px;border:1px solid #aaa;padding:8px 12px;font-size:11px;line-height:1.9}'
+    +'table{width:100%;border-collapse:collapse;font-size:11px;margin-bottom:10px}'
+    +'thead th{background:#4a5568;color:#fff;padding:6px 4px;text-align:center;border:1px solid #4a5568;font-size:11px}'
+    +'.summary-row td{background:#eaf0fb;font-weight:700;font-size:11px}'
+    +'@media print{@page{size:A4 portrait;margin:10mm}button{display:none!important}}'
+    +'</style>'
+    +'</head><body>';
+  html+='<div class="title">TIME SHEET</div>';
+  html+='<div class="period">'+ymLabel.replace('月','月分')+'</div>';
+  html+='<div class="info-block">'
+    +'<div class="info-row"><span class="info-label">スタッフ名</span><span>'+staffName+'</span></div>'
+    +'<div class="info-row"><span class="info-label">派遣先</span><span>株式会社FCCテクノ</span></div>'
+    +'<div class="info-row"><span class="info-label">勤務地</span><span>福岡市中央区六本松2-3-6 7F</span></div>'
+    +'<div class="info-row"><span class="info-label">指揮命令者</span><span>金子 順一</span></div>'
+    +'</div>';
+  html+='<div class="ins-block">'
+    +'<div>【保険加入】</div>'
+    +'<div>雇用保険：なし　　健康・厚生：なし</div>'
+    +'<div style="font-size:10px;color:#555;margin-top:2px">未加入理由：2ヶ月以内の期間を定めて雇用されるため</div>'
+    +'</div>';
+  html+='<table>'
+    +'<thead><tr>'
+    +'<th style="width:32px">日付</th>'
+    +'<th style="width:28px">曜日</th>'
+    +'<th style="width:58px">始業時間</th>'
+    +'<th style="width:58px">終業時間</th>'
+    +'<th style="width:52px">休憩時間</th>'
+    +'<th style="width:52px">実労働</th>'
+    +'<th>備考</th>'
+    +'<th style="width:40px">承認</th>'
+    +'</tr></thead>'
+    +'<tbody>'+rowsHtml+'</tbody>'
+    +'<tfoot><tr class="summary-row">'
+    +'<td colspan="2" style="text-align:center;border:1px solid #ccc;padding:6px 4px">合計</td>'
+    +'<td style="border:1px solid #ccc;padding:6px 4px"></td>'
+    +'<td style="border:1px solid #ccc;padding:6px 4px"></td>'
+    +'<td style="border:1px solid #ccc;padding:6px 4px"></td>'
+    +'<td style="text-align:center;border:1px solid #ccc;padding:6px 4px">'+totalStr+'</td>'
+    +'<td style="text-align:left;border:1px solid #ccc;padding:6px 6px;font-size:10px">勤務日数：'+workDays+'日</td>'
+    +'<td style="border:1px solid #ccc;padding:6px 4px"></td>'
+    +'</tr></tfoot>'
+    +'</table>';
+  html+='</body></html>';
+  w.document.write(html);
   w.document.close();w.focus();
   setTimeout(function(){w.print();},600);
 }
