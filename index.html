@@ -3388,45 +3388,112 @@ function printTimesheet(){
   setTimeout(function(){w.print();},600);
 }
   async function sendTimesheetEmail(){
-  if(!supabaseClient)return;
-  var staffSel=document.getElementById('ts-staff-select');
-  var monthSel=document.getElementById('ts-month-select');
-  if(!staffSel||!monthSel||!staffSel.value||!monthSel.value){alert('スタッフと月を選択してください');return;}
-  var staffId=staffSel.value;
-  var ym=monthSel.value;
-  var staffName=staffSel.options[staffSel.selectedIndex].text.split('（')[0];
-  var ymLabel=ym.replace('-','年')+'月';
-  if(!confirm(staffName+'さんの'+ymLabel+'のタイムシートを派遣先に送信しますか？'))return;
-  var startDate=ym+'-01';
-  var lastDay=new Date(parseInt(ym.split('-')[0]),parseInt(ym.split('-')[1]),0).getDate();
-  var endDate=ym+'-'+String(lastDay).padStart(2,'0');
-  var {data:records}=await supabaseClient.from('kintai_records').select('*').eq('staff_id',staffId).gte('work_date',startDate).lte('work_date',endDate).order('work_date',{ascending:true});
-  var recMap={};
-  if(records){records.forEach(function(r){recMap[r.work_date]=r;});}
+  var d=window._tsData;
+  if(!d){alert('先にタイムシートを表示してください');return;}
+  var staffName=d.staffName;var ymLabel=d.ymLabel;var recMap=d.recMap;var ym=d.ym;var lastDay=d.lastDay;
+  if(!confirm(staffName+'さんの'+ymLabel+'のタイムシートをPDF添付で派遣先に送信しますか？'))return;
   var weekDays=['日','月','火','水','木','金','土'];
-  var rows='';var totalMinutes=0;var workDays=0;
+  var totalMinutes=0;var workDays=0;var rowsHtml='';
   for(var day=1;day<=lastDay;day++){
     var dateStr=ym+'-'+String(day).padStart(2,'0');
-    var d=new Date(dateStr+'T00:00:00');
-    var dow=d.getDay();var dowLabel=weekDays[dow];
+    var dt=new Date(dateStr+'T00:00:00');
+    var dow=dt.getDay();var dowLabel=weekDays[dow];
+    var isWeekend=(dow===0||dow===6);
     var r=recMap[dateStr];
+    var bgColor=isWeekend?'#f5f5f5':'#ffffff';
+    var dateColor=dow===0?'#c0392b':dow===6?'#2980b9':'#1a1a1a';
     if(r){
       var wH=Math.floor(r.work_minutes/60);var wM=r.work_minutes%60;
-      var workStr=wH+'時間'+(wM>0?wM+'分':'');
+      var workStr=wH+':'+(wM<10?'0':'')+wM;
+      var startT=r.start_time||'';var endT=r.end_time||'';
+      var breakM=r.break_minutes||0;
+      var breakStr=breakM>0?(Math.floor(breakM/60)+':'+(breakM%60<10?'0':'')+(breakM%60)):'0:00';
       totalMinutes+=r.work_minutes;workDays++;
-      var statusStr=r.status==='approved'?'承認済':'確認待ち';
-      var statusStyle=r.status==='approved'?'background:#e6f4d7;color:#2d6a10':'background:#fef3cd;color:#8a5a00';
-      rows+='<tr><td style="padding:8px;border:1px solid #ddd;text-align:center">'+day+'日（'+dowLabel+'）</td><td style="padding:8px;border:1px solid #ddd;text-align:center">'+r.start_time+'</td><td style="padding:8px;border:1px solid #ddd;text-align:center">'+r.end_time+'</td><td style="padding:8px;border:1px solid #ddd;text-align:center">'+r.break_minutes+'分</td><td style="padding:8px;border:1px solid #ddd;text-align:center;font-weight:bold">'+workStr+'</td><td style="padding:8px;border:1px solid #ddd;text-align:center">'+(r.note||'')+'</td><td style="padding:8px;border:1px solid #ddd;text-align:center"><span style="display:inline-block;padding:2px 8px;border-radius:10px;font-size:11px;font-weight:700;'+statusStyle+'">'+statusStr+'</span></td></tr>';
+      var approvedMark=r.status==='approved'?'✓':'';
+      rowsHtml+='<tr style="background:'+bgColor+'">'
+        +'<td style="color:'+dateColor+';font-weight:600;text-align:center;border:1px solid #ccc;padding:5px 4px">'+day+'</td>'
+        +'<td style="color:'+dateColor+';text-align:center;border:1px solid #ccc;padding:5px 4px">'+dowLabel+'</td>'
+        +'<td style="text-align:center;border:1px solid #ccc;padding:5px 4px">'+startT+'</td>'
+        +'<td style="text-align:center;border:1px solid #ccc;padding:5px 4px">'+endT+'</td>'
+        +'<td style="text-align:center;border:1px solid #ccc;padding:5px 4px">'+breakStr+'</td>'
+        +'<td style="text-align:center;border:1px solid #ccc;padding:5px 4px;font-weight:600">'+workStr+'</td>'
+        +'<td style="text-align:left;border:1px solid #ccc;padding:5px 6px;font-size:11px">'+(r.note||'')+'</td>'
+        +'<td style="text-align:center;border:1px solid #ccc;padding:5px 4px">'+approvedMark+'</td>'
+        +'</tr>';
+    }else{
+      rowsHtml+='<tr style="background:'+bgColor+'">'
+        +'<td style="color:'+dateColor+';font-weight:600;text-align:center;border:1px solid #ccc;padding:5px 4px">'+day+'</td>'
+        +'<td style="color:'+dateColor+';text-align:center;border:1px solid #ccc;padding:5px 4px">'+dowLabel+'</td>'
+        +'<td style="border:1px solid #ccc;padding:5px 4px"></td>'
+        +'<td style="border:1px solid #ccc;padding:5px 4px"></td>'
+        +'<td style="border:1px solid #ccc;padding:5px 4px"></td>'
+        +'<td style="border:1px solid #ccc;padding:5px 4px"></td>'
+        +'<td style="border:1px solid #ccc;padding:5px 4px"></td>'
+        +'<td style="border:1px solid #ccc;padding:5px 4px"></td>'
+        +'</tr>';
     }
   }
   if(workDays===0){alert('この月の勤怠データがありません');return;}
   var totalH=Math.floor(totalMinutes/60);var totalM=totalMinutes%60;
-  var totalStr=totalH+'時間'+(totalM>0?totalM+'分':'');
-  var emailBody='<div style="font-family:sans-serif;max-width:700px;margin:0 auto;padding:20px"><h2 style="color:#4a5568;border-bottom:2px solid #4a5568;padding-bottom:8px">'+ymLabel+'　勤怠タイムシート</h2><p style="color:#555;margin-bottom:4px">スタッフ：<strong>'+staffName+'</strong></p><p style="color:#555;margin-bottom:16px">お世話になっております。フレックスビジネスサービス株式会社です。<br>'+ymLabel+'の勤怠タイムシートをお送りします。ご確認をお願いいたします。</p><table style="border-collapse:collapse;width:100%;margin:16px 0;font-size:13px"><thead><tr style="background:#4a5568;color:#fff"><th style="padding:8px;text-align:center;border:1px solid #ccc">日付</th><th style="padding:8px;text-align:center;border:1px solid #ccc">始業</th><th style="padding:8px;text-align:center;border:1px solid #ccc">終業</th><th style="padding:8px;text-align:center;border:1px solid #ccc">休憩</th><th style="padding:8px;text-align:center;border:1px solid #ccc">実労働</th><th style="padding:8px;text-align:center;border:1px solid #ccc">備考</th><th style="padding:8px;text-align:center;border:1px solid #ccc">状況</th></tr></thead><tbody>'+rows+'</tbody></table><div style="background:#f5f4f0;border-radius:8px;padding:10px 14px;font-size:13px;text-align:right;margin-top:8px">合計：'+workDays+'日勤務　実労働時間合計 '+totalStr+'</div><p style="color:#888;font-size:12px;margin-top:16px">このメールはシステムから自動送信されています。</p></div>';
+  var totalStr=totalH+':'+(totalM<10?'0':'')+totalM;
+  // PDFのHTMLを生成
+  var pdfHtml='<!DOCTYPE html><html><head><meta charset="utf-8">'
+    +'<style>*{box-sizing:border-box;margin:0;padding:0}body{font-family:"Hiragino Sans","Meiryo","MS Gothic",sans-serif;font-size:11px;color:#1a1a1a;padding:16px 20px}.title{font-size:16px;font-weight:900;text-align:center;letter-spacing:2px;margin-bottom:6px}.period{font-size:12px;text-align:center;margin-bottom:14px;color:#333}.info-block{margin-bottom:14px;border:1px solid #aaa;padding:8px 12px;font-size:11px;line-height:1.9}.info-row{display:flex;gap:24px}.info-label{color:#555;min-width:64px}.ins-block{margin-bottom:14px;border:1px solid #aaa;padding:8px 12px;font-size:11px;line-height:1.9}table{width:100%;border-collapse:collapse;font-size:11px;margin-bottom:10px}thead th{background:#4a5568;color:#fff;padding:6px 4px;text-align:center;border:1px solid #4a5568;font-size:11px}.summary-row td{background:#eaf0fb;font-weight:700;font-size:11px}</style>'
+    +'</head><body>'
+    +'<div class="title">TIME SHEET</div>'
+    +'<div class="period">'+ymLabel.replace('月','月分')+'</div>'
+    +'<div class="info-block">'
+    +'<div class="info-row"><span class="info-label">スタッフ名</span><span>'+staffName+'</span></div>'
+    +'<div class="info-row"><span class="info-label">派遣先</span><span>株式会社FCCテクノ</span></div>'
+    +'<div class="info-row"><span class="info-label">勤務地</span><span>福岡市中央区六本松2-3-6 7F</span></div>'
+    +'<div class="info-row"><span class="info-label">指揮命令者</span><span>金子 順一</span></div>'
+    +'</div>'
+    +'<div class="ins-block">'
+    +'<div>【保険加入】</div>'
+    +'<div>雇用保険：なし　　健康・厚生：なし</div>'
+    +'<div style="font-size:10px;color:#555;margin-top:2px">未加入理由：2ヶ月以内の期間を定めて雇用されるため</div>'
+    +'</div>'
+    +'<table><thead><tr>'
+    +'<th style="width:32px">日付</th><th style="width:28px">曜日</th><th style="width:58px">始業時間</th>'
+    +'<th style="width:58px">終業時間</th><th style="width:52px">休憩時間</th><th style="width:52px">実労働</th>'
+    +'<th>備考</th><th style="width:40px">承認</th>'
+    +'</tr></thead><tbody>'+rowsHtml+'</tbody>'
+    +'<tfoot><tr class="summary-row">'
+    +'<td colspan="2" style="text-align:center;border:1px solid #ccc;padding:6px 4px">合計</td>'
+    +'<td style="border:1px solid #ccc;padding:6px 4px"></td>'
+    +'<td style="border:1px solid #ccc;padding:6px 4px"></td>'
+    +'<td style="border:1px solid #ccc;padding:6px 4px"></td>'
+    +'<td style="text-align:center;border:1px solid #ccc;padding:6px 4px">'+totalStr+'</td>'
+    +'<td style="text-align:left;border:1px solid #ccc;padding:6px 6px;font-size:10px">勤務日数：'+workDays+'日</td>'
+    +'<td style="border:1px solid #ccc;padding:6px 4px"></td>'
+    +'</tr></tfoot></table>'
+    +'</body></html>';
+  // HTMLをBase64に変換してPDFとして添付
+  var encoder=new TextEncoder();
+  var uint8=encoder.encode(pdfHtml);
+  var binary='';uint8.forEach(function(b){binary+=String.fromCharCode(b);});
+  var pdfBase64=btoa(binary);
+  var emailBody='<div style="font-family:sans-serif;max-width:600px;margin:0 auto;padding:20px">'
+    +'<p>金子様</p>'
+    +'<p>お世話になっております。フレックスビジネスサービス株式会社です。</p>'
+    +'<p>'+ymLabel+'の'+staffName+'さんの勤怠タイムシートを添付にてお送りします。<br>ご確認をお願いいたします。</p>'
+    +'<p style="margin-top:16px;color:#888;font-size:12px">このメールはシステムから自動送信されています。</p>'
+    +'</div>';
   var session=supabaseClient.auth.session?supabaseClient.auth.session():null;
   var accessToken=session&&session.access_token?session.access_token:SUPABASE_KEY;
   try{
-    var res=await fetch('https://wafarcqisrwzlkectrdo.supabase.co/functions/v1/send-kintai-mail',{method:'POST',headers:{'Authorization':'Bearer '+accessToken,'Content-Type':'application/json','apikey':SUPABASE_KEY},body:JSON.stringify({to:'wakamatsu@flexbs.com',subject:'【タイムシート】'+staffName+'さん　'+ymLabel,html:emailBody})});
+    alert('送信中です。しばらくお待ちください...');
+    var res=await fetch('https://wafarcqisrwzlkectrdo.supabase.co/functions/v1/send-timesheet-pdf',{
+      method:'POST',
+      headers:{'Authorization':'Bearer '+accessToken,'Content-Type':'application/json','apikey':SUPABASE_KEY},
+      body:JSON.stringify({
+        to:'wakamatsu@flexbs.com',
+        subject:'【タイムシート】'+staffName+'さん　'+ymLabel,
+        html:emailBody,
+        pdfBase64:pdfBase64,
+        fileName:staffName+'_'+ymLabel+'_タイムシート.html'
+      })
+    });
     if(res.ok){alert('派遣先にタイムシートを送信しました！');}
     else{alert('送信に失敗しました。もう一度お試しください。');}
   }catch(e){alert('送信エラー：'+e.message);}
