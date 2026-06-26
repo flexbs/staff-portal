@@ -1239,10 +1239,13 @@ async function submitKintai(){
     emailBody+='</div>';
     emailBody+='<p style="color:#888;font-size:12px">このメールはシステムから自動送信されています。</p>';
     emailBody+='</div>';
+    var session=supabaseClient.auth.session?supabaseClient.auth.session():null;
+    var accessToken=session&&session.access_token?session.access_token:SUPABASE_KEY;
+    var mailPayload=JSON.stringify({to:'wakamatsu@flexbs.com',subject:'【勤怠確認】'+myStaffData.name+'さんの勤怠申請（'+date+'）',html:emailBody});
     await fetch('https://wafarcqisrwzlkectrdo.supabase.co/functions/v1/send-kintai-mail',{
       method:'POST',
-      headers:{'Authorization':'Bearer '+SUPABASE_KEY,'Content-Type':'application/json'},
-      body:JSON.stringify({to:'wakamatsu@flexbs.com',subject:'【勤怠確認】'+myStaffData.name+'さんの勤怠申請（'+date+'）',html:emailBody})
+      headers:{'Authorization':'Bearer '+accessToken,'Content-Type':'application/json','apikey':SUPABASE_KEY},
+      body:mailPayload
     });
   }catch(mailErr){console.log('メール送信エラー:',mailErr);}
   document.getElementById('kintai-date').value='';
