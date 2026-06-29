@@ -1519,8 +1519,8 @@ async function loadAdminStaffListOnly(){
   var tbody=document.getElementById('admin-stafflist-tbody');
   if(!tbody)return;
   tbody.innerHTML='<tr><td colspan="6" style="text-align:center;color:#888;padding:20px">読み込み中...</td></tr>';
-  var {data,error}=await supabaseClient.from('staffs').select('*').order('name_kana');
-  if(error||!data){tbody.innerHTML='<tr><td colspan="5" style="text-align:center;color:#991b1b;padding:20px">読み込みに失敗しました</td></tr>';return;}
+  var {data,error}=await supabaseClient.from('staffs').select('*').order('employee_id');
+  if(error||!data){tbody.innerHTML='<tr><td colspan="6" style="text-align:center;color:#991b1b;padding:20px">読み込みに失敗しました</td></tr>';return;}
   _staffListOnly=data.filter(s=>s.employee_id>=1000);
   _currentStaffFilter='全員';
   renderStaffListOnly(_staffListOnly);
