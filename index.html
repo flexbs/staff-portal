@@ -213,9 +213,9 @@ input:disabled{background:#f5f4f0;color:#aaa;border-color:#e8e6e0}
       </div>
       <div class="tbl-scroll">
         <table class="tbl">
-          <thead><tr><th>名前</th><th>ステータス</th><th>社員番号</th><th>派遣先</th><th></th></tr></thead>
+          <thead><tr><th>名前</th><th>ステータス</th><th>社員番号</th><th>派遣先</th><th>有給残</th><th></th></tr></thead>
           <tbody id="admin-stafflist-tbody">
-            <tr><td colspan="5" style="text-align:center;color:#888;padding:20px">読み込み中...</td></tr>
+            <tr><td colspan="6" style="text-align:center;color:#888;padding:20px">読み込み中...</td></tr>
           </tbody>
         </table>
       </div>
@@ -348,7 +348,8 @@ input:disabled{background:#f5f4f0;color:#aaa;border-color:#e8e6e0}
           <table class="tbl">
             <thead><tr><th>名前</th><th>手続き区分</th><th>書類種別</th><th>提出日</th><th>状態</th><th></th></tr></thead>
             <tbody id="admin-uploads-tbody">
-<tr><td colspan="6" style="text-align:center;color:#888;padding:40px 20px"><div style="font-size:40px;margin-bottom:10px">📥</div><div style="font-size:15px;font-weight:600;color:#555;margin-bottom:6px">もうすぐ公開</div><div style="font-size:13px;line-height:1.6">スタッフからの提出書類を受け取る機能は<br>現在準備中です。公開まで今しばらくお待ちください。</div></td></tr>            </tbody>
+<tr><td colspan="6" style="text-align:center;color:#888;padding:20px">読み込み中...</td></tr>
+            </tbody>
           </table>
         </div>
       </div>
@@ -489,7 +490,7 @@ input:disabled{background:#f5f4f0;color:#aaa;border-color:#e8e6e0}
     <button class="sub-tab" id="staff-tab-spaid" onclick="showSub('staff','spaid',this)">有給</button>
     <button class="sub-tab" id="staff-notice-tab" onclick="showSub('staff','snotice',this);loadMyNotices();clearNoticeBadge()">お知らせ<span id="notice-badge" style="display:none;background:#e53e3e;color:#fff;border-radius:10px;font-size:10px;font-weight:700;padding:1px 6px;margin-left:4px;vertical-align:middle"></span></button>
     <button class="sub-tab" id="staff-tab-resign" onclick="showSub('staff','sresign',this);loadMyResignDocs()" style="display:none">退職書類</button>
-    <button class="sub-tab" onclick="showSub('staff','supload',this)">アップロード</button>
+    <button class="sub-tab" onclick="showSub('staff','supload',this);loadUploadHistory()">アップロード</button>
     <button class="sub-tab" onclick="showSub('staff','sprofile',this)">プロフィール</button>
     <button class="sub-tab" onclick="showSub('staff','sqa',this)">Q&A</button>
   </div>
@@ -622,8 +623,25 @@ input:disabled{background:#f5f4f0;color:#aaa;border-color:#e8e6e0}
   </div>
 <div id="staff-supload" class="sp">
     <div class="card">
-      <div class="ch"><span class="ct">アップロード</span></div>
-      <div style="padding:40px 20px;text-align:center;color:#888"><div style="font-size:48px;margin-bottom:12px">📤</div><div style="font-size:16px;font-weight:600;color:#555;margin-bottom:8px">もうすぐ公開</div><div style="font-size:13px;line-height:1.7">入社・退社書類のアップロード機能は<br>現在準備中です。公開まで今しばらくお待ちください。</div></div>
+      <div class="ch"><span class="ct">書類アップロード</span></div>
+      <div style="font-size:13px;color:#666;line-height:1.7;margin-bottom:16px">遅延証明書・その他書類をアップロードしてください。<br>担当者が確認いたします。</div>
+      <div class="upload-item">
+        <div class="upload-item-head"><span class="upload-item-title">📄 遅延証明書</span><span class="upload-item-opt">任意</span></div>
+        <div class="upload-item-desc">電車・バスの遅延証明書をアップロードしてください。</div>
+        <input type="file" id="upload-delay" accept="image/*,application/pdf" style="font-size:12px;margin-bottom:8px">
+        <button class="btn btn-sm btn-p" onclick="uploadStaffDoc('delay','遅延証明書')">アップロード</button>
+      </div>
+      <div class="upload-item">
+        <div class="upload-item-head"><span class="upload-item-title">📄 その他書類</span><span class="upload-item-opt">任意</span></div>
+        <div class="upload-item-desc">その他、会社に提出が必要な書類をアップロードしてください。</div>
+        <input type="file" id="upload-other" accept="image/*,application/pdf" style="font-size:12px;margin-bottom:8px">
+        <button class="btn btn-sm btn-p" onclick="uploadStaffDoc('other','その他書類')">アップロード</button>
+      </div>
+      <div id="upload-status" style="display:none;margin-top:12px;padding:10px 14px;border-radius:8px;font-size:13px"></div>
+    </div>
+    <div class="card" style="margin-top:12px">
+      <div class="ch"><span class="ct">アップロード履歴</span></div>
+      <div id="upload-history-list"><div style="text-align:center;color:#aaa;padding:20px;font-size:13px">読み込み中...</div></div>
     </div>
   </div>
 
@@ -1500,7 +1518,7 @@ async function loadAdminStaffListOnly(){
   if(!supabaseClient) return;
   var tbody=document.getElementById('admin-stafflist-tbody');
   if(!tbody)return;
-  tbody.innerHTML='<tr><td colspan="5" style="text-align:center;color:#888;padding:20px">読み込み中...</td></tr>';
+  tbody.innerHTML='<tr><td colspan="6" style="text-align:center;color:#888;padding:20px">読み込み中...</td></tr>';
   var {data,error}=await supabaseClient.from('staffs').select('*').order('name_kana');
   if(error||!data){tbody.innerHTML='<tr><td colspan="5" style="text-align:center;color:#991b1b;padding:20px">読み込みに失敗しました</td></tr>';return;}
   _staffListOnly=data.filter(s=>s.employee_id>=1000);
@@ -1525,11 +1543,13 @@ function renderStaffListOnly(list){
   var tbody=document.getElementById('admin-stafflist-tbody');
   if(!tbody)return;
   tbody.innerHTML='';
-  if(!list||list.length===0){tbody.innerHTML='<tr><td colspan="5" style="text-align:center;color:#888;padding:20px">該当するスタッフがいません</td></tr>';return;}
+  if(!list||list.length===0){tbody.innerHTML='<tr><td colspan="6" style="text-align:center;color:#888;padding:20px">該当するスタッフがいません</td></tr>';return;}
   list.forEach(function(s){
     var tr=document.createElement('tr');
     var statusBdg=s.status==='稼働中'?'<span class="bdg bg">稼働中</span>':s.status==='契約終了'?'<span class="bdg bz">契約終了</span>':s.status==='育休中'?'<span class="bdg ba">育休中</span>':s.status==='休業中'?'<span class="bdg bo">休業中</span>':s.status==='短期・単発'?'<span class="bdg bb">短期・単発</span>':s.status==='請負'?'<span class="bdg bp">請負</span>':s.status==='管理者'?'<span class="bdg" style="background:#7c3aed;color:#fff">管理者</span>':'<span class="bdg bz">-</span>';
-    tr.innerHTML='<td>'+s.name+'</td><td>'+statusBdg+'</td><td>'+String(s.employee_id).padStart(4,'0')+'</td><td>'+(s.workplace||'')+'</td><td><button class="btn btn-sm" onclick="openStaffDetail('+s.employee_id+')">プロフィール</button></td>';
+    var remDays=(s.paid_leave_remaining!==null&&s.paid_leave_remaining!==undefined)?s.paid_leave_remaining:'-';
+    var remLabel=remDays!=='-'?('<span style="font-weight:700;color:'+(remDays<=3?'#991b1b':remDays<=7?'#8a5a00':'#1a6b1a')+'">'+remDays+'日</span>'):'<span style="color:#aaa">-</span>';
+    tr.innerHTML='<td>'+s.name+'</td><td>'+statusBdg+'</td><td>'+String(s.employee_id).padStart(4,'0')+'</td><td>'+(s.workplace||'')+'</td><td style="text-align:center">'+remLabel+'</td><td><button class="btn btn-sm" onclick="openStaffDetail('+s.employee_id+')">プロフィール</button></td>';
     tbody.appendChild(tr);
   });
 }
@@ -1696,6 +1716,23 @@ async function loadAdminUploads(){
   }
   await buildUploadsRows(payslipDocs,'admin-sent-payslip-tbody');
   await buildUploadsRows(contractDocs,'admin-sent-contract-tbody');
+  // スタッフからのアップロード書類
+  var uploadDocs=docs.filter(function(d){return d.type==='upload';});
+  var recvTbody=document.getElementById('admin-uploads-tbody');
+  if(recvTbody){
+    if(uploadDocs.length===0){
+      recvTbody.innerHTML='<tr><td colspan="6" style="text-align:center;color:#888;padding:40px 20px"><div style="font-size:32px;margin-bottom:8px">📥</div><div>スタッフからの提出書類はまだありません</div></td></tr>';
+    }else{
+      recvTbody.innerHTML='';
+      uploadDocs.forEach(function(d){
+        var name=staffMap[d.staff_id]||'(不明)';
+        var dateStr=d.created_at?d.created_at.substring(0,10).replace(/-/g,'/'):'';
+        var tr=document.createElement('tr');
+        tr.innerHTML='<td>'+name+'</td><td style="font-size:12px">'+(d.title||'')+'</td><td style="white-space:nowrap">'+dateStr+'</td><td colspan="2"></td><td><a class="btn btn-sm" href="'+d.file_url+'" target="_blank" rel="noopener" style="text-decoration:none;display:inline-block">表示</a></td>';
+        recvTbody.appendChild(tr);
+      });
+    }
+  }
 }
 async function cancelDocument(docId,fileUrl,bucket){
   if(!supabaseClient){alert('接続エラーです');return;}
@@ -3084,6 +3121,66 @@ async function submitResignSign(){
   setTimeout(function(){closeModal('resign-sign');loadMyResignDocs();},1000);
 }
 // ========== 退職手続き機能ここまで ==========
+
+async function uploadStaffDoc(type, label){
+  if(!supabaseClient||!myStaffData)return;
+  var inputEl=document.getElementById('upload-'+type);
+  var statusEl=document.getElementById('upload-status');
+  if(!inputEl||!inputEl.files||inputEl.files.length===0){
+    alert('ファイルを選択してください');return;
+  }
+  var file=inputEl.files[0];
+  if(file.size>5*1024*1024){alert('5MB以下のファイルをアップロードしてください');return;}
+  var ext=file.name.split('.').pop();
+  var fileName=myStaffData.employee_id+'_'+type+'_'+Date.now()+'.'+ext;
+  statusEl.style.display='block';
+  statusEl.style.background='#fef3cd';
+  statusEl.style.color='#8a5a00';
+  statusEl.textContent='アップロード中...';
+  var{error:upErr}=await supabaseClient.storage.from('staff-uploads').upload(fileName,file,{upsert:false});
+  if(upErr){
+    statusEl.style.background='#fee2e2';statusEl.style.color='#991b1b';
+    statusEl.textContent='アップロードに失敗しました：'+upErr.message;return;
+  }
+  var{data:urlData}=supabaseClient.storage.from('staff-uploads').getPublicUrl(fileName);
+  var{error:dbErr}=await supabaseClient.from('documents').insert({
+    staff_id:myStaffData.id,
+    type:'upload',
+    title:label,
+    file_url:urlData.publicUrl,
+    created_at:new Date().toISOString()
+  });
+  if(dbErr){
+    statusEl.style.background='#fee2e2';statusEl.style.color='#991b1b';
+    statusEl.textContent='登録に失敗しました：'+dbErr.message;return;
+  }
+  statusEl.style.background='#e6f4d7';statusEl.style.color='#1a6b1a';
+  statusEl.textContent=label+'をアップロードしました！担当者が確認いたします。';
+  inputEl.value='';
+  loadUploadHistory();
+}
+
+async function loadUploadHistory(){
+  if(!supabaseClient||!myStaffData)return;
+  var listEl=document.getElementById('upload-history-list');
+  if(!listEl)return;
+  var{data,error}=await supabaseClient.from('documents')
+    .select('*').eq('staff_id',myStaffData.id).eq('type','upload')
+    .is('cancelled_at',null).order('created_at',{ascending:false});
+  if(error||!data||data.length===0){
+    listEl.innerHTML='<div style="text-align:center;color:#aaa;padding:20px;font-size:13px">アップロード履歴はありません</div>';return;
+  }
+  var html='';
+  data.forEach(function(d){
+    var dt=new Date(d.created_at);
+    var dtStr=dt.getFullYear()+'/'+(dt.getMonth()+1)+'/'+dt.getDate();
+    html+='<div style="display:flex;align-items:center;justify-content:space-between;padding:10px 0;border-bottom:1px solid #f0efe9">'
+      +'<div><div style="font-size:13px;font-weight:600">'+d.title+'</div><div style="font-size:11px;color:#888;margin-top:2px">'+dtStr+'</div></div>'
+      +'<a href="'+d.file_url+'" target="_blank" class="btn btn-sm">表示</a>'
+      +'</div>';
+  });
+  listEl.innerHTML=html;
+}
 
 async function changeMyPassword(){
   if(!supabaseClient){alert('接続エラー');return;}
