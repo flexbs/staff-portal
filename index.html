@@ -1283,7 +1283,7 @@ emailBody+='</table>';
     emailBody+='</div>';
     var session=supabaseClient.auth.session?supabaseClient.auth.session():null;
     var accessToken=session&&session.access_token?session.access_token:SUPABASE_KEY;
-    var mailPayload=JSON.stringify({to:'wakamatsu@flexbs.com',subject:'【勤怠確認】'+myStaffData.name+'さんの勤怠申請（'+date+'）',html:emailBody});
+    var mailPayload=JSON.stringify({to:'junichi.kaneko.5870@i-bp.co.jp',subject:'【勤怠確認】'+myStaffData.name+'さんの勤怠申請（'+date+'）',html:emailBody});
     await fetch('https://wafarcqisrwzlkectrdo.supabase.co/functions/v1/send-kintai-mail',{
       method:'POST',
       headers:{'Authorization':'Bearer '+accessToken,'Content-Type':'application/json','apikey':SUPABASE_KEY},
@@ -3494,7 +3494,7 @@ function printTimesheet(){
       method:'POST',
       headers:{'Authorization':'Bearer '+accessToken,'Content-Type':'application/json','apikey':SUPABASE_KEY},
       body:JSON.stringify({
-        to:'wakamatsu@flexbs.com',
+        to:'junichi.kaneko.5870@i-bp.co.jp',
         subject:'【タイムシート】'+staffName+'さん　'+ymLabel,
         html:emailBody,
         pdfBase64:pdfBase64,
