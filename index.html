@@ -817,7 +817,7 @@ input:disabled{background:#f5f4f0;color:#aaa;border-color:#e8e6e0}
     <div class="profile-row"><span class="profile-label">次回付与日</span><span class="profile-val" id="modal-next-grant-date" style="color:#534AB7;font-weight:600">-</span></div>
     <div id="modal-next-grant-alert" style="display:none;background:#fee2e2;border-radius:8px;padding:8px 12px;font-size:12px;color:#991b1b;font-weight:700;margin-bottom:8px"></div>
     <div class="profile-row"><span class="profile-label">有給対象外</span><label style="display:flex;align-items:center;gap:6px;cursor:pointer"><input type="checkbox" id="modal-paid-leave-exempt" style="width:16px;height:16px;accent-color:#534AB7"><span style="font-size:12px;color:#666">チェックするとスタッフ画面の有給情報が非表示になります</span></label></div>
-    <div class="profile-row"><span class="profile-label">有給残日数</span><input type="number" id="modal-paid-leave-remaining" placeholder="未入力" step="0.5" min="0" style="width:80px;font-size:12px;padding:4px 8px"> <span style="font-size:12px;color:#888">日（7/1時点の残日数を入力）</span></div>
+    <div class="profile-row"><span class="profile-label">有給残日数</span><input type="number" id="modal-paid-leave-remaining" placeholder="未入力" step="0.5" min="0" style="width:80px;font-size:12px;padding:4px 8px"> <span style="font-size:12px;color:#888">日（<span id="leave-remaining-label"></span>現在の残日数を入力）</span></div>
     <div class="profile-row"><span class="profile-label">所定労働時間</span><input type="number" id="modal-work-hours" placeholder="7" min="0" max="12" style="width:50px;font-size:12px;padding:4px 8px"> <span style="font-size:12px;color:#888">時間</span> <input type="number" id="modal-work-mins" placeholder="0" min="0" max="59" style="width:50px;font-size:12px;padding:4px 8px;margin-left:6px"> <span style="font-size:12px;color:#888">分</span></div>
     <div class="ma"><button class="btn btn-sm" onclick="closeModal('staff-profile')">閉じる</button><button class="btn btn-sm btn-p" onclick="saveStaffProfile()">保存する →</button></div>
   </div>
@@ -2179,6 +2179,11 @@ function openModal(id){document.getElementById('modal-'+id).classList.add('open'
 function closeModal(id){document.getElementById('modal-'+id).classList.remove('open');}
 
 async function openStaffDetail(empId){
+  // 今月末の日付ラベルをセット
+  var now=new Date();
+  var lastDay=new Date(now.getFullYear(),now.getMonth()+1,0);
+  var labelEl=document.getElementById('leave-remaining-label');
+  if(labelEl)labelEl.textContent=lastDay.getFullYear()+'年'+(lastDay.getMonth()+1)+'月'+lastDay.getDate()+'日';
   try{
     const {data,error}=await supabaseClient.from('staffs').select('*').eq('employee_id',empId).single();
     if(error){alert('取得失敗:'+error.message);return;}
