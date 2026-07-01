@@ -213,7 +213,7 @@ input:disabled{background:#f5f4f0;color:#aaa;border-color:#e8e6e0}
       </div>
       <div class="tbl-scroll">
         <table class="tbl">
-          <thead><tr><th>名前</th><th>ステータス</th><th>社員番号</th><th>派遣先</th><th>有給残</th><th></th></tr></thead>
+          <thead><tr><th>名前</th><th>ステータス</th><th>社員番号</th><th>派遣先</th><th id="stafflist-col5-header">有給残</th><th></th></tr></thead>
           <tbody id="admin-stafflist-tbody">
             <tr><td colspan="6" style="text-align:center;color:#888;padding:20px">読み込み中...</td></tr>
           </tbody>
@@ -1537,6 +1537,8 @@ function filterStaffList(filter){
     else{el.style.background='#fff';el.style.color='#333';el.style.borderColor='#d1d5db';el.style.fontWeight='400';}
   });
   var filtered=filter==='全員'?_staffListOnly:_staffListOnly.filter(s=>s.status===filter);
+  var col5Header=document.getElementById('stafflist-col5-header');
+  if(col5Header)col5Header.textContent=(filter==='契約終了')?'終了日':'有給残';
   renderStaffListOnly(filtered);
 }
 
@@ -1549,7 +1551,13 @@ function renderStaffListOnly(list){
     var tr=document.createElement('tr');
     var statusBdg=s.status==='稼働中'?'<span class="bdg bg">稼働中</span>':s.status==='契約終了'?'<span class="bdg bz">契約終了</span>':s.status==='育休中'?'<span class="bdg ba">育休中</span>':s.status==='休業中'?'<span class="bdg bo">休業中</span>':s.status==='短期・単発'?'<span class="bdg bb">短期・単発</span>':s.status==='請負'?'<span class="bdg bp">請負</span>':s.status==='管理者'?'<span class="bdg" style="background:#7c3aed;color:#fff">管理者</span>':'<span class="bdg bz">-</span>';
     var remDays=(s.paid_leave_remaining!==null&&s.paid_leave_remaining!==undefined)?s.paid_leave_remaining:'-';
-    var remLabel=remDays!=='-'?('<span style="font-weight:700;color:'+(remDays<=3?'#991b1b':remDays<=7?'#8a5a00':'#1a6b1a')+'">'+remDays+'日</span>'):'<span style="color:#aaa">-</span>';
+    var remLabel;
+    if(s.status==='契約終了'){
+      var endStr=s.resignation_date?s.resignation_date.replace(/-/g,'/'):'-';
+      remLabel='<span style="color:#555">'+endStr+'</span>';
+    }else{
+      remLabel=remDays!=='-'?('<span style="font-weight:700;color:'+(remDays<=3?'#991b1b':remDays<=7?'#8a5a00':'#1a6b1a')+'">'+remDays+'日</span>'):'<span style="color:#aaa">-</span>';
+    }
     tr.innerHTML='<td>'+s.name+'</td><td>'+statusBdg+'</td><td>'+String(s.employee_id).padStart(4,'0')+'</td><td>'+(s.workplace||'')+'</td><td style="text-align:center">'+remLabel+'</td><td><button class="btn btn-sm" onclick="openStaffDetail('+s.employee_id+')">プロフィール</button></td>';
     tbody.appendChild(tr);
   });
