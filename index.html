@@ -849,6 +849,7 @@ input:disabled{background:#f5f4f0;color:#aaa;border-color:#e8e6e0}
 <div class="fg"><label class="fl">対象月</label><select id="payslip-month"><option value="2026-05">2026年5月分</option><option value="2026-06">2026年6月分</option><option value="2026-07">2026年7月分</option><option value="2026-08">2026年8月分</option><option value="2026-09">2026年9月分</option><option value="2026-10">2026年10月分</option><option value="2026-11">2026年11月分</option><option value="2026-12">2026年12月分</option><option value="2027-01">2027年1月分</option><option value="2027-02">2027年2月分</option><option value="2027-03">2027年3月分</option><option value="2027-04">2027年4月分</option><option value="2027-05">2027年5月分</option><option value="2027-06">2027年6月分</option><option value="2027-07">2027年7月分</option><option value="2027-08">2027年8月分</option><option value="2027-09">2027年9月分</option><option value="2027-10">2027年10月分</option><option value="2027-11">2027年11月分</option><option value="2027-12">2027年12月分</option><option value="2028-01">2028年1月分</option><option value="2028-02">2028年2月分</option><option value="2028-03">2028年3月分</option><option value="2028-04">2028年4月分</option></select></div>
 <div class="fg"><label class="fl">送付先</label><select id="payslip-target" onchange="checkPaperPayslip()"><option>読み込み中...</option></select></div>
     <div class="fg"><label class="fl">PDFファイル</label><input type="file" id="payslip-file" accept=".pdf"></div>
+    <div class="fg"><label style="display:flex;align-items:center;gap:6px;cursor:pointer;font-size:13px;color:#555"><input type="checkbox" id="payslip-resend" style="width:16px;height:16px">再送（同じ月をもう一度送る場合はチェック）</label></div>
     <div id="payslip-status" style="display:none;font-size:12px;margin-top:8px"></div>
     <div id="payslip-paper-warning" style="display:none;background:#fee;border:2px solid #c00;border-radius:8px;padding:12px;margin-top:8px;color:#c00;font-weight:bold;font-size:14px;text-align:center">🚨 この方は給与明細を紙で受け取る方です<br>ポータルからは送付できません</div>
     <div class="ma"><button class="btn btn-sm" onclick="closeModal('send-payslip')">キャンセル</button><button id="payslip-send-btn" class="btn btn-sm btn-p" onclick="sendPayslip()">送付する →</button></div>
@@ -1914,9 +1915,10 @@ async function sendPayslip(){
   var month=document.getElementById('payslip-month').value;
   var fileInput=document.getElementById('payslip-file');
   var status=document.getElementById('payslip-status');
+  var isResend=document.getElementById('payslip-resend')?document.getElementById('payslip-resend').checked:false;
   if(!fileInput.files||!fileInput.files[0]){alert('PDFファイルを選択してください');return;}
   var targetName=document.getElementById('payslip-target').options[document.getElementById('payslip-target').selectedIndex].text;
-  if(!confirm(targetName+'に'+month+'分の給与明細を送付します。よろしいですか？'))return;
+  if(!confirm(targetName+'に'+month+'分の給与明細を'+(isResend?'再送':'送付')+'します。よろしいですか？'))return;
   var file=fileInput.files[0];
   status.style.display='block';status.style.color='#666';status.textContent='アップロード中...';
   var filePath=target+'/'+month+'_payslip_'+Date.now()+'.pdf';
@@ -1928,12 +1930,13 @@ async function sendPayslip(){
   var ins=await supabaseClient.from('documents').insert({
   staff_id:staffUuid,
    type:'payslip',
-    title:month+'分 給与明細.pdf',
+    title:month+'分 給与明細'+(isResend?'（再送）':'')+'.pdf',
    file_url:filePath
   });
   if(ins.error){status.style.color='#991b1b';status.textContent='登録失敗:'+ins.error.message;return;}
-  status.style.color='#2d6a10';status.textContent='送付完了!';
-  setTimeout(()=>{closeModal('send-payslip');loadAdminUploads();},1000);
+  status.style.color='#2d6a10';status.textContent=(isResend?'再送完了!':'送付完了!');
+  var resendCb=document.getElementById('payslip-resend');if(resendCb)resendCb.checked=false;
+  setTimeout(()=>{closeModal('send-payslip');loadAdminUploads();if(typeof loadAdminStaffList==='function')loadAdminStaffList();},1000);
 }
 async function checkPaperContract(){
   var target=document.getElementById('contract-target').value;
@@ -1999,7 +2002,7 @@ async function sendContract(){
   });
   if(ins.error){status.style.color='#991b1b';status.textContent='登録失敗:'+ins.error.message;return;}
   status.style.color='#2d6a10';status.textContent='送付完了!';const titleVal=document.getElementById('contract-title')?document.getElementById('contract-title').value:'';const dateMatch=titleVal.match(/(\d{4})年(\d{1,2})月(\d{1,2})日[〜～](\d{4})年(\d{1,2})月(\d{1,2})日/);const cStart=dateMatch?dateMatch[1]+'-'+String(dateMatch[2]).padStart(2,'0')+'-'+String(dateMatch[3]).padStart(2,'0'):null;const cEnd=dateMatch?dateMatch[4]+'-'+String(dateMatch[5]).padStart(2,'0')+'-'+String(dateMatch[6]).padStart(2,'0'):null;if(cEnd){await supabaseClient.from('staffs').update({contract_end_date:cEnd,contract_start_date:cStart}).eq('employee_id',target);}
-  setTimeout(()=>{closeModal('send-contract');loadAdminUploads();},1000);
+  setTimeout(()=>{closeModal('send-contract');loadAdminUploads();if(typeof loadAdminStaffList==='function')loadAdminStaffList();},1000);
 }
   function displayPaidLeaveInfo(data){
   const el=document.getElementById('paid-leave-info');
