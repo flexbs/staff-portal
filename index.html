@@ -807,6 +807,7 @@ input:disabled{background:#f5f4f0;color:#aaa;border-color:#e8e6e0}
       <div><div style="font-size:15px;font-weight:700" id="modal-name"></div><div style="font-size:12px;color:#888;margin-top:2px" id="modal-empid"></div></div>
     </div>
     <div class="profile-row"><span class="profile-label">ステータス</span><select id="modal-status" style="width:auto;font-size:12px;padding:4px 8px"><option value="稼働中">稼働中</option><option value="短期・単発">短期・単発</option><option value="請負">請負</option><option value="育休中">育休中</option><option value="休業中">休業中</option><option value="契約終了">契約終了</option></select></div>
+    <div class="profile-row"><span class="profile-label">終了日</span><input type="date" id="modal-resignation-date" style="width:auto;font-size:12px;padding:4px 8px"></div>
     <div class="profile-row"><span class="profile-label">派遣先</span><input type="text" id="modal-workplace" style="width:auto;font-size:12px;padding:4px 8px;text-align:right;flex:1"></div>
     <div class="profile-row"><span class="profile-label">派遣開始日</span><input type="date" id="modal-dispatch-start" style="width:auto;font-size:12px;padding:4px 8px"></div>
     <div class="profile-row"><span class="profile-label">現契約期間</span><input type="text" id="modal-contract" style="width:auto;font-size:12px;padding:4px 8px;text-align:right"></div>
@@ -2071,6 +2072,7 @@ async function saveStaffProfile(){
   try{
     const empId=document.getElementById('modal-empid').textContent.replace('社員番号：','').replace('社員番号:','').trim();
     const restrictionDate=document.getElementById('modal-restriction').value||null;
+    const resignationDate=document.getElementById('modal-resignation-date').value||null;
     const contractEnd=document.getElementById('modal-contract').value||null;
     const paidLeaveDate=document.getElementById('modal-paid-leave-date').value||null;
     const paidLeaveDays=document.getElementById('modal-paid-leave-days').value?parseInt(document.getElementById('modal-paid-leave-days').value):null;
@@ -2085,7 +2087,7 @@ async function saveStaffProfile(){
     const pensionNumber=document.getElementById('modal-pension').value||null;
     const insuranceNumber=document.getElementById('modal-insurance').value||null;
     const staffNote=document.getElementById('modal-note').value||null;
-    const{error}=await supabaseClient.from('staffs').update({status:staffStatus,workplace:workplace,dispatch_start_date:dispatchStart,restriction_date:restrictionDate,contract_end_date:contractEnd,paid_leave_grant_date:paidLeaveDate,paid_leave_grant_days:paidLeaveDays,paid_leave_exempt:paidLeaveExempt,paid_leave_remaining:paidLeaveRemaining,work_minutes_per_day:workMinutesPerDay,pension_number:pensionNumber,insurance_number:insuranceNumber,note:staffNote}).eq('employee_id',empId);
+    const{error}=await supabaseClient.from('staffs').update({status:staffStatus,workplace:workplace,dispatch_start_date:dispatchStart,restriction_date:restrictionDate,resignation_date:resignationDate,contract_end_date:contractEnd,paid_leave_grant_date:paidLeaveDate,paid_leave_grant_days:paidLeaveDays,paid_leave_exempt:paidLeaveExempt,paid_leave_remaining:paidLeaveRemaining,work_minutes_per_day:workMinutesPerDay,pension_number:pensionNumber,insurance_number:insuranceNumber,note:staffNote}).eq('employee_id',empId);
     if(error){alert('保存失敗：'+error.message);return;}
     alert('保存しました！');
     closeModal('staff-profile');
@@ -2228,6 +2230,8 @@ async function openStaffDetail(empId){
     document.getElementById('modal-dispatch-start').value=data.dispatch_start_date||'';
     document.getElementById('modal-contract').value=data.contract_end_date||'';
     document.getElementById('modal-restriction').value=data.restriction_date||'';
+    var resignEl=document.getElementById('modal-resignation-date');
+    if(resignEl)resignEl.value=data.resignation_date||'';
     let modalGrantDate=data.paid_leave_grant_date||'';
     let modalGrantDays=data.paid_leave_grant_days||'';
     if(!modalGrantDate&&data.dispatch_start_date){
