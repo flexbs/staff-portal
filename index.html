@@ -1771,7 +1771,7 @@ async function initLeaveRequestStaffSelect(){
   if(!sel||sel.options.length>1)return;
   var {data:staffs}=await supabaseClient.from('staffs').select('id,name,employee_id').order('employee_id');
   sel.innerHTML='<option value="all">全員</option>';
-  (staffs||[]).forEach(function(s){
+  (staffs||[]).filter(function(s){return s.employee_id>=1000;}).forEach(function(s){
     sel.innerHTML+='<option value="'+s.id+'">'+s.name+'（'+String(s.employee_id).padStart(4,'0')+'）</option>';
   });
 }
