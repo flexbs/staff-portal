@@ -320,7 +320,8 @@ input:disabled{background:#f5f4f0;color:#aaa;border-color:#e8e6e0}
 
     <div class="card">
       <div class="ch"><span class="ct">有給申請一覧</span>
-        <div style="display:flex;align-items:center;gap:8px;margin-left:auto">
+        <div style="display:flex;align-items:center;gap:8px;margin-left:auto;flex-wrap:wrap">
+          <select id="leave-request-staff-filter" onchange="loadAdminLeaveRequests()" style="font-size:12px;padding:4px 8px;border:1px solid #ddd;border-radius:6px;font-family:inherit"><option value="all">全員</option></select>
           <select id="leave-month-select" style="font-size:12px;padding:4px 8px;border:1px solid #ddd;border-radius:6px;font-family:inherit"></select>
           <button class="btn btn-sm" onclick="loadAdminLeaveRequests()" style="font-size:12px">表示</button>
           <button class="btn btn-sm" onclick="printLeaveRequests()" style="font-size:12px">🖨 印刷</button>
@@ -1576,11 +1577,15 @@ async function loadAdminStaffList(){
   if(monthSel){
     var months=new Set();
     _adminDocsAll.forEach(d=>{if(d.created_at)months.add(d.created_at.substring(0,7));});
-    monthSel.innerHTML='<option value="all">すべて</option>';
-    Array.from(months).sort().reverse().forEach(m=>{
+    var sortedDocMonths=Array.from(months).sort().reverse();
+    var docMonthOptsHtml='';
+    sortedDocMonths.forEach(m=>{
       var label=m.replace('-','年')+'月';
-      monthSel.innerHTML+='<option value="'+m+'">'+label+'</option>';
+      docMonthOptsHtml+='<option value="'+m+'">'+label+'</option>';
     });
+    docMonthOptsHtml+='<option value="all">すべて</option>';
+    monthSel.innerHTML=docMonthOptsHtml;
+    if(sortedDocMonths.length>0)monthSel.value=sortedDocMonths[0];
   }
   // 書類送付管理タブも初期表示
   filterAdminDocs();
@@ -1761,9 +1766,19 @@ async function initLeaveMonthSelect(){
     sel.appendChild(opt);
   }
 }
+async function initLeaveRequestStaffSelect(){
+  var sel=document.getElementById('leave-request-staff-filter');
+  if(!sel||sel.options.length>1)return;
+  var {data:staffs}=await supabaseClient.from('staffs').select('id,name,employee_id').order('employee_id');
+  sel.innerHTML='<option value="all">全員</option>';
+  (staffs||[]).forEach(function(s){
+    sel.innerHTML+='<option value="'+s.id+'">'+s.name+'（'+String(s.employee_id).padStart(4,'0')+'）</option>';
+  });
+}
 async function loadAdminLeaveRequests(){
   if(!supabaseClient) return;
   initLeaveMonthSelect();
+  await initLeaveRequestStaffSelect();
   var tbody=document.getElementById('admin-leave-tbody');
   if(!tbody) return;
   tbody.innerHTML='<tr><td colspan="8" style="text-align:center;color:#888;padding:20px">読み込み中...</td></tr>';
@@ -1773,7 +1788,11 @@ async function loadAdminLeaveRequests(){
   var startDate=ym+'-01';
   var endD=new Date(ym.split('-')[0],parseInt(ym.split('-')[1]),0);
   var endDate=ym+'-'+(String(endD.getDate()).padStart(2,'0'));
-  var {data:reqs,error}=await supabaseClient.from('leave_requests').select('*').gte('leave_date',startDate).lte('leave_date',endDate).order('leave_date',{ascending:false});
+  var staffFilterSel=document.getElementById('leave-request-staff-filter');
+  var staffFilterVal=staffFilterSel?staffFilterSel.value:'all';
+  var reqQuery=supabaseClient.from('leave_requests').select('*').gte('leave_date',startDate).lte('leave_date',endDate).order('leave_date',{ascending:false});
+  if(staffFilterVal&&staffFilterVal!=='all')reqQuery=reqQuery.eq('staff_id',staffFilterVal);
+  var {data:reqs,error}=await reqQuery;
   if(error){tbody.innerHTML='<tr><td colspan="8" style="text-align:center;color:#991b1b;padding:20px">読み込みに失敗しました</td></tr>';return;}
   if(!reqs||reqs.length===0){
     tbody.innerHTML='<tr><td colspan="8" style="text-align:center;color:#888;padding:40px 20px"><div style="font-size:40px;margin-bottom:10px">📋</div><div style="font-size:14px">有給申請はまだありません</div></td></tr>';
@@ -1816,6 +1835,10 @@ async function loadAdminLeaveRequests(){
 function printLeaveRequests(){
   var sel=document.getElementById('leave-month-select');
   var label=sel?sel.options[sel.selectedIndex].text:'';
+  var staffFilterSel=document.getElementById('leave-request-staff-filter');
+  if(staffFilterSel&&staffFilterSel.value!=='all'&&staffFilterSel.selectedIndex>=0){
+    label+='　'+staffFilterSel.options[staffFilterSel.selectedIndex].text;
+  }
   var tbody=document.getElementById('admin-leave-tbody');
   if(!tbody)return;
   var allRows=tbody.querySelectorAll('tr');
@@ -2555,16 +2578,23 @@ async function loadLeaveHistory(){
     sel.innerHTML+='<option value="'+s.id+'">'+s.name+'（'+String(s.employee_id).padStart(4,'0')+'）</option>';
   });
   var monthSel=document.getElementById('leave-history-month-filter');
+  var sortedLeaveMonths=[];
   if(monthSel){
     var months=new Set();
     leaveHistoryAll.forEach(r=>{if(r.leave_date)months.add(r.leave_date.substring(0,7));});
-    monthSel.innerHTML='<option value="all">すべて</option>';
-    Array.from(months).sort().reverse().forEach(m=>{
+    sortedLeaveMonths=Array.from(months).sort().reverse();
+    var monthOptsHtml='';
+    sortedLeaveMonths.forEach(m=>{
       var label=m.replace('-','年')+'月';
-      monthSel.innerHTML+='<option value="'+m+'">'+label+'</option>';
+      monthOptsHtml+='<option value="'+m+'">'+label+'</option>';
     });
+    monthOptsHtml+='<option value="all">すべて</option>';
+    monthSel.innerHTML=monthOptsHtml;
+    if(sortedLeaveMonths.length>0)monthSel.value=sortedLeaveMonths[0];
   }
-  renderLeaveHistory(leaveHistoryAll,staffMap);
+  var defaultLeaveMonth=sortedLeaveMonths.length>0?sortedLeaveMonths[0]:'all';
+  var initialLeaveReqs=defaultLeaveMonth==='all'?leaveHistoryAll:leaveHistoryAll.filter(r=>r.leave_date&&r.leave_date.startsWith(defaultLeaveMonth));
+  renderLeaveHistory(initialLeaveReqs,staffMap);
 }
 
 function filterLeaveHistory(){
