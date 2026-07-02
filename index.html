@@ -835,6 +835,7 @@ input:disabled{background:#f5f4f0;color:#aaa;border-color:#e8e6e0}
     <div class="profile-row"><span class="profile-label">ステータス</span><select id="modal-status" style="width:auto;font-size:12px;padding:4px 8px"><option value="稼働中">稼働中</option><option value="短期・単発">短期・単発</option><option value="請負">請負</option><option value="育休中">育休中</option><option value="休業中">休業中</option><option value="契約終了">契約終了</option></select></div>
     <div class="profile-row"><span class="profile-label">終了日</span><input type="date" id="modal-resignation-date" style="width:auto;font-size:12px;padding:4px 8px"></div>
     <div class="profile-row"><span class="profile-label">派遣先</span><input type="text" id="modal-workplace" style="width:auto;font-size:12px;padding:4px 8px;text-align:right;flex:1"></div>
+    <div class="profile-row"><span class="profile-label">派遣先住所</span><input type="text" id="modal-workplace-address" placeholder="例：福岡市中央区六本松2-3-6 7F" style="width:auto;font-size:12px;padding:4px 8px;text-align:right;flex:1"></div>
     <div class="profile-row"><span class="profile-label">派遣開始日</span><input type="date" id="modal-dispatch-start" style="width:auto;font-size:12px;padding:4px 8px"></div>
     <div class="profile-row"><span class="profile-label">現契約期間</span><input type="text" id="modal-contract" style="width:auto;font-size:12px;padding:4px 8px;text-align:right"></div>
     <div class="profile-row"><span class="profile-label">個人抵触日</span><input type="date" id="modal-restriction" style="width:auto;font-size:12px;padding:4px 8px"></div><div class="profile-row"><span class="profile-label">有給取得日</span><input type="date" id="modal-paid-leave-date" style="width:auto;font-size:12px;padding:4px 8px"></div>
@@ -972,6 +973,7 @@ input:disabled{background:#f5f4f0;color:#aaa;border-color:#e8e6e0}
     <div class="fg"><label class="fl">郵便番号</label><input type="text" id="addr-new-postal" placeholder="例：810-0001"></div>
     <div class="fg"><label class="fl">住所 <span style="color:#991b1b">*必須</span></label><input type="text" id="addr-new-address" placeholder="市区町村・番地・建物名など"></div>
     <div style="margin:-8px 0 14px;text-align:right"><a href="#" onclick="return openAddressOnMap()" style="font-size:12px;color:#5b21b6;text-decoration:underline">📍 入力した住所をGoogleマップで確認する</a></div>
+    <div style="margin:-8px 0 14px;text-align:right"><a href="#" onclick="return openCommuteRouteOnMap()" style="font-size:12px;color:#5b21b6;text-decoration:underline">🚗 自宅から会社までの経路をGoogleマップで見る</a></div>
     <div style="font-size:12px;font-weight:700;color:#555;margin:14px 0 6px">旧住所（参考）</div>
     <div class="fg"><label class="fl">郵便番号</label><input type="text" id="addr-old-postal" placeholder="例：810-0001"></div>
     <div class="fg"><label class="fl">住所</label><input type="text" id="addr-old-address"></div>
@@ -1009,6 +1011,7 @@ input:disabled{background:#f5f4f0;color:#aaa;border-color:#e8e6e0}
     <div class="profile-row"><span class="profile-label">旧住所</span><span class="profile-val" id="addrd-old-address">-</span></div>
     <div class="profile-row"><span class="profile-label">新住所</span><span class="profile-val" id="addrd-new-address">-</span></div>
     <div style="margin:-6px 0 8px;text-align:right"><a id="addrd-map-link" href="#" target="_blank" rel="noopener" style="font-size:12px;color:#5b21b6;text-decoration:underline">📍 Googleマップで見る</a></div>
+    <div id="addrd-route-map-row" style="margin:-6px 0 8px;text-align:right;display:none"><a id="addrd-route-map-link" href="#" target="_blank" rel="noopener" style="font-size:12px;color:#5b21b6;text-decoration:underline">🚗 自宅から会社までの経路をGoogleマップで見る</a></div>
     <div style="height:1px;background:#f0efe9;margin:8px 0"></div>
     <div class="profile-row"><span class="profile-label">通勤経路①</span><span class="profile-val" id="addrd-route1">-</span></div>
     <div class="profile-row"><span class="profile-label">通勤経路②</span><span class="profile-val" id="addrd-route2">-</span></div>
@@ -1844,6 +1847,17 @@ function openAddressOnMap(){
   return false;
 }
 
+function openCommuteRouteOnMap(){
+  var postal=document.getElementById('addr-new-postal').value||'';
+  var addr=document.getElementById('addr-new-address').value||'';
+  var origin=(postal?postal+' ':'')+addr;
+  if(!origin.trim()){alert('先に新しい住所を入力してください');return false;}
+  var dest=(myStaffData&&myStaffData.workplace_address)?myStaffData.workplace_address:'';
+  if(!dest){alert('派遣先の住所がまだ登録されていません。担当者にご確認ください');return false;}
+  window.open('https://www.google.com/maps/dir/?api=1&origin='+encodeURIComponent(origin)+'&destination='+encodeURIComponent(dest),'_blank');
+  return false;
+}
+
 function openAddressChangeModal(){
   ['addr-relocation-date','addr-new-postal','addr-new-address','addr-old-postal','addr-old-address',
    'addr-route1-company','addr-route1-section','addr-route1-fare','addr-route1-pass',
@@ -1916,8 +1930,8 @@ async function loadAdminAddressChanges(){
   if(!tbody)return;
   var {data,error}=await supabaseClient.from('address_change_requests').select('*').order('created_at',{ascending:false});
   if(error||!data){tbody.innerHTML='<tr><td colspan="6" style="text-align:center;color:#991b1b;padding:20px">読み込みに失敗しました</td></tr>';return;}
-  var {data:staffs}=await supabaseClient.from('staffs').select('id,name,employee_id');
-  var staffMap={};(staffs||[]).forEach(function(s){staffMap[s.id]={name:s.name,empId:s.employee_id};});
+  var {data:staffs}=await supabaseClient.from('staffs').select('id,name,employee_id,workplace_address');
+  var staffMap={};(staffs||[]).forEach(function(s){staffMap[s.id]={name:s.name,employee_id:s.employee_id,workplace_address:s.workplace_address};});
   window._addressChangesCache={};
   if(data.length===0){
     tbody.innerHTML='<tr><td colspan="6" style="text-align:center;color:#888;padding:20px">届出はまだありません</td></tr>';
@@ -1925,8 +1939,8 @@ async function loadAdminAddressChanges(){
   }
   tbody.innerHTML='';
   data.forEach(function(d){
-    var s=staffMap[d.staff_id]||{name:'(不明)',employee_id:''};
-    d._staffName=s.name;d._staffEmpId=s.employee_id;
+    var s=staffMap[d.staff_id]||{name:'(不明)',employee_id:'',workplace_address:''};
+    d._staffName=s.name;d._staffEmpId=s.employee_id;d._staffWorkplaceAddress=s.workplace_address;
     window._addressChangesCache[d.id]=d;
     var dateStr=d.created_at?d.created_at.substring(0,10).replace(/-/g,'/'):'';
     var reloStr=d.relocation_date?d.relocation_date.replace(/-/g,'/'):'';
@@ -1951,6 +1965,17 @@ function openAddressDetail(id){
   if(mapLink){
     var mapQuery=(d.new_postal_code?d.new_postal_code+' ':'')+(d.new_address||'');
     mapLink.href='https://www.google.com/maps/search/?api=1&query='+encodeURIComponent(mapQuery);
+  }
+  var routeRow=document.getElementById('addrd-route-map-row');
+  var routeLink=document.getElementById('addrd-route-map-link');
+  if(routeRow&&routeLink){
+    if(d._staffWorkplaceAddress&&d.new_address){
+      var origin=(d.new_postal_code?d.new_postal_code+' ':'')+d.new_address;
+      routeLink.href='https://www.google.com/maps/dir/?api=1&origin='+encodeURIComponent(origin)+'&destination='+encodeURIComponent(d._staffWorkplaceAddress);
+      routeRow.style.display='block';
+    }else{
+      routeRow.style.display='none';
+    }
   }
   var r1=[];if(d.route1_company)r1.push(d.route1_company);if(d.route1_section)r1.push(d.route1_section);if(d.route1_fare)r1.push('片道'+d.route1_fare+'円');if(d.route1_pass_fare)r1.push('定期'+d.route1_pass_fare+'円');
   document.getElementById('addrd-route1').textContent=r1.length?r1.join(' / '):'-';
@@ -2316,11 +2341,12 @@ async function saveStaffProfile(){
     const workMinutesPerDay=(workHours!==null)?(workHours*60+workMins):null;
     const staffStatus=document.getElementById('modal-status').value;
     const workplace=document.getElementById('modal-workplace').value||null;
+    const workplaceAddress=document.getElementById('modal-workplace-address')?(document.getElementById('modal-workplace-address').value||null):null;
     const dispatchStart=document.getElementById('modal-dispatch-start').value||null;
     const pensionNumber=document.getElementById('modal-pension').value||null;
     const insuranceNumber=document.getElementById('modal-insurance').value||null;
     const staffNote=document.getElementById('modal-note').value||null;
-    const{error}=await supabaseClient.from('staffs').update({status:staffStatus,workplace:workplace,dispatch_start_date:dispatchStart,restriction_date:restrictionDate,resignation_date:resignationDate,contract_end_date:contractEnd,paid_leave_grant_date:paidLeaveDate,paid_leave_grant_days:paidLeaveDays,paid_leave_exempt:paidLeaveExempt,paid_leave_remaining:paidLeaveRemaining,work_minutes_per_day:workMinutesPerDay,pension_number:pensionNumber,insurance_number:insuranceNumber,note:staffNote}).eq('employee_id',empId);
+    const{error}=await supabaseClient.from('staffs').update({status:staffStatus,workplace:workplace,workplace_address:workplaceAddress,dispatch_start_date:dispatchStart,restriction_date:restrictionDate,resignation_date:resignationDate,contract_end_date:contractEnd,paid_leave_grant_date:paidLeaveDate,paid_leave_grant_days:paidLeaveDays,paid_leave_exempt:paidLeaveExempt,paid_leave_remaining:paidLeaveRemaining,work_minutes_per_day:workMinutesPerDay,pension_number:pensionNumber,insurance_number:insuranceNumber,note:staffNote}).eq('employee_id',empId);
     if(error){alert('保存失敗：'+error.message);return;}
     alert('保存しました！');
     closeModal('staff-profile');
@@ -2458,6 +2484,7 @@ async function openStaffDetail(empId){
     document.getElementById('modal-empid').textContent='社員番号:'+(data.employee_id||'');
     document.getElementById('modal-avatar').textContent=data.name?data.name.replace(' ','').slice(0,2):'';
     document.getElementById('modal-workplace').value=data.workplace||'';
+    var wpAddrEl=document.getElementById('modal-workplace-address');if(wpAddrEl)wpAddrEl.value=data.workplace_address||'';
     var stSel=document.getElementById('modal-status');
     if(stSel)stSel.value=data.status||'稼働中';
     document.getElementById('modal-dispatch-start').value=data.dispatch_start_date||'';
