@@ -341,6 +341,20 @@ input:disabled{background:#f5f4f0;color:#aaa;border-color:#e8e6e0}
     <div class="sub-tabs">
       <button class="sub-tab active" onclick="showSub2('recv',this)">スタッフからの提出書類</button>
       <button class="sub-tab" onclick="showSub2('sent',this)">派遣元からの送付書類</button>
+      <button class="sub-tab" onclick="showSub2('address',this)">住所変更届</button>
+    </div>
+    <div id="uploads-address" class="sp" style="display:none">
+      <div class="card">
+        <div class="ch"><span class="ct">住所・通勤経路変更届の一覧</span></div>
+        <div class="tbl-scroll">
+          <table class="tbl">
+            <thead><tr><th>名前</th><th>届出日</th><th>転居日</th><th>新住所</th><th>状態</th><th></th></tr></thead>
+            <tbody id="admin-address-tbody">
+<tr><td colspan="6" style="text-align:center;color:#888;padding:20px">読み込み中...</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
     </div>
     <div id="uploads-recv" class="sp active">
       <div class="card">
@@ -647,6 +661,19 @@ input:disabled{background:#f5f4f0;color:#aaa;border-color:#e8e6e0}
 
   <div id="staff-sprofile" class="sp">
     <div class="card">
+      <div class="ch"><span class="ct">住所・通勤経路の変更届</span></div>
+      <div style="font-size:12px;color:#666;line-height:1.7;margin-bottom:12px">引っ越しをされた場合や、通勤経路が変わった場合は、こちらから届け出てください。</div>
+      <button class="btn btn-p" onclick="openAddressChangeModal()" style="width:100%">📮 住所・通勤経路の変更を届け出る</button>
+      <div style="height:1px;background:#f0efe9;margin:14px 0"></div>
+      <div style="font-size:12px;font-weight:700;color:#555;margin-bottom:8px">届出履歴</div>
+      <div class="tbl-scroll">
+        <table class="tbl">
+          <thead><tr><th>届出日</th><th>転居日</th><th>新住所</th><th>状態</th></tr></thead>
+          <tbody id="my-address-tbody"><tr><td colspan="4" style="text-align:center;color:#888;padding:16px;font-size:12px">読み込み中...</td></tr></tbody>
+        </table>
+      </div>
+    </div>
+    <div class="card">
       <div class="ch"><span class="ct">就業情報</span></div>
       <div class="profile-row"><span class="profile-label">社員番号</span><span class="profile-val" id="profile-employee-id">-</span></div>
       <div class="profile-row"><span class="profile-label">氏名</span><span class="profile-val" id="profile-name">-</span></div>
@@ -936,6 +963,60 @@ input:disabled{background:#f5f4f0;color:#aaa;border-color:#e8e6e0}
     <div class="ma"><button class="btn btn-sm" onclick="closeModal('apply-leave')">キャンセル</button><button class="btn btn-sm btn-p" onclick="closeModal('apply-leave')">申請する →</button></div>
   </div>
 </div>
+
+<div class="mbg" id="modal-address-change">
+  <div class="modal">
+    <div class="mt">住所変更届 兼 通勤経路変更届</div>
+    <div class="fg"><label class="fl">転居日 <span style="color:#991b1b">*必須</span></label><input type="date" id="addr-relocation-date"></div>
+    <div style="font-size:12px;font-weight:700;color:#555;margin:14px 0 6px">新しい住所</div>
+    <div class="fg"><label class="fl">郵便番号</label><input type="text" id="addr-new-postal" placeholder="例：810-0001"></div>
+    <div class="fg"><label class="fl">住所 <span style="color:#991b1b">*必須</span></label><input type="text" id="addr-new-address" placeholder="市区町村・番地・建物名など"></div>
+    <div style="font-size:12px;font-weight:700;color:#555;margin:14px 0 6px">旧住所（参考）</div>
+    <div class="fg"><label class="fl">郵便番号</label><input type="text" id="addr-old-postal" placeholder="例：810-0001"></div>
+    <div class="fg"><label class="fl">住所</label><input type="text" id="addr-old-address"></div>
+    <div style="background:#f7f6f2;border-radius:8px;padding:10px 12px;font-size:12px;color:#666;margin:14px 0">交通機関を利用する方のみ、通勤経路をご記入ください。</div>
+    <div style="font-size:12px;font-weight:700;color:#555;margin-bottom:6px">通勤経路①</div>
+    <div class="fg"><label class="fl">交通機関名</label><input type="text" id="addr-route1-company" placeholder="例：西鉄バス"></div>
+    <div class="fg"><label class="fl">乗車区間</label><input type="text" id="addr-route1-section" placeholder="例：〇〇駅 〜 △△駅"></div>
+    <div style="display:flex;gap:8px">
+      <div class="fg" style="flex:1"><label class="fl">片道運賃</label><input type="number" id="addr-route1-fare" placeholder="円"></div>
+      <div class="fg" style="flex:1"><label class="fl">定期代（1ヶ月）</label><input type="number" id="addr-route1-pass" placeholder="円"></div>
+    </div>
+    <div style="font-size:12px;font-weight:700;color:#555;margin-bottom:6px">通勤経路②</div>
+    <div class="fg"><label class="fl">交通機関名</label><input type="text" id="addr-route2-company" placeholder="例：JR"></div>
+    <div class="fg"><label class="fl">乗車区間</label><input type="text" id="addr-route2-section" placeholder="例：〇〇駅 〜 △△駅"></div>
+    <div style="display:flex;gap:8px">
+      <div class="fg" style="flex:1"><label class="fl">片道運賃</label><input type="number" id="addr-route2-fare" placeholder="円"></div>
+      <div class="fg" style="flex:1"><label class="fl">定期代（1ヶ月）</label><input type="number" id="addr-route2-pass" placeholder="円"></div>
+    </div>
+    <div style="background:#f7f6f2;border-radius:8px;padding:10px 12px;font-size:12px;color:#666;margin:14px 0">自動車通勤の方のみご記入ください。</div>
+    <div style="display:flex;gap:8px">
+      <div class="fg" style="flex:1"><label class="fl">通勤距離（片道）</label><input type="number" step="0.1" id="addr-distance" placeholder="km"></div>
+      <div class="fg" style="flex:1"><label class="fl">通勤時間（片道）</label><input type="number" id="addr-time" placeholder="分"></div>
+    </div>
+    <div id="addr-status" style="display:none;font-size:12px;margin-top:8px;padding:10px;border-radius:8px"></div>
+    <div class="ma"><button class="btn btn-sm" onclick="closeModal('address-change')">キャンセル</button><button class="btn btn-sm btn-p" onclick="submitAddressChange()">提出する →</button></div>
+  </div>
+</div>
+
+<div class="mbg" id="modal-address-detail">
+  <div class="modal">
+    <div class="mt">住所変更届 詳細</div>
+    <div class="profile-row"><span class="profile-label">氏名</span><span class="profile-val" id="addrd-name">-</span></div>
+    <div class="profile-row"><span class="profile-label">申請日</span><span class="profile-val" id="addrd-request-date">-</span></div>
+    <div class="profile-row"><span class="profile-label">転居日</span><span class="profile-val" id="addrd-relocation-date">-</span></div>
+    <div class="profile-row"><span class="profile-label">旧住所</span><span class="profile-val" id="addrd-old-address">-</span></div>
+    <div class="profile-row"><span class="profile-label">新住所</span><span class="profile-val" id="addrd-new-address">-</span></div>
+    <div style="height:1px;background:#f0efe9;margin:8px 0"></div>
+    <div class="profile-row"><span class="profile-label">通勤経路①</span><span class="profile-val" id="addrd-route1">-</span></div>
+    <div class="profile-row"><span class="profile-label">通勤経路②</span><span class="profile-val" id="addrd-route2">-</span></div>
+    <div class="profile-row"><span class="profile-label">通勤距離/時間</span><span class="profile-val" id="addrd-distance">-</span></div>
+    <div style="height:1px;background:#f0efe9;margin:8px 0"></div>
+    <div class="profile-row"><span class="profile-label">確認状況</span><span class="profile-val" id="addrd-confirmed">-</span></div>
+    <div class="ma"><button class="btn btn-sm" onclick="closeModal('address-detail')">閉じる</button><button id="addrd-confirm-btn" class="btn btn-sm btn-p" onclick="confirmAddressChange()">確認済みにする</button></div>
+  </div>
+</div>
+
 
 <div class="mbg" id="modal-add-staff">
   <div class="modal" style="max-width:520px">
@@ -1433,6 +1514,7 @@ async function loadStaffProfile(){
   el=document.getElementById('profile-insurance');if(el)el.textContent=data.insurance_number||'';
   el=document.getElementById('profile-note');if(el)el.textContent=data.note||'-';
   loadMyDocuments();
+  loadMyAddressChanges();
   displayPaidLeaveInfo(data);
   var paidTab=document.getElementById('staff-tab-spaid');
   if(paidTab){
@@ -1730,6 +1812,7 @@ async function loadAdminUploads(){
   }
   await buildUploadsRows(payslipDocs,'admin-sent-payslip-tbody');
   await buildUploadsRows(contractDocs,'admin-sent-contract-tbody');
+  loadAdminAddressChanges();
   // スタッフからのアップロード書類
   var uploadDocs=docs.filter(function(d){return d.type==='upload';});
   var recvTbody=document.getElementById('admin-uploads-tbody');
@@ -1748,6 +1831,137 @@ async function loadAdminUploads(){
     }
   }
 }
+var _currentAddressDetailId=null;
+
+function openAddressChangeModal(){
+  ['addr-relocation-date','addr-new-postal','addr-new-address','addr-old-postal','addr-old-address',
+   'addr-route1-company','addr-route1-section','addr-route1-fare','addr-route1-pass',
+   'addr-route2-company','addr-route2-section','addr-route2-fare','addr-route2-pass',
+   'addr-distance','addr-time'].forEach(function(id){var el=document.getElementById(id);if(el)el.value='';});
+  var s=document.getElementById('addr-status');if(s)s.style.display='none';
+  openModal('address-change');
+}
+
+async function submitAddressChange(){
+  if(!supabaseClient||!myStaffData){alert('データ取得中です。少し待ってもう一度お試しください');return;}
+  var relocationDate=document.getElementById('addr-relocation-date').value;
+  var newAddress=document.getElementById('addr-new-address').value.trim();
+  var status=document.getElementById('addr-status');
+  if(!relocationDate||!newAddress){
+    status.style.display='block';status.style.background='#fee2e2';status.style.color='#991b1b';status.textContent='転居日と新住所は必須です';
+    return;
+  }
+  var val=function(id){var el=document.getElementById(id);return (el&&el.value!=='')?el.value:null;};
+  var valInt=function(id){var v=val(id);return v!==null?parseInt(v):null;};
+  var valFloat=function(id){var v=val(id);return v!==null?parseFloat(v):null;};
+  var payload={
+    staff_id: myStaffData.id,
+    relocation_date: relocationDate,
+    old_postal_code: val('addr-old-postal'),
+    old_address: val('addr-old-address'),
+    new_postal_code: val('addr-new-postal'),
+    new_address: newAddress,
+    route1_company: val('addr-route1-company'),
+    route1_section: val('addr-route1-section'),
+    route1_fare: valInt('addr-route1-fare'),
+    route1_pass_fare: valInt('addr-route1-pass'),
+    route2_company: val('addr-route2-company'),
+    route2_section: val('addr-route2-section'),
+    route2_fare: valInt('addr-route2-fare'),
+    route2_pass_fare: valInt('addr-route2-pass'),
+    commute_distance_km: valFloat('addr-distance'),
+    commute_time_minutes: valInt('addr-time')
+  };
+  status.style.display='block';status.style.background='#f0f0f0';status.style.color='#666';status.textContent='送信中...';
+  var ins=await supabaseClient.from('address_change_requests').insert(payload);
+  if(ins.error){status.style.background='#fee2e2';status.style.color='#991b1b';status.textContent='送信に失敗しました：'+ins.error.message;return;}
+  status.style.background='#dcfce7';status.style.color='#166534';status.textContent='届出が完了しました！';
+  setTimeout(function(){closeModal('address-change');loadMyAddressChanges();},1200);
+}
+
+async function loadMyAddressChanges(){
+  if(!supabaseClient||!myStaffData)return;
+  var tbody=document.getElementById('my-address-tbody');
+  if(!tbody)return;
+  var {data,error}=await supabaseClient.from('address_change_requests').select('*').eq('staff_id',myStaffData.id).order('created_at',{ascending:false});
+  if(error||!data||data.length===0){
+    tbody.innerHTML='<tr><td colspan="4" style="text-align:center;color:#888;padding:16px;font-size:12px">届出履歴はまだありません</td></tr>';
+    return;
+  }
+  tbody.innerHTML='';
+  data.forEach(function(d){
+    var tr=document.createElement('tr');
+    var dateStr=d.created_at?d.created_at.substring(0,10).replace(/-/g,'/'):'';
+    var reloStr=d.relocation_date?d.relocation_date.replace(/-/g,'/'):'';
+    var statusBdg=d.confirmed_at?'<span class="bdg bg">確認済</span>':'<span class="bdg bo">確認待ち</span>';
+    tr.innerHTML='<td style="white-space:nowrap;font-size:12px">'+dateStr+'</td><td style="white-space:nowrap;font-size:12px">'+reloStr+'</td><td style="font-size:12px">'+(d.new_address||'')+'</td><td>'+statusBdg+'</td>';
+    tbody.appendChild(tr);
+  });
+}
+
+async function loadAdminAddressChanges(){
+  if(!supabaseClient)return;
+  var tbody=document.getElementById('admin-address-tbody');
+  if(!tbody)return;
+  var {data,error}=await supabaseClient.from('address_change_requests').select('*').order('created_at',{ascending:false});
+  if(error||!data){tbody.innerHTML='<tr><td colspan="6" style="text-align:center;color:#991b1b;padding:20px">読み込みに失敗しました</td></tr>';return;}
+  var {data:staffs}=await supabaseClient.from('staffs').select('id,name,employee_id');
+  var staffMap={};(staffs||[]).forEach(function(s){staffMap[s.id]={name:s.name,empId:s.employee_id};});
+  window._addressChangesCache={};
+  if(data.length===0){
+    tbody.innerHTML='<tr><td colspan="6" style="text-align:center;color:#888;padding:20px">届出はまだありません</td></tr>';
+    return;
+  }
+  tbody.innerHTML='';
+  data.forEach(function(d){
+    var s=staffMap[d.staff_id]||{name:'(不明)',employee_id:''};
+    d._staffName=s.name;d._staffEmpId=s.employee_id;
+    window._addressChangesCache[d.id]=d;
+    var dateStr=d.created_at?d.created_at.substring(0,10).replace(/-/g,'/'):'';
+    var reloStr=d.relocation_date?d.relocation_date.replace(/-/g,'/'):'';
+    var statusBdg=d.confirmed_at?'<span class="bdg bg">確認済</span>':'<span class="bdg bo">確認待ち</span>';
+    var tr=document.createElement('tr');
+    tr.innerHTML='<td>'+(s.name||'(不明)')+'（'+(s.employee_id||'')+'）</td><td style="white-space:nowrap">'+dateStr+'</td><td style="white-space:nowrap">'+reloStr+'</td><td style="font-size:12px">'+(d.new_address||'')+'</td><td>'+statusBdg+'</td><td><button class="btn btn-sm" onclick="openAddressDetail(\''+d.id+'\')">詳細</button></td>';
+    tbody.appendChild(tr);
+  });
+}
+
+function openAddressDetail(id){
+  var d=(window._addressChangesCache||{})[id];
+  if(!d)return;
+  _currentAddressDetailId=id;
+  document.getElementById('addrd-name').textContent=(d._staffName||'(不明)')+'（'+(d._staffEmpId||'')+'）';
+  document.getElementById('addrd-request-date').textContent=d.created_at?d.created_at.substring(0,10).replace(/-/g,'/'):'-';
+  document.getElementById('addrd-relocation-date').textContent=d.relocation_date?d.relocation_date.replace(/-/g,'/'):'-';
+  document.getElementById('addrd-old-address').textContent=(d.old_postal_code?'〒'+d.old_postal_code+' ':'')+(d.old_address||'-');
+  document.getElementById('addrd-new-address').textContent=(d.new_postal_code?'〒'+d.new_postal_code+' ':'')+(d.new_address||'-');
+  var r1=[];if(d.route1_company)r1.push(d.route1_company);if(d.route1_section)r1.push(d.route1_section);if(d.route1_fare)r1.push('片道'+d.route1_fare+'円');if(d.route1_pass_fare)r1.push('定期'+d.route1_pass_fare+'円');
+  document.getElementById('addrd-route1').textContent=r1.length?r1.join(' / '):'-';
+  var r2=[];if(d.route2_company)r2.push(d.route2_company);if(d.route2_section)r2.push(d.route2_section);if(d.route2_fare)r2.push('片道'+d.route2_fare+'円');if(d.route2_pass_fare)r2.push('定期'+d.route2_pass_fare+'円');
+  document.getElementById('addrd-route2').textContent=r2.length?r2.join(' / '):'-';
+  var dt=[];if(d.commute_distance_km)dt.push('約'+d.commute_distance_km+'km');if(d.commute_time_minutes)dt.push('約'+d.commute_time_minutes+'分');
+  document.getElementById('addrd-distance').textContent=dt.length?dt.join('・'):'-';
+  var confirmBtn=document.getElementById('addrd-confirm-btn');
+  if(d.confirmed_at){
+    document.getElementById('addrd-confirmed').textContent='確認済み（'+new Date(d.confirmed_at).toLocaleString('ja-JP',{year:'numeric',month:'2-digit',day:'2-digit',hour:'2-digit',minute:'2-digit'})+'）';
+    if(confirmBtn)confirmBtn.style.display='none';
+  }else{
+    document.getElementById('addrd-confirmed').textContent='確認待ち';
+    if(confirmBtn)confirmBtn.style.display='inline-block';
+  }
+  openModal('address-detail');
+}
+
+async function confirmAddressChange(){
+  if(!_currentAddressDetailId)return;
+  var confirmer=myStaffData?(myStaffData.name||'管理者'):'管理者';
+  var now=new Date().toISOString();
+  var u=await supabaseClient.from('address_change_requests').update({confirmed_at:now,confirmed_by:confirmer}).eq('id',_currentAddressDetailId);
+  if(u.error){alert('確認処理に失敗しました：'+u.error.message);return;}
+  closeModal('address-detail');
+  loadAdminAddressChanges();
+}
+
 async function cancelDocument(docId,fileUrl,bucket){
   if(!supabaseClient){alert('接続エラーです');return;}
   var ok=window.confirm('この書類の送付を取り消します。よろしいですか？\n（スタッフ画面からも見えなくなります）');
@@ -2189,7 +2403,7 @@ function showSub(pg,id,btn){
 }
 
 function showSub2(id,btn){
-  ['recv','sent'].forEach(function(k){
+  ['recv','sent','address'].forEach(function(k){
     var el=document.getElementById('uploads-'+k);
     if(el){el.style.display='none';el.classList.remove('active');}
   });
