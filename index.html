@@ -1039,6 +1039,7 @@ input:disabled{background:#f5f4f0;color:#aaa;border-color:#e8e6e0}
       <div class="fg"><label class="fl">フリガナ</label><input type="text" id="add-name-kana" placeholder="例：ヤマダ ハナコ"></div>
     </div>
     <div class="fg"><label class="fl">派遣先</label><input type="text" id="add-workplace" placeholder="例：FCCテクノ"></div>
+    <div class="fg"><label class="fl">派遣先住所</label><input type="text" id="add-workplace-address" placeholder="例：福岡市中央区六本松2-3-6 7F"></div>
     <div class="section-divider">就業期間</div>
     <div class="g2">
       <div class="fg"><label class="fl">派遣開始日</label><input type="date" id="add-dispatch-start"></div>
@@ -3011,6 +3012,7 @@ async function confirmMyNotice(recipientId){
   var nameKana=document.getElementById('add-name-kana').value.trim();
   var status=document.getElementById('add-status').value;
   var workplace=document.getElementById('add-workplace').value.trim();
+  var workplaceAddress=document.getElementById('add-workplace-address').value.trim()||null;
   var dispatchStart=document.getElementById('add-dispatch-start').value||null;
   var contractStart=document.getElementById('add-contract-start').value||null;
   var contractEnd=document.getElementById('add-contract-end').value||null;
@@ -3060,6 +3062,7 @@ async function confirmMyNotice(recipientId){
     name_kana:nameKana||null,
     status:status,
     workplace:workplace||null,
+    workplace_address:workplaceAddress,
     dispatch_start_date:dispatchStart,
     contract_start_date:contractStart,
     contract_end_date:contractEnd,
@@ -3074,7 +3077,7 @@ async function confirmMyNotice(recipientId){
   }
   statusEl.style.background='#e6f4d7';statusEl.style.color='#2d6a10';
   statusEl.textContent='追加しました！メール：'+email+'　初期パスワード：'+password;
-  ['add-employee-id','add-name','add-name-kana','add-workplace','add-dispatch-start','add-contract-start','add-contract-end','add-restriction','add-pension','add-insurance','add-note'].forEach(function(id){
+  ['add-employee-id','add-name','add-name-kana','add-workplace','add-workplace-address','add-dispatch-start','add-contract-start','add-contract-end','add-restriction','add-pension','add-insurance','add-note'].forEach(function(id){
     var el=document.getElementById(id);if(el)el.value='';
   });
   document.getElementById('add-status').value='稼働中';
