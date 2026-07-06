@@ -322,7 +322,7 @@ input:disabled{background:#f5f4f0;color:#aaa;border-color:#e8e6e0}
       <div class="ch"><span class="ct">有給申請一覧</span>
         <div style="display:flex;align-items:center;gap:8px;margin-left:auto;flex-wrap:wrap">
           <select id="leave-request-staff-filter" onchange="loadAdminLeaveRequests()" style="font-size:12px;padding:4px 8px;border:1px solid #ddd;border-radius:6px;font-family:inherit"><option value="all">全員</option></select>
-          <select id="leave-month-select" style="font-size:12px;padding:4px 8px;border:1px solid #ddd;border-radius:6px;font-family:inherit"></select>
+          <select id="leave-month-select" onchange="loadAdminLeaveRequests()" style="font-size:12px;padding:4px 8px;border:1px solid #ddd;border-radius:6px;font-family:inherit"></select>
           <button class="btn btn-sm" onclick="loadAdminLeaveRequests()" style="font-size:12px">表示</button>
           <button class="btn btn-sm" onclick="printLeaveRequests()" style="font-size:12px">🖨 印刷</button>
         </div>
