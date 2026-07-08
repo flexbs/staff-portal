@@ -126,6 +126,7 @@ input:disabled{background:#f5f4f0;color:#aaa;border-color:#e8e6e0}
   .hide-sp{display:none}
   .tbl td,.tbl th{padding:7px 6px;font-size:12px}
 }
+#addrd-allowance-input::-webkit-inner-spin-button,#addrd-allowance-input::-webkit-outer-spin-button{-webkit-appearance:none;margin:0}
 </style>
 </head>
 <body>
@@ -1020,7 +1021,8 @@ input:disabled{background:#f5f4f0;color:#aaa;border-color:#e8e6e0}
     <div class="profile-row"><span class="profile-label">通勤経路①</span><span class="profile-val" id="addrd-route1">-</span></div>
     <div class="profile-row"><span class="profile-label">通勤経路②</span><span class="profile-val" id="addrd-route2">-</span></div>
     <div class="profile-row"><span class="profile-label">通勤距離/時間</span><span class="profile-val" id="addrd-distance">-</span></div>
-    <div id="addrd-allowance-row" class="profile-row" style="display:none"><span class="profile-label">通勤費（車通勤）</span><span style="display:flex;align-items:center;gap:6px"><input type="number" id="addrd-allowance-input" placeholder="円" style="width:100px;font-size:12px;padding:4px 8px"><button class="btn btn-sm" onclick="saveCommuteAllowance()">保存</button></span></div>
+    <div id="addrd-allowance-row" class="profile-row" style="display:none;flex-wrap:wrap"><span class="profile-label">通勤費（車通勤）</span><span style="display:flex;align-items:center;gap:6px;flex-wrap:wrap"><input type="number" id="addrd-allowance-input" placeholder="例：10500" style="width:110px;font-size:13px;padding:6px 8px;-moz-appearance:textfield" onwheel="this.blur()"><span style="font-size:12px;color:#888">円</span><button class="btn btn-sm" onclick="autoCalcCommuteAllowance()">700円×距離で自動計算</button></span></div>
+    <div id="addrd-allowance-basis-row" class="profile-row" style="display:none"><span class="profile-label">通勤費の根拠</span><span style="display:flex;align-items:center;gap:6px;flex:1"><input type="text" id="addrd-allowance-basis-input" placeholder="例：700円×15km=10500円" style="flex:1;font-size:13px;padding:6px 8px"><button class="btn btn-sm btn-p" onclick="saveCommuteAllowance()">保存</button></span></div>
     <div style="height:1px;background:#f0efe9;margin:8px 0"></div>
     <div class="profile-row"><span class="profile-label">確認状況</span><span class="profile-val" id="addrd-confirmed">-</span></div>
     <div class="ma"><button class="btn btn-sm" onclick="closeModal('address-detail')">閉じる</button><button class="btn btn-sm" onclick="printAddressDetail()">🖨 PDF保存</button><button id="addrd-confirm-btn" class="btn btn-sm btn-p" onclick="confirmAddressChange()">確認済みにする</button></div>
@@ -2001,12 +2003,19 @@ function openAddressDetail(id){
   document.getElementById('addrd-distance').textContent=dt.length?dt.join('・'):'-';
   var allowanceRow=document.getElementById('addrd-allowance-row');
   var allowanceInput=document.getElementById('addrd-allowance-input');
+  var basisRow=document.getElementById('addrd-allowance-basis-row');
+  var basisInput=document.getElementById('addrd-allowance-basis-input');
   if(allowanceRow&&allowanceInput){
     if(d.commute_distance_km){
       allowanceInput.value=(d.commute_allowance!==null&&d.commute_allowance!==undefined)?d.commute_allowance:'';
       allowanceRow.style.display='flex';
+      if(basisRow&&basisInput){
+        basisInput.value=d.commute_allowance_basis||'';
+        basisRow.style.display='flex';
+      }
     }else{
       allowanceRow.style.display='none';
+      if(basisRow)basisRow.style.display='none';
     }
   }
   var confirmBtn=document.getElementById('addrd-confirm-btn');
@@ -2033,12 +2042,24 @@ async function confirmAddressChange(){
 async function saveCommuteAllowance(){
   if(!_currentAddressDetailId)return;
   var input=document.getElementById('addrd-allowance-input');
+  var basisInput=document.getElementById('addrd-allowance-basis-input');
   var val=input&&input.value!==''?parseInt(input.value):null;
-  var u=await supabaseClient.from('address_change_requests').update({commute_allowance:val}).eq('id',_currentAddressDetailId);
+  var basisVal=basisInput&&basisInput.value.trim()!==''?basisInput.value.trim():null;
+  var u=await supabaseClient.from('address_change_requests').update({commute_allowance:val,commute_allowance_basis:basisVal}).eq('id',_currentAddressDetailId);
   if(u.error){alert('通勤費の保存に失敗しました：'+u.error.message);return;}
   var d=(window._addressChangesCache||{})[_currentAddressDetailId];
-  if(d)d.commute_allowance=val;
+  if(d){d.commute_allowance=val;d.commute_allowance_basis=basisVal;}
   alert('通勤費を保存しました');
+}
+
+function autoCalcCommuteAllowance(){
+  var d=(window._addressChangesCache||{})[_currentAddressDetailId];
+  if(!d||!d.commute_distance_km){alert('通勤距離が入力されていません');return;}
+  var amount=Math.round(700*d.commute_distance_km);
+  var input=document.getElementById('addrd-allowance-input');
+  var basisInput=document.getElementById('addrd-allowance-basis-input');
+  if(input)input.value=amount;
+  if(basisInput)basisInput.value='700円×'+d.commute_distance_km+'km='+amount+'円';
 }
 
 async function cancelDocument(docId,fileUrl,bucket){
@@ -2157,6 +2178,7 @@ function printAddressDetail(){
   );
   if(d.commute_distance_km){
     rows.push(['通勤費',(d.commute_allowance!==null&&d.commute_allowance!==undefined)?d.commute_allowance+'円':'未設定']);
+    rows.push(['通勤費の根拠',d.commute_allowance_basis||'-']);
   }
   rows.push(['確認状況',d.confirmed_at?('確認済み（'+new Date(d.confirmed_at).toLocaleString('ja-JP',{year:'numeric',month:'2-digit',day:'2-digit',hour:'2-digit',minute:'2-digit'})+'）'):'確認待ち']);
   var rowsHtml=rows.map(function(r){return '<tr><th>'+r[0]+'</th><td>'+r[1]+'</td></tr>';}).join('');
