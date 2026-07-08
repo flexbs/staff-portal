@@ -1840,18 +1840,16 @@ async function loadAdminUploads(){
 var _currentAddressDetailId=null;
 
 function openAddressOnMap(){
-  var postal=document.getElementById('addr-new-postal').value||'';
   var addr=document.getElementById('addr-new-address').value||'';
-  var q=(postal?postal+' ':'')+addr;
+  var q=addr;
   if(!q.trim()){alert('先に住所を入力してください');return false;}
   window.open('https://www.google.com/maps/search/?api=1&query='+encodeURIComponent(q),'_blank');
   return false;
 }
 
 function openCommuteRouteOnMap(){
-  var postal=document.getElementById('addr-new-postal').value||'';
   var addr=document.getElementById('addr-new-address').value||'';
-  var origin=(postal?postal+' ':'')+addr;
+  var origin=addr;
   if(!origin.trim()){alert('先に新しい住所を入力してください');return false;}
   var dest=(myStaffData&&myStaffData.workplace_address)?myStaffData.workplace_address:'';
   if(!dest){alert('派遣先の住所がまだ登録されていません。担当者にご確認ください');return false;}
@@ -1964,14 +1962,14 @@ function openAddressDetail(id){
   document.getElementById('addrd-new-address').textContent=(d.new_postal_code?'〒'+d.new_postal_code+' ':'')+(d.new_address||'-');
   var mapLink=document.getElementById('addrd-map-link');
   if(mapLink){
-    var mapQuery=(d.new_postal_code?d.new_postal_code+' ':'')+(d.new_address||'');
+    var mapQuery=d.new_address||'';
     mapLink.href='https://www.google.com/maps/search/?api=1&query='+encodeURIComponent(mapQuery);
   }
   var routeRow=document.getElementById('addrd-route-map-row');
   var routeLink=document.getElementById('addrd-route-map-link');
   if(routeRow&&routeLink){
     if(d._staffWorkplaceAddress&&d.new_address){
-      var origin=(d.new_postal_code?d.new_postal_code+' ':'')+d.new_address;
+      var origin=d.new_address;
       routeLink.href='https://www.google.com/maps/dir/?api=1&origin='+encodeURIComponent(origin)+'&destination='+encodeURIComponent(d._staffWorkplaceAddress);
       routeRow.style.display='block';
     }else{
