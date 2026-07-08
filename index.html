@@ -1018,7 +1018,7 @@ input:disabled{background:#f5f4f0;color:#aaa;border-color:#e8e6e0}
     <div class="profile-row"><span class="profile-label">通勤距離/時間</span><span class="profile-val" id="addrd-distance">-</span></div>
     <div style="height:1px;background:#f0efe9;margin:8px 0"></div>
     <div class="profile-row"><span class="profile-label">確認状況</span><span class="profile-val" id="addrd-confirmed">-</span></div>
-    <div class="ma"><button class="btn btn-sm" onclick="closeModal('address-detail')">閉じる</button><button id="addrd-confirm-btn" class="btn btn-sm btn-p" onclick="confirmAddressChange()">確認済みにする</button></div>
+    <div class="ma"><button class="btn btn-sm" onclick="closeModal('address-detail')">閉じる</button><button class="btn btn-sm" onclick="printAddressDetail()">🖨 PDF保存</button><button id="addrd-confirm-btn" class="btn btn-sm btn-p" onclick="confirmAddressChange()">確認済みにする</button></div>
   </div>
 </div>
 
@@ -2096,6 +2096,36 @@ async function loadAdminLeaveRequests(){
   var pendingCount=reqs.filter(r=>r.status==='pending').length;
   var metEl=document.getElementById('adminReqCount');
   if(metEl)metEl.textContent=pendingCount+'件';
+}
+
+function printAddressDetail(){
+  var d=(window._addressChangesCache||{})[_currentAddressDetailId];
+  if(!d){alert('データが見つかりません');return;}
+  var r1=[];if(d.route1_company)r1.push(d.route1_company);if(d.route1_section)r1.push(d.route1_section);if(d.route1_fare)r1.push('片道'+d.route1_fare+'円');if(d.route1_pass_fare)r1.push('定期'+d.route1_pass_fare+'円');
+  var r2=[];if(d.route2_company)r2.push(d.route2_company);if(d.route2_section)r2.push(d.route2_section);if(d.route2_fare)r2.push('片道'+d.route2_fare+'円');if(d.route2_pass_fare)r2.push('定期'+d.route2_pass_fare+'円');
+  var dt=[];if(d.commute_distance_km)dt.push('約'+d.commute_distance_km+'km');if(d.commute_time_minutes)dt.push('約'+d.commute_time_minutes+'分');
+  var rows=[
+    ['氏名',(d._staffName||'')+'（'+(d._staffEmpId||'')+'）'],
+    ['申請日',d.created_at?d.created_at.substring(0,10).replace(/-/g,'/'):'-'],
+    ['転居日',d.relocation_date?d.relocation_date.replace(/-/g,'/'):'-'],
+    ['旧住所',(d.old_postal_code?'〒'+d.old_postal_code+' ':'')+(d.old_address||'-')],
+    ['新住所',(d.new_postal_code?'〒'+d.new_postal_code+' ':'')+(d.new_address||'-')],
+    ['通勤経路①',r1.length?r1.join(' / '):'-'],
+    ['通勤経路②',r2.length?r2.join(' / '):'-'],
+    ['通勤距離/時間',dt.length?dt.join('・'):'-'],
+    ['確認状況',d.confirmed_at?('確認済み（'+new Date(d.confirmed_at).toLocaleString('ja-JP',{year:'numeric',month:'2-digit',day:'2-digit',hour:'2-digit',minute:'2-digit'})+'）'):'確認待ち']
+  ];
+  var rowsHtml=rows.map(function(r){return '<tr><th>'+r[0]+'</th><td>'+r[1]+'</td></tr>';}).join('');
+  var w=window.open('','_blank');
+  w.document.write('<html><head><meta charset="utf-8"><title>住所変更届 詳細</title>');
+  w.document.write('<style>body{font-family:sans-serif;font-size:13px;padding:20px}h2{font-size:16px;margin-bottom:16px}table{width:100%;border-collapse:collapse}th,td{border:1px solid #ccc;padding:8px 10px;text-align:left;vertical-align:top}th{background:#f5f5f5;font-weight:bold;width:150px;white-space:nowrap}@media print{button{display:none}}</style>');
+  w.document.write('</head><body>');
+  w.document.write('<h2>住所変更届 兼 通勤経路変更届</h2>');
+  w.document.write('<table>'+rowsHtml+'</table>');
+  w.document.write('</body></html>');
+  w.document.close();
+  w.focus();
+  setTimeout(function(){w.print();},500);
 }
 
 function printLeaveRequests(){
