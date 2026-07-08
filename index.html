@@ -2912,7 +2912,7 @@ async function checkUnreadNotices(){
   }else{
     if(badge){badge.style.display='none';badge.textContent='';}
   }
-  var {data:docs}=await supabaseClient.from('documents').select('id,confirmed_at,type').eq('staff_id',myStaffData.id).is('confirmed_at',null).is('cancelled_at',null);
+  var {data:docs}=await supabaseClient.from('documents').select('id,confirmed_at,type').eq('staff_id',myStaffData.id).is('confirmed_at',null).is('cancelled_at',null).neq('type','upload');
   if(docs&&docs.length>0){
     var contractCnt=docs.filter(function(d){return d.type==='contract';}).length;
     var payslipCnt=docs.filter(function(d){return d.type==='payslip';}).length;
