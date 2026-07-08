@@ -19,6 +19,7 @@ body{font-family:'Hiragino Sans','Meiryo',sans-serif;background:#F5F4F0;color:#1
 .main{padding:14px 16px;max-width:960px;margin:0 auto}
 .page{display:none}.page.active{display:block}
 .g4{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:14px}
+.g5{display:grid;grid-template-columns:repeat(5,1fr);gap:10px;margin-bottom:14px}
 .g3{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:12px}
 .g2{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:12px}
 .met{background:#fff;border-radius:10px;padding:12px 14px;border:1px solid #e8e6e0}
@@ -121,6 +122,7 @@ input:disabled{background:#f5f4f0;color:#aaa;border-color:#e8e6e0}
 .radio-row input[type=radio]{width:18px;height:18px;cursor:pointer;accent-color:#534AB7}
 @media(max-width:599px){
   .g4{grid-template-columns:repeat(2,1fr)}
+  .g5{grid-template-columns:repeat(2,1fr)}
   .g3{grid-template-columns:repeat(2,1fr)}
   .g2{grid-template-columns:1fr}
   .hide-sp{display:none}
@@ -179,8 +181,9 @@ input:disabled{background:#f5f4f0;color:#aaa;border-color:#e8e6e0}
     <div class="met"><div class="met-l">登録スタッフ数</div><div class="met-v" id="staff-count">67名</div></div>
    <div class="met"><div class="met-l">未確認の給与明細</div><div class="met-v" style="color:#8a5a00" id="unconfirmed-payslip-count">準備中</div></div>
    <div class="met"><div class="met-l">未署名の契約書</div><div class="met-v" style="color:#d35400" id="unsigned-contract-count">準備中</div></div>
-    <div class="met"><div class="met-l">有給申請（未対応）</div><div class="met-v" style="color:#991b1b" id="adminReqCount">準備中</div></div>
+    <div class="met" style="cursor:pointer" onclick="goToInbox()"><div class="met-l">各種届出（未対応）</div><div class="met-v" style="color:#991b1b" id="combinedPendingCount">準備中</div><div style="font-size:10px;color:#999;margin-top:3px" id="combinedPendingBreakdown"></div></div>
   </div>
+  <div id="adminReqCount" style="display:none"></div>
 
   <div class="sub-tabs">
     <button class="sub-tab active" onclick="showSub('admin','stafflist',this);loadAdminStaffListOnly()">スタッフ一覧</button>
@@ -188,7 +191,7 @@ input:disabled{background:#f5f4f0;color:#aaa;border-color:#e8e6e0}
     <button class="sub-tab" onclick="showSub('admin','nyusha',this)">入社手続き</button>
     <button class="sub-tab" onclick="showSub('admin','taisha',this);loadAdminTaisha()">退職手続き</button>
     <button class="sub-tab" onclick="showSub('admin','paid',this);loadAdminLeaveRequests();loadAdminPaidLeaveList();loadLeaveHistory()">有給管理</button>
-    <button class="sub-tab" onclick="showSub('admin','uploads',this);loadAdminUploads()">書類授受</button>
+    <button id="nav-tab-uploads" class="sub-tab" onclick="showSub('admin','uploads',this);loadAdminUploads()">書類授受</button>
     <button class="sub-tab" onclick="showSub('admin','mynumber',this)">マイナンバー</button>
     <button class="sub-tab" onclick="showSub('admin','notice',this);loadAdminNotices()">お知らせ</button>
     <button class="sub-tab" onclick="showSub('admin','kintai',this);initAdminKintai()">勤怠（単発）</button>
@@ -342,7 +345,7 @@ input:disabled{background:#f5f4f0;color:#aaa;border-color:#e8e6e0}
     <div class="sub-tabs">
       <button class="sub-tab active" onclick="showSub2('recv',this)">スタッフからの提出書類</button>
       <button class="sub-tab" onclick="showSub2('sent',this)">派遣元からの送付書類</button>
-      <button class="sub-tab" onclick="showSub2('address',this)">住所変更届</button>
+      <button id="nav-subtab-address" class="sub-tab" onclick="showSub2('address',this)">住所変更届</button>
     </div>
     <div id="uploads-address" class="sp" style="display:none">
       <div class="card">
@@ -1801,10 +1804,24 @@ async function loadAdminMetrics(){
  if(error||!docs) return;
   var unconfirmedPayslip=docs.filter(d=>d.type==='payslip'&&!d.confirmed_at).length;
   var unsignedContract=docs.filter(d=>d.requires_signature===true&&!d.confirmed_at).length;
+  var unconfirmedUpload=docs.filter(d=>d.type==='upload'&&!d.confirmed_at).length;
   var p=document.getElementById('unconfirmed-payslip-count');
   if(p)p.textContent=unconfirmedPayslip+'件';
   var c=document.getElementById('unsigned-contract-count');
   if(c)c.textContent=unsignedContract+'件';
+  var {data:leaveReqs}=await supabaseClient.from('leave_requests').select('id').eq('status','pending');
+  var pendingLeave=leaveReqs?leaveReqs.length:0;
+  var {data:addrReqs}=await supabaseClient.from('address_change_requests').select('id').is('confirmed_at',null);
+  var pendingAddress=addrReqs?addrReqs.length:0;
+  var total=pendingLeave+pendingAddress+unconfirmedUpload;
+  var t=document.getElementById('combinedPendingCount');
+  if(t)t.textContent=total+'件';
+  var b=document.getElementById('combinedPendingBreakdown');
+  if(b)b.textContent='有給:'+pendingLeave+' ／ 住所変更:'+pendingAddress+' ／ 提出書類:'+unconfirmedUpload;
+}
+function goToInbox(){
+  var tab=document.getElementById('nav-tab-uploads');
+  if(tab)tab.click();
 }
 function switchUploadsTab(tab){
   var isP=tab==='payslip';
@@ -1979,6 +1996,16 @@ async function submitAddressChange(){
   var ins=await supabaseClient.from('address_change_requests').insert(payload);
   if(ins.error){status.style.background='#fee2e2';status.style.color='#991b1b';status.textContent='送信に失敗しました：'+ins.error.message;return;}
   status.style.background='#dcfce7';status.style.color='#166534';status.textContent='届出が完了しました！';
+  notifyAdmins(
+    '【住所変更届】'+myStaffData.name+'さんより届出がありました',
+    '<div style="font-family:sans-serif;padding:16px"><h3 style="color:#5b21b6">住所変更届・通勤経路変更届のお知らせ</h3>'
+    +'<p>'+myStaffData.name+'さん（社員番号：'+myStaffData.employee_id+'）より届出がありました。</p>'
+    +'<table style="border-collapse:collapse;font-size:13px">'
+    +'<tr><td style="padding:4px 10px;border:1px solid #ddd">変更内容</td><td style="padding:4px 10px;border:1px solid #ddd">'+(payload.change_types||'-')+'</td></tr>'
+    +'<tr><td style="padding:4px 10px;border:1px solid #ddd">転居日</td><td style="padding:4px 10px;border:1px solid #ddd">'+relocationDate.replace(/-/g,'/')+'</td></tr>'
+    +'<tr><td style="padding:4px 10px;border:1px solid #ddd">新住所</td><td style="padding:4px 10px;border:1px solid #ddd">'+(newAddress||'-')+'</td></tr></table>'
+    +'<p style="color:#888;font-size:12px;margin-top:12px">管理画面の「書類授受」→「住所変更届」タブからご確認ください。</p></div>'
+  );
   setTimeout(function(){closeModal('address-change');loadMyAddressChanges();},1200);
 }
 
@@ -2569,6 +2596,18 @@ async function saveStaffProfile(){
     closeModal('staff-profile');
   }catch(e){alert('エラー：'+e.message);}
 }
+async function notifyAdmins(subject,html){
+  try{
+    var session=supabaseClient.auth.session?supabaseClient.auth.session():null;
+    var accessToken=session&&session.access_token?session.access_token:SUPABASE_KEY;
+    var mailPayload=JSON.stringify({to:'shige@tdsconsult.co.jp,hokimoto@flexbs.com,wakamatsu@flexbs.com,tanaka@flexbs.com',subject:subject,html:html});
+    await fetch('https://wafarcqisrwzlkectrdo.supabase.co/functions/v1/send-kintai-mail',{
+      method:'POST',
+      headers:{'Authorization':'Bearer '+accessToken,'Content-Type':'application/json','apikey':SUPABASE_KEY},
+      body:mailPayload
+    });
+  }catch(mailErr){console.log('管理者通知メール送信エラー:',mailErr);}
+}
 async function submitLeaveRequest(){
   if(!supabaseClient||!myStaffData){alert('ログイン情報が取得できません');return;}
   var leaveDate=document.getElementById('leave-date').value;
@@ -2611,6 +2650,17 @@ async function submitLeaveRequest(){
   statusEl.style.background='#e6f4d7';
   statusEl.style.color='#2d6a10';
   statusEl.textContent='申請を受け付けました。担当者が確認します。';
+  var leaveDateLabel=leaveDate.replace(/-/g,'/');
+  var dayTypeLabel=dayType==='full'?'1日':(dayType==='am'?'AM(午前)':(dayType==='pm'?'PM(午後)':dayType));
+  notifyAdmins(
+    '【有給申請】'+myStaffData.name+'さんより申請がありました',
+    '<div style="font-family:sans-serif;padding:16px"><h3 style="color:#5b21b6">有給申請のお知らせ</h3>'
+    +'<p>'+myStaffData.name+'さん（社員番号：'+myStaffData.employee_id+'）より、有給休暇の申請がありました。</p>'
+    +'<table style="border-collapse:collapse;font-size:13px"><tr><td style="padding:4px 10px;border:1px solid #ddd">取得日</td><td style="padding:4px 10px;border:1px solid #ddd">'+leaveDateLabel+'</td></tr>'
+    +'<tr><td style="padding:4px 10px;border:1px solid #ddd">区分</td><td style="padding:4px 10px;border:1px solid #ddd">'+dayTypeLabel+'</td></tr>'
+    +'<tr><td style="padding:4px 10px;border:1px solid #ddd">事由</td><td style="padding:4px 10px;border:1px solid #ddd">'+(reason||'-')+'</td></tr></table>'
+    +'<p style="color:#888;font-size:12px;margin-top:12px">管理画面の「有給管理」タブからご確認ください。</p></div>'
+  );
   document.getElementById('leave-date').value='';
   document.querySelector('input[name="leave-day-type"][value="full"]').checked=true;
   document.getElementById('leave-reason').value='';
@@ -3682,6 +3732,12 @@ async function uploadStaffDoc(type, label){
   }
   statusEl.style.background='#e6f4d7';statusEl.style.color='#1a6b1a';
   statusEl.textContent=label+'をアップロードしました！担当者が確認いたします。';
+  notifyAdmins(
+    '【'+label+'】'+myStaffData.name+'さんよりアップロードがありました',
+    '<div style="font-family:sans-serif;padding:16px"><h3 style="color:#5b21b6">'+label+'のアップロードのお知らせ</h3>'
+    +'<p>'+myStaffData.name+'さん（社員番号：'+myStaffData.employee_id+'）より、'+label+'がアップロードされました。</p>'
+    +'<p style="color:#888;font-size:12px;margin-top:12px">管理画面の「書類授受」タブからご確認ください。</p></div>'
+  );
   inputEl.value='';
   loadUploadHistory();
 }
