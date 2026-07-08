@@ -2597,16 +2597,23 @@ async function saveStaffProfile(){
   }catch(e){alert('エラー：'+e.message);}
 }
 async function notifyAdmins(subject,html){
-  try{
-    var session=supabaseClient.auth.session?supabaseClient.auth.session():null;
-    var accessToken=session&&session.access_token?session.access_token:SUPABASE_KEY;
-    var mailPayload=JSON.stringify({to:'shige@tdsconsult.co.jp,hokimoto@flexbs.com,wakamatsu@flexbs.com,tanaka@flexbs.com',subject:subject,html:html});
-    await fetch('https://wafarcqisrwzlkectrdo.supabase.co/functions/v1/send-kintai-mail',{
-      method:'POST',
-      headers:{'Authorization':'Bearer '+accessToken,'Content-Type':'application/json','apikey':SUPABASE_KEY},
-      body:mailPayload
-    });
-  }catch(mailErr){console.log('管理者通知メール送信エラー:',mailErr);}
+  var admins=['shige@tdsconsult.co.jp','hokimoto@flexbs.com','wakamatsu@flexbs.com','tanaka@flexbs.com'];
+  var session=supabaseClient.auth.session?supabaseClient.auth.session():null;
+  var accessToken=session&&session.access_token?session.access_token:SUPABASE_KEY;
+  for(var i=0;i<admins.length;i++){
+    try{
+      var mailPayload=JSON.stringify({to:admins[i],subject:subject,html:html});
+      var res=await fetch('https://wafarcqisrwzlkectrdo.supabase.co/functions/v1/send-kintai-mail',{
+        method:'POST',
+        headers:{'Authorization':'Bearer '+accessToken,'Content-Type':'application/json','apikey':SUPABASE_KEY},
+        body:mailPayload
+      });
+      if(!res.ok){
+        var errText=await res.text();
+        console.log('管理者通知メール送信失敗（'+admins[i]+'）:',res.status,errText);
+      }
+    }catch(mailErr){console.log('管理者通知メール送信エラー（'+admins[i]+'）:',mailErr);}
+  }
 }
 async function submitLeaveRequest(){
   if(!supabaseClient||!myStaffData){alert('ログイン情報が取得できません');return;}
