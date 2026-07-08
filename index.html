@@ -2610,9 +2610,11 @@ async function notifyAdmins(subject,html){
       });
       if(!res.ok){
         var errText=await res.text();
-        console.log('管理者通知メール送信失敗（'+admins[i]+'）:',res.status,errText);
+        console.error('★管理者通知メール送信失敗（'+admins[i]+'）status='+res.status+' :',errText);
+      }else{
+        console.log('管理者通知メール送信OK（'+admins[i]+'）');
       }
-    }catch(mailErr){console.log('管理者通知メール送信エラー（'+admins[i]+'）:',mailErr);}
+    }catch(mailErr){console.error('★管理者通知メール送信エラー（'+admins[i]+'）:',mailErr);}
   }
 }
 async function submitLeaveRequest(){
