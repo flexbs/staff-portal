@@ -1000,6 +1000,7 @@ input:disabled{background:#f5f4f0;color:#aaa;border-color:#e8e6e0}
     <div style="font-size:12px;font-weight:700;color:#555;margin-bottom:6px">通勤経路①</div>
     <div class="fg"><label class="fl">交通機関名</label><input type="text" id="addr-route1-company" placeholder="例：西鉄バス"></div>
     <div class="fg"><label class="fl">乗車区間</label><input type="text" id="addr-route1-section" placeholder="例：〇〇駅 〜 △△駅"></div>
+    <div style="margin:-8px 0 10px;text-align:right"><a href="#" onclick="return openTransitRouteOnMap(1)" style="font-size:12px;color:#5b21b6;text-decoration:underline">🚃 この経路をGoogleマップで見る</a></div>
     <div style="display:flex;gap:8px">
       <div class="fg" style="flex:1"><label class="fl">片道運賃</label><input type="number" id="addr-route1-fare" placeholder="円"></div>
       <div class="fg" style="flex:1"><label class="fl">定期代（1ヶ月）</label><input type="number" id="addr-route1-pass" placeholder="円"></div>
@@ -1007,6 +1008,7 @@ input:disabled{background:#f5f4f0;color:#aaa;border-color:#e8e6e0}
     <div style="font-size:12px;font-weight:700;color:#555;margin-bottom:6px">通勤経路②</div>
     <div class="fg"><label class="fl">交通機関名</label><input type="text" id="addr-route2-company" placeholder="例：JR"></div>
     <div class="fg"><label class="fl">乗車区間</label><input type="text" id="addr-route2-section" placeholder="例：〇〇駅 〜 △△駅"></div>
+    <div style="margin:-8px 0 10px;text-align:right"><a href="#" onclick="return openTransitRouteOnMap(2)" style="font-size:12px;color:#5b21b6;text-decoration:underline">🚃 この経路をGoogleマップで見る</a></div>
     <div style="display:flex;gap:8px">
       <div class="fg" style="flex:1"><label class="fl">片道運賃</label><input type="number" id="addr-route2-fare" placeholder="円"></div>
       <div class="fg" style="flex:1"><label class="fl">定期代（1ヶ月）</label><input type="number" id="addr-route2-pass" placeholder="円"></div>
@@ -1036,7 +1038,9 @@ input:disabled{background:#f5f4f0;color:#aaa;border-color:#e8e6e0}
     <div style="height:1px;background:#f0efe9;margin:8px 0"></div>
     <div id="addrd-commutemethods-row" class="profile-row" style="display:none"><span class="profile-label">通勤手段</span><span class="profile-val" id="addrd-commutemethods">-</span></div>
     <div class="profile-row"><span class="profile-label">通勤経路①</span><span class="profile-val" id="addrd-route1">-</span></div>
+    <div id="addrd-route1-map-row" style="margin:-6px 0 8px;text-align:right;display:none"><a href="#" id="addrd-route1-map-link" onclick="return false" style="font-size:12px;color:#5b21b6;text-decoration:underline">🚃 経路①をGoogleマップで見る</a></div>
     <div class="profile-row"><span class="profile-label">通勤経路②</span><span class="profile-val" id="addrd-route2">-</span></div>
+    <div id="addrd-route2-map-row" style="margin:-6px 0 8px;text-align:right;display:none"><a href="#" id="addrd-route2-map-link" onclick="return false" style="font-size:12px;color:#5b21b6;text-decoration:underline">🚃 経路②をGoogleマップで見る</a></div>
     <div class="profile-row"><span class="profile-label">通勤距離/時間</span><span class="profile-val" id="addrd-distance">-</span></div>
     <div id="addrd-allowance-row" class="profile-row" style="display:none;flex-wrap:wrap"><span class="profile-label">通勤費（車通勤）</span><span style="display:flex;align-items:center;gap:6px;flex-wrap:wrap"><input type="number" id="addrd-allowance-input" placeholder="例：10500" style="width:110px;font-size:13px;padding:6px 8px;-moz-appearance:textfield" onwheel="this.blur()"><span style="font-size:12px;color:#888">円</span><button class="btn btn-sm" onclick="autoCalcCommuteAllowance()">700円×距離で自動計算</button></span></div>
     <div id="addrd-allowance-basis-row" class="profile-row" style="display:none"><span class="profile-label">通勤費の根拠</span><span style="display:flex;align-items:center;gap:6px;flex:1"><input type="text" id="addrd-allowance-basis-input" placeholder="例：700円×15km=10500円" style="flex:1;font-size:13px;padding:6px 8px"><button class="btn btn-sm btn-p" onclick="saveCommuteAllowance()">保存</button></span></div>
@@ -1881,6 +1885,39 @@ function openCommuteRouteOnMap(){
   return false;
 }
 
+function splitRouteSection(section){
+  var seps=['〜','～','~','−','-','ー','−'];
+  for(var i=0;i<seps.length;i++){
+    var idx=section.indexOf(seps[i]);
+    if(idx>-1){
+      return {from:section.substring(0,idx).trim(),to:section.substring(idx+1).trim()};
+    }
+  }
+  return null;
+}
+
+function openTransitRouteOnMap(routeNum){
+  var section=(document.getElementById('addr-route'+routeNum+'-section').value||'').trim();
+  if(!section){alert('先に乗車区間を入力してください');return false;}
+  var parts=splitRouteSection(section);
+  if(parts&&parts.from&&parts.to){
+    window.open('https://www.google.com/maps/dir/?api=1&origin='+encodeURIComponent(parts.from)+'&destination='+encodeURIComponent(parts.to)+'&travelmode=transit','_blank');
+  }else{
+    window.open('https://www.google.com/maps/search/?api=1&query='+encodeURIComponent(section),'_blank');
+  }
+  return false;
+}
+
+function openTransitRouteOnMapAdmin(section){
+  if(!section){return;}
+  var parts=splitRouteSection(section);
+  if(parts&&parts.from&&parts.to){
+    window.open('https://www.google.com/maps/dir/?api=1&origin='+encodeURIComponent(parts.from)+'&destination='+encodeURIComponent(parts.to)+'&travelmode=transit','_blank');
+  }else{
+    window.open('https://www.google.com/maps/search/?api=1&query='+encodeURIComponent(section),'_blank');
+  }
+}
+
 function openAddressChangeModal(){
   ['addr-relocation-date','addr-new-name','addr-name-change-date','addr-new-postal','addr-new-address','addr-old-postal','addr-old-address',
    'addr-route1-company','addr-route1-section','addr-route1-fare','addr-route1-pass',
@@ -2048,8 +2085,28 @@ function openAddressDetail(id){
   }
   var r1=[];if(d.route1_company)r1.push(d.route1_company);if(d.route1_section)r1.push(d.route1_section);if(d.route1_fare)r1.push('片道'+d.route1_fare+'円');if(d.route1_pass_fare)r1.push('定期'+d.route1_pass_fare+'円');
   document.getElementById('addrd-route1').textContent=r1.length?r1.join(' / '):'-';
+  var route1MapRow=document.getElementById('addrd-route1-map-row');
+  var route1MapLink=document.getElementById('addrd-route1-map-link');
+  if(route1MapRow&&route1MapLink){
+    if(d.route1_section){
+      route1MapRow.style.display='block';
+      route1MapLink.onclick=function(){openTransitRouteOnMapAdmin(d.route1_section);return false;};
+    }else{
+      route1MapRow.style.display='none';
+    }
+  }
   var r2=[];if(d.route2_company)r2.push(d.route2_company);if(d.route2_section)r2.push(d.route2_section);if(d.route2_fare)r2.push('片道'+d.route2_fare+'円');if(d.route2_pass_fare)r2.push('定期'+d.route2_pass_fare+'円');
   document.getElementById('addrd-route2').textContent=r2.length?r2.join(' / '):'-';
+  var route2MapRow=document.getElementById('addrd-route2-map-row');
+  var route2MapLink=document.getElementById('addrd-route2-map-link');
+  if(route2MapRow&&route2MapLink){
+    if(d.route2_section){
+      route2MapRow.style.display='block';
+      route2MapLink.onclick=function(){openTransitRouteOnMapAdmin(d.route2_section);return false;};
+    }else{
+      route2MapRow.style.display='none';
+    }
+  }
   var dt=[];if(d.commute_distance_km)dt.push('約'+d.commute_distance_km+'km');if(d.commute_time_minutes)dt.push('約'+d.commute_time_minutes+'分');
   document.getElementById('addrd-distance').textContent=dt.length?dt.join('・'):'-';
   var allowanceRow=document.getElementById('addrd-allowance-row');
