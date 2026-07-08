@@ -969,10 +969,13 @@ input:disabled{background:#f5f4f0;color:#aaa;border-color:#e8e6e0}
 <div class="mbg" id="modal-address-change">
   <div class="modal">
     <div class="mt">住所変更届 兼 通勤経路変更届</div>
+    <div style="font-size:12px;font-weight:700;color:#555;margin-bottom:6px">変更内容（あてはまるものすべて）</div>
+    <div class="fg" style="display:flex;flex-wrap:wrap;gap:14px 18px">
+      <label style="display:flex;align-items:center;gap:6px;font-size:13px;cursor:pointer"><input type="checkbox" id="addr-change-address" style="width:16px;height:16px"> 住所変更</label>
+      <label style="display:flex;align-items:center;gap:6px;font-size:13px;cursor:pointer"><input type="checkbox" id="addr-change-name" style="width:16px;height:16px"> 氏名変更</label>
+      <label style="display:flex;align-items:center;gap:6px;font-size:13px;cursor:pointer"><input type="checkbox" id="addr-change-commute" style="width:16px;height:16px"> 通勤経路・通勤費変更</label>
+    </div>
     <div class="fg"><label class="fl">転居日 <span style="color:#991b1b">*必須</span></label><input type="date" id="addr-relocation-date"></div>
-    <div style="background:#f7f6f2;border-radius:8px;padding:10px 12px;font-size:12px;color:#666;margin:14px 0">結婚などで氏名が変わる方のみご記入ください（任意）</div>
-    <div class="fg"><label class="fl">新しい氏名</label><input type="text" id="addr-new-name" placeholder="例：山田 花子"></div>
-    <div class="fg"><label class="fl">氏名変更日（入籍日など）</label><input type="date" id="addr-name-change-date"></div>
     <div style="font-size:12px;font-weight:700;color:#555;margin:14px 0 6px">新しい住所</div>
     <div class="fg"><label class="fl">郵便番号</label><input type="text" id="addr-new-postal" placeholder="例：810-0001"></div>
     <div class="fg"><label class="fl">住所 <span style="color:#991b1b">*必須</span></label><input type="text" id="addr-new-address" placeholder="市区町村・番地・建物名など"></div>
@@ -981,6 +984,18 @@ input:disabled{background:#f5f4f0;color:#aaa;border-color:#e8e6e0}
     <div style="font-size:12px;font-weight:700;color:#555;margin:14px 0 6px">旧住所（参考）</div>
     <div class="fg"><label class="fl">郵便番号</label><input type="text" id="addr-old-postal" placeholder="例：810-0001"></div>
     <div class="fg"><label class="fl">住所</label><input type="text" id="addr-old-address"></div>
+    <div style="background:#f7f6f2;border-radius:8px;padding:10px 12px;font-size:12px;color:#666;margin:14px 0">結婚などで氏名が変わる方のみご記入ください（任意）</div>
+    <div class="fg"><label class="fl">新しい氏名</label><input type="text" id="addr-new-name" placeholder="例：山田 花子"></div>
+    <div class="fg"><label class="fl">氏名変更日（入籍日など）</label><input type="date" id="addr-name-change-date"></div>
+    <div style="font-size:12px;font-weight:700;color:#555;margin:14px 0 6px">通勤手段（あてはまるものすべて）</div>
+    <div class="fg" style="display:flex;flex-wrap:wrap;gap:10px 16px">
+      <label style="display:flex;align-items:center;gap:6px;font-size:13px;cursor:pointer"><input type="checkbox" id="addr-cm-train" style="width:16px;height:16px"> 電車</label>
+      <label style="display:flex;align-items:center;gap:6px;font-size:13px;cursor:pointer"><input type="checkbox" id="addr-cm-bus" style="width:16px;height:16px"> バス</label>
+      <label style="display:flex;align-items:center;gap:6px;font-size:13px;cursor:pointer"><input type="checkbox" id="addr-cm-car" style="width:16px;height:16px"> 自家用車</label>
+      <label style="display:flex;align-items:center;gap:6px;font-size:13px;cursor:pointer"><input type="checkbox" id="addr-cm-bicycle" style="width:16px;height:16px"> 自転車</label>
+      <label style="display:flex;align-items:center;gap:6px;font-size:13px;cursor:pointer"><input type="checkbox" id="addr-cm-walk" style="width:16px;height:16px"> 徒歩</label>
+      <label style="display:flex;align-items:center;gap:6px;font-size:13px;cursor:pointer"><input type="checkbox" id="addr-cm-other" style="width:16px;height:16px"> その他</label>
+    </div>
     <div style="background:#f7f6f2;border-radius:8px;padding:10px 12px;font-size:12px;color:#666;margin:14px 0">交通機関を利用する方のみ、通勤経路をご記入ください。</div>
     <div style="font-size:12px;font-weight:700;color:#555;margin-bottom:6px">通勤経路①</div>
     <div class="fg"><label class="fl">交通機関名</label><input type="text" id="addr-route1-company" placeholder="例：西鉄バス"></div>
@@ -1010,6 +1025,7 @@ input:disabled{background:#f5f4f0;color:#aaa;border-color:#e8e6e0}
   <div class="modal">
     <div class="mt">住所変更届 詳細</div>
     <div class="profile-row"><span class="profile-label">氏名</span><span class="profile-val" id="addrd-name">-</span></div>
+    <div id="addrd-changetypes-row" class="profile-row" style="display:none"><span class="profile-label">変更内容</span><span class="profile-val" id="addrd-changetypes">-</span></div>
     <div id="addrd-namechange-row" class="profile-row" style="display:none"><span class="profile-label">氏名変更</span><span class="profile-val" id="addrd-namechange">-</span></div>
     <div class="profile-row"><span class="profile-label">申請日</span><span class="profile-val" id="addrd-request-date">-</span></div>
     <div class="profile-row"><span class="profile-label">転居日</span><span class="profile-val" id="addrd-relocation-date">-</span></div>
@@ -1018,6 +1034,7 @@ input:disabled{background:#f5f4f0;color:#aaa;border-color:#e8e6e0}
     <div style="margin:-6px 0 8px;text-align:right"><a id="addrd-map-link" href="#" target="_blank" rel="noopener" style="font-size:12px;color:#5b21b6;text-decoration:underline">📍 Googleマップで見る</a></div>
     <div id="addrd-route-map-row" style="margin:-6px 0 8px;text-align:right;display:none"><a id="addrd-route-map-link" href="#" target="_blank" rel="noopener" style="font-size:12px;color:#5b21b6;text-decoration:underline">🚗 自宅から会社までの経路をGoogleマップで見る</a></div>
     <div style="height:1px;background:#f0efe9;margin:8px 0"></div>
+    <div id="addrd-commutemethods-row" class="profile-row" style="display:none"><span class="profile-label">通勤手段</span><span class="profile-val" id="addrd-commutemethods">-</span></div>
     <div class="profile-row"><span class="profile-label">通勤経路①</span><span class="profile-val" id="addrd-route1">-</span></div>
     <div class="profile-row"><span class="profile-label">通勤経路②</span><span class="profile-val" id="addrd-route2">-</span></div>
     <div class="profile-row"><span class="profile-label">通勤距離/時間</span><span class="profile-val" id="addrd-distance">-</span></div>
@@ -1869,6 +1886,8 @@ function openAddressChangeModal(){
    'addr-route1-company','addr-route1-section','addr-route1-fare','addr-route1-pass',
    'addr-route2-company','addr-route2-section','addr-route2-fare','addr-route2-pass',
    'addr-distance','addr-time'].forEach(function(id){var el=document.getElementById(id);if(el)el.value='';});
+  ['addr-change-address','addr-change-name','addr-change-commute',
+   'addr-cm-train','addr-cm-bus','addr-cm-car','addr-cm-bicycle','addr-cm-walk','addr-cm-other'].forEach(function(id){var el=document.getElementById(id);if(el)el.checked=false;});
   var s=document.getElementById('addr-status');if(s)s.style.display='none';
   openModal('address-change');
 }
@@ -1885,9 +1904,23 @@ async function submitAddressChange(){
   var val=function(id){var el=document.getElementById(id);return (el&&el.value!=='')?el.value:null;};
   var valInt=function(id){var v=val(id);return v!==null?parseInt(v):null;};
   var valFloat=function(id){var v=val(id);return v!==null?parseFloat(v):null;};
+  var isChecked=function(id){var el=document.getElementById(id);return !!(el&&el.checked);};
+  var changeTypes=[];
+  if(isChecked('addr-change-address'))changeTypes.push('住所変更');
+  if(isChecked('addr-change-name'))changeTypes.push('氏名変更');
+  if(isChecked('addr-change-commute'))changeTypes.push('通勤経路・通勤費変更');
+  var commuteMethods=[];
+  if(isChecked('addr-cm-train'))commuteMethods.push('電車');
+  if(isChecked('addr-cm-bus'))commuteMethods.push('バス');
+  if(isChecked('addr-cm-car'))commuteMethods.push('自家用車');
+  if(isChecked('addr-cm-bicycle'))commuteMethods.push('自転車');
+  if(isChecked('addr-cm-walk'))commuteMethods.push('徒歩');
+  if(isChecked('addr-cm-other'))commuteMethods.push('その他');
   var payload={
     staff_id: myStaffData.id,
     relocation_date: relocationDate,
+    change_types: changeTypes.length?changeTypes.join('、'):null,
+    commute_methods: commuteMethods.length?commuteMethods.join('、'):null,
     new_name: val('addr-new-name'),
     name_change_date: val('addr-name-change-date'),
     old_postal_code: val('addr-old-postal'),
@@ -1965,6 +1998,24 @@ function openAddressDetail(id){
   if(!d)return;
   _currentAddressDetailId=id;
   document.getElementById('addrd-name').textContent=(d._staffName||'(不明)')+'（'+(d._staffEmpId||'')+'）';
+  var changeTypesRow=document.getElementById('addrd-changetypes-row');
+  if(changeTypesRow){
+    if(d.change_types){
+      document.getElementById('addrd-changetypes').textContent=d.change_types;
+      changeTypesRow.style.display='flex';
+    }else{
+      changeTypesRow.style.display='none';
+    }
+  }
+  var commuteMethodsRow=document.getElementById('addrd-commutemethods-row');
+  if(commuteMethodsRow){
+    if(d.commute_methods){
+      document.getElementById('addrd-commutemethods').textContent=d.commute_methods;
+      commuteMethodsRow.style.display='flex';
+    }else{
+      commuteMethodsRow.style.display='none';
+    }
+  }
   var nameChangeRow=document.getElementById('addrd-namechange-row');
   if(nameChangeRow){
     if(d.new_name){
@@ -2164,6 +2215,9 @@ function printAddressDetail(){
   var rows=[
     ['氏名',(d._staffName||'')+'（'+(d._staffEmpId||'')+'）']
   ];
+  if(d.change_types){
+    rows.push(['変更内容',d.change_types]);
+  }
   if(d.new_name){
     rows.push(['氏名変更',d.new_name+(d.name_change_date?'（'+d.name_change_date.replace(/-/g,'/')+'〜）':'')]);
   }
@@ -2171,7 +2225,12 @@ function printAddressDetail(){
     ['申請日',d.created_at?d.created_at.substring(0,10).replace(/-/g,'/'):'-'],
     ['転居日',d.relocation_date?d.relocation_date.replace(/-/g,'/'):'-'],
     ['旧住所',(d.old_postal_code?'〒'+d.old_postal_code+' ':'')+(d.old_address||'-')],
-    ['新住所',(d.new_postal_code?'〒'+d.new_postal_code+' ':'')+(d.new_address||'-')],
+    ['新住所',(d.new_postal_code?'〒'+d.new_postal_code+' ':'')+(d.new_address||'-')]
+  );
+  if(d.commute_methods){
+    rows.push(['通勤手段',d.commute_methods]);
+  }
+  rows.push(
     ['通勤経路①',r1.length?r1.join(' / '):'-'],
     ['通勤経路②',r2.length?r2.join(' / '):'-'],
     ['通勤距離/時間',dt.length?dt.join('・'):'-']
