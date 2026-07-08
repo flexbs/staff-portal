@@ -2177,8 +2177,12 @@ function printAddressDetail(){
     ['通勤距離/時間',dt.length?dt.join('・'):'-']
   );
   if(d.commute_distance_km){
-    rows.push(['通勤費',(d.commute_allowance!==null&&d.commute_allowance!==undefined)?d.commute_allowance+'円':'未設定']);
-    rows.push(['通勤費の根拠',d.commute_allowance_basis||'-']);
+    var liveAllowanceInput=document.getElementById('addrd-allowance-input');
+    var liveBasisInput=document.getElementById('addrd-allowance-basis-input');
+    var liveAllowance=(liveAllowanceInput&&liveAllowanceInput.value!=='')?liveAllowanceInput.value:((d.commute_allowance!==null&&d.commute_allowance!==undefined)?d.commute_allowance:null);
+    var liveBasis=(liveBasisInput&&liveBasisInput.value.trim()!=='')?liveBasisInput.value.trim():(d.commute_allowance_basis||null);
+    rows.push(['通勤費',(liveAllowance!==null)?liveAllowance+'円':'未設定']);
+    rows.push(['通勤費の根拠',liveBasis||'-']);
   }
   rows.push(['確認状況',d.confirmed_at?('確認済み（'+new Date(d.confirmed_at).toLocaleString('ja-JP',{year:'numeric',month:'2-digit',day:'2-digit',hour:'2-digit',minute:'2-digit'})+'）'):'確認待ち']);
   var rowsHtml=rows.map(function(r){return '<tr><th>'+r[0]+'</th><td>'+r[1]+'</td></tr>';}).join('');
