@@ -1875,14 +1875,25 @@ async function loadAdminUploads(){
       uploadDocs.forEach(function(d){
         var name=staffMap[d.staff_id]||'(不明)';
         var dateStr=d.created_at?d.created_at.substring(0,10).replace(/-/g,'/'):'';
+        var statusBdg=d.confirmed_at?'<span class="bdg bg">確認済</span>':'<span class="bdg ba">未確認</span>';
+        var confirmBtn=d.confirmed_at?'':' <button class="btn btn-sm btn-p" onclick="confirmUploadDoc(\''+d.id+'\')">確認済みにする</button>';
         var tr=document.createElement('tr');
-        tr.innerHTML='<td>'+name+'</td><td style="font-size:12px">'+(d.title||'')+'</td><td style="white-space:nowrap">'+dateStr+'</td><td colspan="2"></td><td><a class="btn btn-sm" href="'+d.file_url+'" target="_blank" rel="noopener" style="text-decoration:none;display:inline-block">表示</a></td>';
+        tr.innerHTML='<td>'+name+'</td><td>-</td><td style="font-size:12px">'+(d.title||'')+'</td><td style="white-space:nowrap">'+dateStr+'</td><td>'+statusBdg+'</td><td><a class="btn btn-sm" href="'+d.file_url+'" target="_blank" rel="noopener" style="text-decoration:none;display:inline-block">表示</a>'+confirmBtn+'</td>';
         recvTbody.appendChild(tr);
       });
     }
   }
 }
 var _currentAddressDetailId=null;
+
+async function confirmUploadDoc(docId){
+  if(!supabaseClient)return;
+  var now=new Date().toISOString();
+  var u=await supabaseClient.from('documents').update({confirmed_at:now}).eq('id',docId);
+  if(u.error){alert('確認処理に失敗しました：'+u.error.message);return;}
+  loadAdminUploads();
+  loadAdminMetrics();
+}
 
 function openAddressOnMap(){
   var addr=document.getElementById('addr-new-address').value||'';
