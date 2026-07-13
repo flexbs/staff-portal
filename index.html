@@ -2226,12 +2226,13 @@ async function initLeaveMonthSelect(){
   var sel=document.getElementById('leave-month-select');
   if(!sel||sel.options.length>0)return;
   var now=new Date();
-  for(var i=0;i<12;i++){
+  for(var i=-3;i<12;i++){
     var d=new Date(now.getFullYear(),now.getMonth()-i,1);
     var val=d.getFullYear()+'-'+(String(d.getMonth()+1).padStart(2,'0'));
     var label=d.getFullYear()+'年'+(d.getMonth()+1)+'月';
     var opt=document.createElement('option');
     opt.value=val;opt.textContent=label;
+    if(i===0)opt.selected=true;
     sel.appendChild(opt);
   }
 }
