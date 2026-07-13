@@ -342,6 +342,19 @@ input:disabled{background:#f5f4f0;color:#aaa;border-color:#e8e6e0}
     </div>
   </div>
   <div id="admin-uploads" class="sp">
+    <div class="card">
+      <div class="ch"><span class="ct">📊 月次サマリー（各種申請・届出）</span>
+        <div style="display:flex;align-items:center;gap:8px;margin-left:auto">
+          <select id="summary-month-select" onchange="loadMonthlySummary()" style="font-size:12px;padding:4px 8px;border:1px solid #ddd;border-radius:6px;font-family:inherit"></select>
+        </div>
+      </div>
+      <div class="g4" style="margin-bottom:0">
+        <div class="met"><div class="met-l">有給申請</div><div class="met-v" style="color:#5b21b6" id="summary-leave-count">-</div></div>
+        <div class="met"><div class="met-l">住所変更届</div><div class="met-v" style="color:#5b21b6" id="summary-address-count">-</div></div>
+        <div class="met"><div class="met-l">遅延証明書・その他書類</div><div class="met-v" style="color:#5b21b6" id="summary-upload-count">-</div></div>
+        <div class="met"><div class="met-l">勤怠（単発）申請</div><div class="met-v" style="color:#5b21b6" id="summary-kintai-count">-</div></div>
+      </div>
+    </div>
     <div class="sub-tabs">
       <button class="sub-tab active" onclick="showSub2('recv',this)">スタッフからの提出書類</button>
       <button class="sub-tab" onclick="showSub2('sent',this)">派遣元からの送付書類</button>
@@ -643,6 +656,7 @@ input:disabled{background:#f5f4f0;color:#aaa;border-color:#e8e6e0}
     <div class="card">
       <div class="ch"><span class="ct">書類アップロード</span></div>
       <div style="font-size:13px;color:#666;line-height:1.7;margin-bottom:16px">遅延証明書・その他書類をアップロードしてください。<br>担当者が確認いたします。</div>
+      <div style="background:#f7f6f2;border-radius:8px;padding:10px 12px;font-size:12px;color:#666;margin-bottom:16px">📮 アップロードした時点で会社に届いています。給与計算とあわせて確認するため、内容の反映まで少しお時間をいただく場合があります。</div>
       <div class="upload-item">
         <div class="upload-item-head"><span class="upload-item-title">📄 遅延証明書</span><span class="upload-item-opt">任意</span></div>
         <div class="upload-item-desc">電車・バスの遅延証明書をアップロードしてください。</div>
@@ -1864,6 +1878,7 @@ async function loadAdminUploads(){
   await buildUploadsRows(payslipDocs,'admin-sent-payslip-tbody');
   await buildUploadsRows(contractDocs,'admin-sent-contract-tbody');
   loadAdminAddressChanges();
+  loadMonthlySummary();
   // スタッフからのアップロード書類
   var uploadDocs=docs.filter(function(d){return d.type==='upload';});
   var recvTbody=document.getElementById('admin-uploads-tbody');
@@ -1885,6 +1900,44 @@ async function loadAdminUploads(){
   }
 }
 var _currentAddressDetailId=null;
+async function initSummaryMonthSelect(){
+  var sel=document.getElementById('summary-month-select');
+  if(!sel||sel.options.length>0)return;
+  var now=new Date();
+  for(var i=-1;i<12;i++){
+    var d=new Date(now.getFullYear(),now.getMonth()-i,1);
+    var val=d.getFullYear()+'-'+(String(d.getMonth()+1).padStart(2,'0'));
+    var label=d.getFullYear()+'年'+(d.getMonth()+1)+'月';
+    var opt=document.createElement('option');
+    opt.value=val;opt.textContent=label;
+    if(i===0)opt.selected=true;
+    sel.appendChild(opt);
+  }
+}
+async function loadMonthlySummary(){
+  if(!supabaseClient)return;
+  initSummaryMonthSelect();
+  var sel=document.getElementById('summary-month-select');
+  var ym=sel?sel.value:null;
+  if(!ym){var n=new Date();ym=n.getFullYear()+'-'+(String(n.getMonth()+1).padStart(2,'0'));}
+  var startDate=ym+'-01';
+  var endD=new Date(ym.split('-')[0],parseInt(ym.split('-')[1]),0);
+  var endDate=ym+'-'+(String(endD.getDate()).padStart(2,'0'));
+  var nextMonthD=new Date(ym.split('-')[0],parseInt(ym.split('-')[1]),1);
+  var nextMonthStart=nextMonthD.getFullYear()+'-'+String(nextMonthD.getMonth()+1).padStart(2,'0')+'-01';
+
+  var {data:leaveReqs}=await supabaseClient.from('leave_requests').select('id').gte('leave_date',startDate).lte('leave_date',endDate);
+  var lEl=document.getElementById('summary-leave-count');if(lEl)lEl.textContent=(leaveReqs?leaveReqs.length:0)+'件';
+
+  var {data:addrReqs}=await supabaseClient.from('address_change_requests').select('id').gte('created_at',startDate).lt('created_at',nextMonthStart);
+  var aEl=document.getElementById('summary-address-count');if(aEl)aEl.textContent=(addrReqs?addrReqs.length:0)+'件';
+
+  var {data:uploadDocs}=await supabaseClient.from('documents').select('id').eq('type','upload').is('cancelled_at',null).gte('created_at',startDate).lt('created_at',nextMonthStart);
+  var uEl=document.getElementById('summary-upload-count');if(uEl)uEl.textContent=(uploadDocs?uploadDocs.length:0)+'件';
+
+  var {data:kintaiRecs}=await supabaseClient.from('kintai_records').select('id').gte('work_date',startDate).lte('work_date',endDate);
+  var kEl=document.getElementById('summary-kintai-count');if(kEl)kEl.textContent=(kintaiRecs?kintaiRecs.length:0)+'件';
+}
 
 async function confirmUploadDoc(docId){
   if(!supabaseClient)return;
@@ -3777,9 +3830,10 @@ async function loadUploadHistory(){
   data.forEach(function(d){
     var dt=new Date(d.created_at);
     var dtStr=dt.getFullYear()+'/'+(dt.getMonth()+1)+'/'+dt.getDate();
-    html+='<div style="display:flex;align-items:center;justify-content:space-between;padding:10px 0;border-bottom:1px solid #f0efe9">'
+    var statusBdg=d.confirmed_at?'<span class="bdg bg">確認済</span>':'<span class="bdg bg" style="background:#e6f0fa;color:#1a5a8a">提出済み</span>';
+    html+='<div style="display:flex;align-items:center;justify-content:space-between;padding:10px 0;border-bottom:1px solid #f0efe9;gap:8px">'
       +'<div><div style="font-size:13px;font-weight:600">'+d.title+'</div><div style="font-size:11px;color:#888;margin-top:2px">'+dtStr+'</div></div>'
-      +'<a href="'+d.file_url+'" target="_blank" class="btn btn-sm">表示</a>'
+      +'<div style="display:flex;align-items:center;gap:8px">'+statusBdg+'<a href="'+d.file_url+'" target="_blank" class="btn btn-sm">表示</a></div>'
       +'</div>';
   });
   listEl.innerHTML=html;
