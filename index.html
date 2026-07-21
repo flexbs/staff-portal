@@ -897,6 +897,7 @@ input:disabled{background:#f5f4f0;color:#aaa;border-color:#e8e6e0}
 <div class="fg"><label class="fl">対象月</label><select id="payslip-month"><option value="2026-05">2026年5月分</option><option value="2026-06">2026年6月分</option><option value="2026-07">2026年7月分</option><option value="2026-08">2026年8月分</option><option value="2026-09">2026年9月分</option><option value="2026-10">2026年10月分</option><option value="2026-11">2026年11月分</option><option value="2026-12">2026年12月分</option><option value="2027-01">2027年1月分</option><option value="2027-02">2027年2月分</option><option value="2027-03">2027年3月分</option><option value="2027-04">2027年4月分</option><option value="2027-05">2027年5月分</option><option value="2027-06">2027年6月分</option><option value="2027-07">2027年7月分</option><option value="2027-08">2027年8月分</option><option value="2027-09">2027年9月分</option><option value="2027-10">2027年10月分</option><option value="2027-11">2027年11月分</option><option value="2027-12">2027年12月分</option><option value="2028-01">2028年1月分</option><option value="2028-02">2028年2月分</option><option value="2028-03">2028年3月分</option><option value="2028-04">2028年4月分</option></select></div>
 <div class="fg"><label class="fl">送付先</label><select id="payslip-target" onchange="checkPaperPayslip()"><option>読み込み中...</option></select></div>
     <div class="fg"><label class="fl">PDFファイル</label><input type="file" id="payslip-file" accept=".pdf"></div>
+    <div class="fg"><label class="fl">一言コメント（任意）</label><textarea id="payslip-message" rows="2" placeholder="例：以前送付していましたが、指揮命令者などの氏名が変更になった為、再送付です"></textarea></div>
     <div class="fg"><label style="display:flex;align-items:center;gap:6px;cursor:pointer;font-size:13px;color:#555"><input type="checkbox" id="payslip-resend" style="width:16px;height:16px">再送（同じ月をもう一度送る場合はチェック）</label></div>
     <div id="payslip-status" style="display:none;font-size:12px;margin-top:8px"></div>
     <div id="payslip-paper-warning" style="display:none;background:#fee;border:2px solid #c00;border-radius:8px;padding:12px;margin-top:8px;color:#c00;font-weight:bold;font-size:14px;text-align:center">🚨 この方は給与明細を紙で受け取る方です<br>ポータルからは送付できません</div>
@@ -913,6 +914,7 @@ input:disabled{background:#f5f4f0;color:#aaa;border-color:#e8e6e0}
     </select></div>
 <div class="fg"><label class="fl">書類タイトル</label><input type="text" id="contract-title" placeholder="例：就業条件明示書（2026年6月1日〜2026年8月31日）"></div>
     <div class="fg"><label class="fl">PDFファイル</label><input type="file" id="contract-file" accept=".pdf"></div>
+    <div class="fg"><label class="fl">一言コメント（任意）</label><textarea id="contract-message" rows="2" placeholder="例：以前送付していましたが、指揮命令者などの氏名が変更になった為、再送付です"></textarea></div>
     <div id="contract-status" style="display:none;font-size:12px;margin-top:8px"></div>
     <div id="contract-paper-warning" style="display:none;background:#fee;border:2px solid #c00;border-radius:8px;padding:12px;margin-top:8px;color:#c00;font-weight:bold;font-size:14px;text-align:center">🚨 この方は契約書を紙で受け取る方です<br>ポータルからは送付できません</div>
     <div class="ma"><button class="btn btn-sm" onclick="closeModal('send-contract')">キャンセル</button><button id="contract-send-btn"  class="btn btn-sm btn-p" onclick="sendContract()">送付する →</button></div>
@@ -2531,6 +2533,8 @@ async function sendPayslip(){
   var fileInput=document.getElementById('payslip-file');
   var status=document.getElementById('payslip-status');
   var isResend=document.getElementById('payslip-resend')?document.getElementById('payslip-resend').checked:false;
+  var messageEl=document.getElementById('payslip-message');
+  var message=messageEl&&messageEl.value.trim()!==''?messageEl.value.trim():null;
   if(!fileInput.files||!fileInput.files[0]){alert('PDFファイルを選択してください');return;}
   var targetName=document.getElementById('payslip-target').options[document.getElementById('payslip-target').selectedIndex].text;
   if(!confirm(targetName+'に'+month+'分の給与明細を'+(isResend?'再送':'送付')+'します。よろしいですか？'))return;
@@ -2546,11 +2550,13 @@ async function sendPayslip(){
   staff_id:staffUuid,
    type:'payslip',
     title:month+'分 給与明細'+(isResend?'（再送）':'')+'.pdf',
-   file_url:filePath
+   file_url:filePath,
+   message:message
   });
   if(ins.error){status.style.color='#991b1b';status.textContent='登録失敗:'+ins.error.message;return;}
   status.style.color='#2d6a10';status.textContent=(isResend?'再送完了!':'送付完了!');
   var resendCb=document.getElementById('payslip-resend');if(resendCb)resendCb.checked=false;
+  if(messageEl)messageEl.value='';
   setTimeout(()=>{closeModal('send-payslip');loadAdminUploads();if(typeof loadAdminStaffList==='function')loadAdminStaffList();},1000);
 }
 async function checkPaperContract(){
@@ -2596,6 +2602,8 @@ async function sendContract(){
   var title=document.getElementById('contract-title').value||'契約書.pdf';
   var fileInput=document.getElementById('contract-file');
   var status=document.getElementById('contract-status');
+  var messageEl=document.getElementById('contract-message');
+  var message=messageEl&&messageEl.value.trim()!==''?messageEl.value.trim():null;
   if(!fileInput.files||!fileInput.files[0]){alert('PDFファイルを選択してください');return;}
   var targetName=document.getElementById('contract-target').options[document.getElementById('contract-target').selectedIndex].text;
   if(!confirm(targetName+'に就業条件明示書を送付します。よろしいですか？'))return;
@@ -2613,10 +2621,12 @@ async function sendContract(){
     type:'contract',
     title:title,
     file_url:filePath,
+    message:message,
     requires_signature:needsSig
   });
   if(ins.error){status.style.color='#991b1b';status.textContent='登録失敗:'+ins.error.message;return;}
   status.style.color='#2d6a10';status.textContent='送付完了!';const titleVal=document.getElementById('contract-title')?document.getElementById('contract-title').value:'';const dateMatch=titleVal.match(/(\d{4})年(\d{1,2})月(\d{1,2})日[〜～](\d{4})年(\d{1,2})月(\d{1,2})日/);const cStart=dateMatch?dateMatch[1]+'-'+String(dateMatch[2]).padStart(2,'0')+'-'+String(dateMatch[3]).padStart(2,'0'):null;const cEnd=dateMatch?dateMatch[4]+'-'+String(dateMatch[5]).padStart(2,'0')+'-'+String(dateMatch[6]).padStart(2,'0'):null;if(cEnd){await supabaseClient.from('staffs').update({contract_end_date:cEnd,contract_start_date:cStart}).eq('employee_id',target);}
+  if(messageEl)messageEl.value='';
   setTimeout(()=>{closeModal('send-contract');loadAdminUploads();if(typeof loadAdminStaffList==='function')loadAdminStaffList();},1000);
 }
   function displayPaidLeaveInfo(data){
@@ -2999,7 +3009,8 @@ async function loadMyDocuments(){
       var bt=su?'<a class="btn btn-sm" href="'+su+'" target="_blank" rel="noopener" style="text-decoration:none;display:inline-block">表示</a> <a class="btn btn-sm" href="'+su+'" download style="text-decoration:none;display:inline-block">ダウンロード</a>':'<button class="btn btn-sm">表示</button>';
       if(ns&&!sg){bt+=' <label style="font-size:11px"><input type="checkbox" id="ck-'+eid+'" onchange="toggleDocBtn(this,&quot;s'+eid+'&quot;)"> PDF確認済</label> <button class="btn btn-sm btn-p" id="s'+eid+'" onclick="signMyDocument(&quot;'+eid+'&quot;)" disabled style="opacity:0.4">署名する</button>';}
       else if(!ns&&!sg){bt+=' <label style="font-size:11px"><input type="checkbox" id="ck-'+eid+'" onchange="toggleDocBtn(this,&quot;c'+eid+'&quot;)"> PDF確認済</label> <button class="btn btn-sm btn-p" id="c'+eid+'" onclick="confirmMyDocument(&quot;'+eid+'&quot;)" disabled style="opacity:0.4">確認しました</button>';}
-      r+='<tr><td>'+(d.title||ts)+'</td><td style="white-space:nowrap">'+ds+'</td><td>'+st+'</td><td style="white-space:nowrap">'+bt+'</td></tr>';
+      var msgHtml=d.message?'<div style="font-size:11px;color:#666;margin-top:3px;line-height:1.5">💬 '+d.message.replace(/\n/g,'<br>')+'</div>':'';
+      r+='<tr><td>'+(d.title||ts)+msgHtml+'</td><td style="white-space:nowrap">'+ds+'</td><td>'+st+'</td><td style="white-space:nowrap">'+bt+'</td></tr>';
     }
     el.innerHTML='<div style="overflow-x:auto"><table style="width:100%;border-collapse:collapse"><thead><tr style="text-align:left;color:#888;font-size:12px"><th style="padding:8px">タイトル</th><th style="padding:8px">受信日</th><th style="padding:8px">状態</th><th style="padding:8px">操作</th></tr></thead><tbody>'+r+'</tbody></table></div>';
   }
@@ -3519,7 +3530,8 @@ async function openDocsDetail(staffId, staffName){
     if(rv.data&&rv.data.signedUrl)sUrl=rv.data.signedUrl;
     var showBtn=sUrl?'<a class="btn btn-sm" href="'+sUrl+'" target="_blank" rel="noopener" style="text-decoration:none;display:inline-block">表示</a>':'<button class="btn btn-sm" disabled style="opacity:0.4">表示</button>';
     var cancelBtn=!d.confirmed_at?'<button class="btn btn-sm" style="background:#fee2e2;color:#991b1b;border-color:#fca5a5" onclick="cancelDocFromDetail(\''+d.id+'\',\''+d.file_url+'\',\''+bucket+'\',\''+staffId+'\',\''+staffName+'\')">取消</button>':'<span style="font-size:11px;color:#aaa">—</span>';
-    rows+='<tr><td style="font-size:12px">'+(d.title||typeStr)+'</td><td><span class="bdg '+(d.type==='payslip'?'bb':'bp')+'" style="font-size:10px">'+typeStr+'</span></td><td style="white-space:nowrap;font-size:12px">'+dateStr+'</td><td>'+statusBdg+'</td><td style="font-size:11px;color:#888;white-space:nowrap">'+confirmedStr+'</td><td style="white-space:nowrap">'+showBtn+'</td><td>'+cancelBtn+'</td></tr>';
+    var msgHtml=d.message?'<div style="font-size:10px;color:#666;margin-top:3px;line-height:1.5">💬 '+d.message.replace(/\n/g,'<br>')+'</div>':'';
+    rows+='<tr><td style="font-size:12px">'+(d.title||typeStr)+msgHtml+'</td><td><span class="bdg '+(d.type==='payslip'?'bb':'bp')+'" style="font-size:10px">'+typeStr+'</span></td><td style="white-space:nowrap;font-size:12px">'+dateStr+'</td><td>'+statusBdg+'</td><td style="font-size:11px;color:#888;white-space:nowrap">'+confirmedStr+'</td><td style="white-space:nowrap">'+showBtn+'</td><td>'+cancelBtn+'</td></tr>';
   }
   c.innerHTML='<div style="overflow-x:auto"><table style="width:100%;border-collapse:collapse"><thead><tr style="text-align:left;color:#888;font-size:11px"><th style="padding:7px 6px">タイトル</th><th style="padding:7px 6px">種別</th><th style="padding:7px 6px">送付日</th><th style="padding:7px 6px">状況</th><th style="padding:7px 6px">確認日時</th><th style="padding:7px 6px">表示</th><th style="padding:7px 6px">取消</th></tr></thead><tbody>'+rows+'</tbody></table></div>';
 }
