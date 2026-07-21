@@ -861,6 +861,7 @@ input:disabled{background:#f5f4f0;color:#aaa;border-color:#e8e6e0}
     <div class="profile-row"><span class="profile-label">基礎年金番号</span><input type="text" id="modal-pension" placeholder="例：1234-567890" style="width:auto;font-size:12px;padding:4px 8px;text-align:right;flex:1"></div>
     <div class="profile-row"><span class="profile-label">雇用保険番号</span><input type="text" id="modal-insurance" placeholder="例：1234-567890-1" style="width:auto;font-size:12px;padding:4px 8px;text-align:right;flex:1"></div>
     <div class="profile-row"><span class="profile-label">備考</span><input type="text" id="modal-note" placeholder="メモなど" style="width:auto;font-size:12px;padding:4px 8px;text-align:right;flex:1"></div>
+    <div class="profile-row" style="align-items:flex-start"><span class="profile-label">時間単位有給メモ<br><span style="font-size:10px;color:#aaa;font-weight:400">（管理者のみ表示）</span></span><textarea id="modal-hourly-leave-note" placeholder="例：2026年7月：2時間使用／残り3日2時間" rows="2" style="width:auto;font-size:12px;padding:4px 8px;flex:1"></textarea></div>
     <div class="profile-row"><span class="profile-label">次回付与日</span><span class="profile-val" id="modal-next-grant-date" style="color:#534AB7;font-weight:600">-</span></div>
     <div id="modal-next-grant-alert" style="display:none;background:#fee2e2;border-radius:8px;padding:8px 12px;font-size:12px;color:#991b1b;font-weight:700;margin-bottom:8px"></div>
     <div class="profile-row"><span class="profile-label">有給対象外</span><label style="display:flex;align-items:center;gap:6px;cursor:pointer"><input type="checkbox" id="modal-paid-leave-exempt" style="width:16px;height:16px;accent-color:#534AB7"><span style="font-size:12px;color:#666">チェックするとスタッフ画面の有給情報が非表示になります</span></label></div>
@@ -2668,7 +2669,8 @@ async function saveStaffProfile(){
     const pensionNumber=document.getElementById('modal-pension').value||null;
     const insuranceNumber=document.getElementById('modal-insurance').value||null;
     const staffNote=document.getElementById('modal-note').value||null;
-    const{error}=await supabaseClient.from('staffs').update({status:staffStatus,workplace:workplace,workplace_address:workplaceAddress,dispatch_start_date:dispatchStart,restriction_date:restrictionDate,resignation_date:resignationDate,contract_end_date:contractEnd,paid_leave_grant_date:paidLeaveDate,paid_leave_grant_days:paidLeaveDays,paid_leave_exempt:paidLeaveExempt,paid_leave_remaining:paidLeaveRemaining,work_minutes_per_day:workMinutesPerDay,pension_number:pensionNumber,insurance_number:insuranceNumber,note:staffNote}).eq('employee_id',empId);
+    const hourlyLeaveNote=document.getElementById('modal-hourly-leave-note')?(document.getElementById('modal-hourly-leave-note').value||null):null;
+    const{error}=await supabaseClient.from('staffs').update({status:staffStatus,workplace:workplace,workplace_address:workplaceAddress,dispatch_start_date:dispatchStart,restriction_date:restrictionDate,resignation_date:resignationDate,contract_end_date:contractEnd,paid_leave_grant_date:paidLeaveDate,paid_leave_grant_days:paidLeaveDays,paid_leave_exempt:paidLeaveExempt,paid_leave_remaining:paidLeaveRemaining,work_minutes_per_day:workMinutesPerDay,pension_number:pensionNumber,insurance_number:insuranceNumber,note:staffNote,hourly_leave_note:hourlyLeaveNote}).eq('employee_id',empId);
     if(error){alert('保存失敗：'+error.message);return;}
     alert('保存しました！');
     closeModal('staff-profile');
@@ -2886,6 +2888,7 @@ async function openStaffDetail(empId){
     document.getElementById('modal-pension').value=data.pension_number||'';
     document.getElementById('modal-insurance').value=data.insurance_number||'';
     document.getElementById('modal-note').value=data.note||'';
+    var hourlyEl=document.getElementById('modal-hourly-leave-note');if(hourlyEl)hourlyEl.value=data.hourly_leave_note||'';
     document.getElementById('modal-paid-leave-exempt').checked=data.paid_leave_exempt||false;
     var remEl=document.getElementById('modal-paid-leave-remaining');
     if(remEl)remEl.value=(data.paid_leave_remaining!==null&&data.paid_leave_remaining!==undefined)?data.paid_leave_remaining:'';
