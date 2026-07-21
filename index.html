@@ -190,7 +190,7 @@ input:disabled{background:#f5f4f0;color:#aaa;border-color:#e8e6e0}
     <button class="sub-tab" onclick="showSub('admin','docs',this)">書類送付</button>
     <button class="sub-tab" onclick="showSub('admin','nyusha',this)">入社手続き</button>
     <button class="sub-tab" onclick="showSub('admin','taisha',this);loadAdminTaisha()">退職手続き</button>
-    <button class="sub-tab" onclick="showSub('admin','paid',this);loadAdminLeaveRequests();loadAdminPaidLeaveList();loadLeaveHistory()">有給管理</button>
+    <button id="nav-tab-paid" class="sub-tab" onclick="showSub('admin','paid',this);loadAdminLeaveRequests();loadAdminPaidLeaveList();loadLeaveHistory()">有給管理</button>
     <button id="nav-tab-uploads" class="sub-tab" onclick="showSub('admin','uploads',this);loadAdminUploads()">書類授受</button>
     <button class="sub-tab" onclick="showSub('admin','mynumber',this)">マイナンバー</button>
     <button class="sub-tab" onclick="showSub('admin','notice',this);loadAdminNotices()">お知らせ</button>
@@ -1661,6 +1661,18 @@ async function loadAdminStaffListOnly(){
   renderStaffListOnly(_staffListOnly);
 }
 
+async function goToStaffLeave(staffId,staffName){
+  var tab=document.getElementById('nav-tab-paid');
+  if(tab)tab.click();
+  await loadLeaveHistory();
+  var histSel=document.getElementById('leave-history-filter');
+  var histMonthSel=document.getElementById('leave-history-month-filter');
+  if(histMonthSel)histMonthSel.value='all';
+  if(histSel){histSel.value=staffId;filterLeaveHistory();}
+  await loadAdminLeaveRequests();
+  var reqSel=document.getElementById('leave-request-staff-filter');
+  if(reqSel){reqSel.value=staffId;await loadAdminLeaveRequests();}
+}
 function filterStaffList(filter){
   _currentStaffFilter=filter;
   var ids={'全員':'sf-btn-all','稼働中':'sf-btn-稼働中','短期・単発':'sf-btn-短期単発','育休中':'sf-btn-育休中','契約終了':'sf-btn-契約終了','管理者':'sf-btn-管理者'};
@@ -1690,7 +1702,8 @@ function renderStaffListOnly(list){
       var endStr=s.resignation_date?s.resignation_date.replace(/-/g,'/'):'-';
       remLabel='<span style="color:#555">'+endStr+'</span>';
     }else{
-      remLabel=remDays!=='-'?('<span style="font-weight:700;color:'+(remDays<=3?'#991b1b':remDays<=7?'#8a5a00':'#1a6b1a')+'">'+remDays+'日</span>'):'<span style="color:#aaa">-</span>';
+      var remColor=remDays<=3?'#991b1b':remDays<=7?'#8a5a00':'#1a6b1a';
+      remLabel=remDays!=='-'?('<span style="font-weight:700;color:'+remColor+';cursor:pointer;text-decoration:underline" onclick="goToStaffLeave(\''+s.id+'\',\''+s.name+'\')">'+remDays+'日</span>'):'<span style="color:#aaa">-</span>';
     }
     tr.innerHTML='<td>'+s.name+'</td><td>'+statusBdg+'</td><td>'+String(s.employee_id).padStart(4,'0')+'</td><td>'+(s.workplace||'')+'</td><td style="text-align:center">'+remLabel+'</td><td><button class="btn btn-sm" onclick="openStaffDetail('+s.employee_id+')">プロフィール</button></td>';
     tbody.appendChild(tr);
