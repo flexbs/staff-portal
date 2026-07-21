@@ -866,6 +866,7 @@ input:disabled{background:#f5f4f0;color:#aaa;border-color:#e8e6e0}
     <div id="modal-next-grant-alert" style="display:none;background:#fee2e2;border-radius:8px;padding:8px 12px;font-size:12px;color:#991b1b;font-weight:700;margin-bottom:8px"></div>
     <div class="profile-row"><span class="profile-label">有給対象外</span><label style="display:flex;align-items:center;gap:6px;cursor:pointer"><input type="checkbox" id="modal-paid-leave-exempt" style="width:16px;height:16px;accent-color:#534AB7"><span style="font-size:12px;color:#666">チェックするとスタッフ画面の有給情報が非表示になります</span></label></div>
     <div class="profile-row"><span class="profile-label">有給残日数</span><input type="number" id="modal-paid-leave-remaining" placeholder="未入力" step="0.5" min="0" style="width:80px;font-size:12px;padding:4px 8px"> <span style="font-size:12px;color:#888">日（<span id="leave-remaining-label"></span>現在の残日数を入力）</span></div>
+    <div class="profile-row" style="align-items:flex-start"><span class="profile-label">有給残メモ<br><span style="font-size:10px;color:#aaa;font-weight:400">（比例付与など）</span></span><textarea id="modal-paid-leave-note" placeholder="例：比例付与のため通常より少なめ" rows="2" style="width:auto;font-size:12px;padding:4px 8px;flex:1"></textarea></div>
     <div class="profile-row"><span class="profile-label">所定労働時間</span><input type="number" id="modal-work-hours" placeholder="7" min="0" max="12" style="width:50px;font-size:12px;padding:4px 8px"> <span style="font-size:12px;color:#888">時間</span> <input type="number" id="modal-work-mins" placeholder="0" min="0" max="59" style="width:50px;font-size:12px;padding:4px 8px;margin-left:6px"> <span style="font-size:12px;color:#888">分</span></div>
     <div class="ma"><button class="btn btn-sm" onclick="closeModal('staff-profile')">閉じる</button><button class="btn btn-sm btn-p" onclick="saveStaffProfile()">保存する →</button></div>
   </div>
@@ -1802,7 +1803,7 @@ async function exportStaffCSV(){
   if(error||!staffs){alert('スタッフ情報の取得に失敗しました');return;}
   var {data:docs}=await supabaseClient.from('documents').select('staff_id,type,confirmed_at,created_at').is('cancelled_at',null).order('created_at',{ascending:false});
   var staffOnly=staffs.filter(s=>s.employee_id>=1000);
-  var rows=[['社員番号','氏名','フリガナ','ステータス','派遣先','営業担当','給与明細','就業条件明示書','確認日時']];
+  var rows=[['社員番号','氏名','フリガナ','ステータス','派遣先','営業担当','有給残','給与明細','就業条件明示書','確認日時']];
   staffOnly.forEach(function(s){
     var myDocs=docs?docs.filter(d=>d.staff_id===s.id):[];
     var latestContract=myDocs.find(d=>d.type==='contract');
@@ -1812,7 +1813,8 @@ async function exportStaffCSV(){
     var confirmedAt=(latestContract&&latestContract.confirmed_at)?new Date(latestContract.confirmed_at).toLocaleString('ja-JP',{year:'numeric',month:'2-digit',day:'2-digit',hour:'2-digit',minute:'2-digit'}):'—';
     var workplace=s.workplace||'';
     var salesPerson=salesMap[workplace]||'未設定';
-    rows.push([String(s.employee_id).padStart(4,'0'),s.name||'',s.name_kana||'',s.status||'',workplace,salesPerson,payslipStatus,contractStatus,confirmedAt]);
+    var remLabel=(s.paid_leave_remaining!==null&&s.paid_leave_remaining!==undefined)?s.paid_leave_remaining+'日':'-';
+    rows.push([String(s.employee_id).padStart(4,'0'),s.name||'',s.name_kana||'',s.status||'',workplace,salesPerson,remLabel,payslipStatus,contractStatus,confirmedAt]);
   });
   var csv=rows.map(function(r){return r.map(function(c){return '"'+String(c).replace(/"/g,'""')+'"';}).join(',');}).join('\r\n');
   var bom='\uFEFF';
@@ -2448,11 +2450,27 @@ function printLeaveRequests(){
 }
 async function approveLeaveRequest(reqId){
   if(!supabaseClient){alert('接続エラー');return;}
-  var ok=window.confirm('この申請を承認しますか?');
+  var {data:reqData,error:reqErr}=await supabaseClient.from('leave_requests').select('*').eq('id',reqId).single();
+  if(reqErr||!reqData){alert('申請データの取得に失敗しました');return;}
+  var deductDays=reqData.day_type==='full'?1:(reqData.day_type==='am'||reqData.day_type==='pm')?0.5:0;
+  var {data:staffData}=await supabaseClient.from('staffs').select('paid_leave_remaining').eq('id',reqData.staff_id).single();
+  var currentRemaining=(staffData&&staffData.paid_leave_remaining!==null&&staffData.paid_leave_remaining!==undefined)?staffData.paid_leave_remaining:null;
+  var newRemaining=(currentRemaining!==null)?(currentRemaining-deductDays):null;
+  var msg='この申請を承認しますか?';
+  if(currentRemaining!==null){
+    msg+='\n有給残：'+currentRemaining+'日 → '+newRemaining+'日（'+deductDays+'日分を自動で差し引きます）';
+  }else{
+    msg+='\n※有給残日数が未入力のため、自動での差し引きは行われません';
+  }
+  var ok=window.confirm(msg);
   if(!ok)return;
   var now=new Date().toISOString();
   var r=await supabaseClient.from('leave_requests').update({status:'approved',updated_at:now}).eq('id',reqId);
   if(r.error){alert('承認に失敗しました:'+r.error.message);return;}
+  if(currentRemaining!==null){
+    var u=await supabaseClient.from('staffs').update({paid_leave_remaining:newRemaining}).eq('id',reqData.staff_id);
+    if(u.error){alert('承認はしましたが、有給残の更新に失敗しました：'+u.error.message);loadAdminLeaveRequests();return;}
+  }
   alert('承認しました。');
   loadAdminLeaveRequests();
 }
@@ -2470,6 +2488,20 @@ async function cancelLeaveRequest(reqId,currentStatus,leaveDate){
   }else{
     msg='この申請を取消しますか?';
   }
+  var restoreInfo=null;
+  if(currentStatus==='approved'){
+    var {data:reqData}=await supabaseClient.from('leave_requests').select('*').eq('id',reqId).single();
+    if(reqData){
+      var restoreDays=reqData.day_type==='full'?1:(reqData.day_type==='am'||reqData.day_type==='pm')?0.5:0;
+      var {data:staffData}=await supabaseClient.from('staffs').select('paid_leave_remaining').eq('id',reqData.staff_id).single();
+      var currentRemaining=(staffData&&staffData.paid_leave_remaining!==null&&staffData.paid_leave_remaining!==undefined)?staffData.paid_leave_remaining:null;
+      if(currentRemaining!==null){
+        var newRemaining=currentRemaining+restoreDays;
+        restoreInfo={staffId:reqData.staff_id,newRemaining:newRemaining};
+        msg+='\n有給残：'+currentRemaining+'日 → '+newRemaining+'日（'+restoreDays+'日分を自動で戻します）';
+      }
+    }
+  }
   var ok=window.confirm(msg);
   if(!ok)return;
   var session=await supabaseClient.auth.getSession();
@@ -2485,6 +2517,10 @@ async function cancelLeaveRequest(reqId,currentStatus,leaveDate){
   if(adminStaffId)updateData.cancelled_by=adminStaffId;
   var r=await supabaseClient.from('leave_requests').update(updateData).eq('id',reqId);
   if(r.error){alert('取消に失敗しました:'+r.error.message);return;}
+  if(restoreInfo){
+    var u=await supabaseClient.from('staffs').update({paid_leave_remaining:restoreInfo.newRemaining}).eq('id',restoreInfo.staffId);
+    if(u.error){alert('取消はしましたが、有給残の更新に失敗しました：'+u.error.message);loadAdminLeaveRequests();return;}
+  }
   alert('取消しました。');
   loadAdminLeaveRequests();
 }
@@ -2670,7 +2706,8 @@ async function saveStaffProfile(){
     const insuranceNumber=document.getElementById('modal-insurance').value||null;
     const staffNote=document.getElementById('modal-note').value||null;
     const hourlyLeaveNote=document.getElementById('modal-hourly-leave-note')?(document.getElementById('modal-hourly-leave-note').value||null):null;
-    const{error}=await supabaseClient.from('staffs').update({status:staffStatus,workplace:workplace,workplace_address:workplaceAddress,dispatch_start_date:dispatchStart,restriction_date:restrictionDate,resignation_date:resignationDate,contract_end_date:contractEnd,paid_leave_grant_date:paidLeaveDate,paid_leave_grant_days:paidLeaveDays,paid_leave_exempt:paidLeaveExempt,paid_leave_remaining:paidLeaveRemaining,work_minutes_per_day:workMinutesPerDay,pension_number:pensionNumber,insurance_number:insuranceNumber,note:staffNote,hourly_leave_note:hourlyLeaveNote}).eq('employee_id',empId);
+    const paidLeaveNote=document.getElementById('modal-paid-leave-note')?(document.getElementById('modal-paid-leave-note').value||null):null;
+    const{error}=await supabaseClient.from('staffs').update({status:staffStatus,workplace:workplace,workplace_address:workplaceAddress,dispatch_start_date:dispatchStart,restriction_date:restrictionDate,resignation_date:resignationDate,contract_end_date:contractEnd,paid_leave_grant_date:paidLeaveDate,paid_leave_grant_days:paidLeaveDays,paid_leave_exempt:paidLeaveExempt,paid_leave_remaining:paidLeaveRemaining,paid_leave_note:paidLeaveNote,work_minutes_per_day:workMinutesPerDay,pension_number:pensionNumber,insurance_number:insuranceNumber,note:staffNote,hourly_leave_note:hourlyLeaveNote}).eq('employee_id',empId);
     if(error){alert('保存失敗：'+error.message);return;}
     alert('保存しました！');
     closeModal('staff-profile');
@@ -2889,6 +2926,7 @@ async function openStaffDetail(empId){
     document.getElementById('modal-insurance').value=data.insurance_number||'';
     document.getElementById('modal-note').value=data.note||'';
     var hourlyEl=document.getElementById('modal-hourly-leave-note');if(hourlyEl)hourlyEl.value=data.hourly_leave_note||'';
+    var paidNoteEl=document.getElementById('modal-paid-leave-note');if(paidNoteEl)paidNoteEl.value=data.paid_leave_note||'';
     document.getElementById('modal-paid-leave-exempt').checked=data.paid_leave_exempt||false;
     var remEl=document.getElementById('modal-paid-leave-remaining');
     if(remEl)remEl.value=(data.paid_leave_remaining!==null&&data.paid_leave_remaining!==undefined)?data.paid_leave_remaining:'';
