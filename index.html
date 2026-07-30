@@ -351,7 +351,7 @@ input:disabled{background:#f5f4f0;color:#aaa;border-color:#e8e6e0}
       <div class="g4" style="margin-bottom:0">
         <div class="met"><div class="met-l">有給申請</div><div class="met-v" style="color:#5b21b6" id="summary-leave-count">-</div></div>
         <div class="met"><div class="met-l">住所変更届</div><div class="met-v" style="color:#5b21b6" id="summary-address-count">-</div></div>
-        <div class="met"><div class="met-l">遅延証明書・その他書類</div><div class="met-v" style="color:#5b21b6" id="summary-upload-count">-</div></div>
+        <div class="met"><div class="met-l">提出書類（アップロード）</div><div class="met-v" style="color:#5b21b6" id="summary-upload-count">-</div></div>
         <div class="met"><div class="met-l">勤怠（単発）申請</div><div class="met-v" style="color:#5b21b6" id="summary-kintai-count">-</div></div>
       </div>
     </div>
@@ -376,11 +376,28 @@ input:disabled{background:#f5f4f0;color:#aaa;border-color:#e8e6e0}
     <div id="uploads-recv" class="sp active">
       <div class="card">
         <div class="ch"><span class="ct">スタッフから受け取った書類</span></div>
+        <div style="display:flex;gap:4px;margin-bottom:12px;border-bottom:2px solid #e8e5e0">
+          <button id="recv-tab-delay" onclick="switchRecvTab('delay')" style="padding:6px 16px;font-size:13px;font-weight:700;border:none;background:#5b21b6;color:#fff;border-radius:6px 6px 0 0;cursor:pointer">遅延証明書</button>
+          <button id="recv-tab-carinsurance" onclick="switchRecvTab('carinsurance')" style="padding:6px 16px;font-size:13px;font-weight:400;border:none;background:#e8e5e0;color:#555;border-radius:6px 6px 0 0;cursor:pointer">自動車保険証券</button>
+          <button id="recv-tab-other" onclick="switchRecvTab('other')" style="padding:6px 16px;font-size:13px;font-weight:400;border:none;background:#e8e5e0;color:#555;border-radius:6px 6px 0 0;cursor:pointer">その他書類</button>
+        </div>
         <div class="tbl-scroll">
-          <table class="tbl">
-            <thead><tr><th>名前</th><th>手続き区分</th><th>書類種別</th><th>提出日</th><th>状態</th><th></th></tr></thead>
-            <tbody id="admin-uploads-tbody">
+          <table class="tbl" id="recv-table-delay">
+            <thead><tr><th>名前</th><th>手続き区分</th><th>提出日</th><th>状態</th><th></th></tr></thead>
+            <tbody id="admin-uploads-tbody-delay">
+<tr><td colspan="5" style="text-align:center;color:#888;padding:20px">読み込み中...</td></tr>
+            </tbody>
+          </table>
+          <table class="tbl" id="recv-table-carinsurance" style="display:none">
+            <thead><tr><th>名前</th><th>手続き区分</th><th>提出日</th><th>状態</th><th>保険期限日</th><th></th></tr></thead>
+            <tbody id="admin-uploads-tbody-carinsurance">
 <tr><td colspan="6" style="text-align:center;color:#888;padding:20px">読み込み中...</td></tr>
+            </tbody>
+          </table>
+          <table class="tbl" id="recv-table-other" style="display:none">
+            <thead><tr><th>名前</th><th>手続き区分</th><th>提出日</th><th>状態</th><th></th></tr></thead>
+            <tbody id="admin-uploads-tbody-other">
+<tr><td colspan="5" style="text-align:center;color:#888;padding:20px">読み込み中...</td></tr>
             </tbody>
           </table>
         </div>
@@ -655,13 +672,19 @@ input:disabled{background:#f5f4f0;color:#aaa;border-color:#e8e6e0}
 <div id="staff-supload" class="sp">
     <div class="card">
       <div class="ch"><span class="ct">書類アップロード</span></div>
-      <div style="font-size:13px;color:#666;line-height:1.7;margin-bottom:16px">遅延証明書・その他書類をアップロードしてください。<br>担当者が確認いたします。</div>
+      <div style="font-size:13px;color:#666;line-height:1.7;margin-bottom:16px">遅延証明書・自動車保険証券・その他書類をアップロードしてください。<br>担当者が確認いたします。</div>
       <div style="background:#f7f6f2;border-radius:8px;padding:10px 12px;font-size:12px;color:#666;margin-bottom:16px">📮 アップロードした時点で会社に届いています。給与計算とあわせて確認するため、内容の反映まで少しお時間をいただく場合があります。</div>
       <div class="upload-item">
         <div class="upload-item-head"><span class="upload-item-title">📄 遅延証明書</span><span class="upload-item-opt">任意</span></div>
         <div class="upload-item-desc">電車・バスの遅延証明書をアップロードしてください。</div>
         <input type="file" id="upload-delay" accept="image/*,application/pdf" style="font-size:12px;margin-bottom:8px">
         <button class="btn btn-sm btn-p" onclick="uploadStaffDoc('delay','遅延証明書')">アップロード</button>
+      </div>
+      <div class="upload-item">
+        <div class="upload-item-head"><span class="upload-item-title">🚗 自動車保険証券</span><span class="upload-item-opt">任意</span></div>
+        <div class="upload-item-desc">自動車通勤・運転をされる方は、任意保険証券をアップロードしてください。</div>
+        <input type="file" id="upload-carinsurance" accept="image/*,application/pdf" style="font-size:12px;margin-bottom:8px">
+        <button class="btn btn-sm btn-p" onclick="uploadStaffDoc('carinsurance','自動車保険証券')">アップロード</button>
       </div>
       <div class="upload-item">
         <div class="upload-item-head"><span class="upload-item-title">📄 その他書類</span><span class="upload-item-opt">任意</span></div>
@@ -1855,6 +1878,23 @@ function goToInbox(){
   var tab=document.getElementById('nav-tab-uploads');
   if(tab)tab.click();
 }
+function switchRecvTab(tab){
+  ['delay','carinsurance','other'].forEach(function(t){
+    var table=document.getElementById('recv-table-'+t);
+    var btn=document.getElementById('recv-tab-'+t);
+    var active=t===tab;
+    if(table)table.style.display=active?'':'none';
+    if(btn){btn.style.background=active?'#5b21b6':'#e8e5e0';btn.style.color=active?'#fff':'#555';btn.style.fontWeight=active?'700':'400';}
+  });
+}
+async function saveInsuranceExpiry(docId){
+  if(!supabaseClient)return;
+  var input=document.getElementById('expiry-'+docId);
+  if(!input||!input.value){alert('保険期限日を入力してください');return;}
+  var u=await supabaseClient.from('documents').update({insurance_expiry_date:input.value}).eq('id',docId);
+  if(u.error){alert('保存に失敗しました：'+u.error.message);return;}
+  alert('保険期限日を保存しました');
+}
 function switchUploadsTab(tab){
   var isP=tab==='payslip';
   document.getElementById('uploads-table-payslip').style.display=isP?'':'none';
@@ -1897,25 +1937,39 @@ async function loadAdminUploads(){
   await buildUploadsRows(contractDocs,'admin-sent-contract-tbody');
   loadAdminAddressChanges();
   loadMonthlySummary();
-  // スタッフからのアップロード書類
+  // スタッフからのアップロード書類（種別ごとにサブタブへ振り分け）
   var uploadDocs=docs.filter(function(d){return d.type==='upload';});
-  var recvTbody=document.getElementById('admin-uploads-tbody');
-  if(recvTbody){
-    if(uploadDocs.length===0){
-      recvTbody.innerHTML='<tr><td colspan="6" style="text-align:center;color:#888;padding:40px 20px"><div style="font-size:32px;margin-bottom:8px">📥</div><div>スタッフからの提出書類はまだありません</div></td></tr>';
-    }else{
-      recvTbody.innerHTML='';
-      uploadDocs.forEach(function(d){
-        var name=staffMap[d.staff_id]||'(不明)';
-        var dateStr=d.created_at?d.created_at.substring(0,10).replace(/-/g,'/'):'';
-        var statusBdg=d.confirmed_at?'<span class="bdg bg">確認済</span>':'<span class="bdg ba">未確認</span>';
-        var confirmBtn=d.confirmed_at?'':' <button class="btn btn-sm btn-p" onclick="confirmUploadDoc(\''+d.id+'\')">確認済みにする</button>';
-        var tr=document.createElement('tr');
-        tr.innerHTML='<td>'+name+'</td><td>-</td><td style="font-size:12px">'+(d.title||'')+'</td><td style="white-space:nowrap">'+dateStr+'</td><td>'+statusBdg+'</td><td><a class="btn btn-sm" href="'+d.file_url+'" target="_blank" rel="noopener" style="text-decoration:none;display:inline-block">表示</a>'+confirmBtn+'</td>';
-        recvTbody.appendChild(tr);
-      });
+  var delayDocs=uploadDocs.filter(function(d){return d.title==='遅延証明書';});
+  var carDocs=uploadDocs.filter(function(d){return d.title==='自動車保険証券';});
+  var otherDocs=uploadDocs.filter(function(d){return d.title!=='遅延証明書'&&d.title!=='自動車保険証券';});
+  function buildRecvRows(targetDocs,tbodyId,isCar){
+    var tbody=document.getElementById(tbodyId);
+    if(!tbody)return;
+    var colCount=isCar?6:5;
+    if(targetDocs.length===0){
+      tbody.innerHTML='<tr><td colspan="'+colCount+'" style="text-align:center;color:#888;padding:40px 20px"><div style="font-size:32px;margin-bottom:8px">📥</div><div>提出書類はまだありません</div></td></tr>';
+      return;
     }
+    tbody.innerHTML='';
+    targetDocs.forEach(function(d){
+      var name=staffMap[d.staff_id]||'(不明)';
+      var dateStr=d.created_at?d.created_at.substring(0,10).replace(/-/g,'/'):'';
+      var statusBdg=d.confirmed_at?'<span class="bdg bg">確認済</span>':'<span class="bdg ba">未確認</span>';
+      var confirmBtn=d.confirmed_at?'':' <button class="btn btn-sm btn-p" onclick="confirmUploadDoc(\''+d.id+'\')">確認済みにする</button>';
+      var expiryTd='';
+      if(isCar){
+        expiryTd=d.confirmed_at
+          ?'<td><input type="date" id="expiry-'+d.id+'" value="'+(d.insurance_expiry_date||'')+'" style="font-size:12px;padding:2px 4px;width:130px"> <button class="btn btn-sm btn-p" onclick="saveInsuranceExpiry(\''+d.id+'\')">保存</button></td>'
+          :'<td style="color:#888;font-size:12px">確認後に入力</td>';
+      }
+      var tr=document.createElement('tr');
+      tr.innerHTML='<td>'+name+'</td><td>-</td><td style="white-space:nowrap">'+dateStr+'</td><td>'+statusBdg+'</td>'+expiryTd+'<td><a class="btn btn-sm" href="'+d.file_url+'" target="_blank" rel="noopener" style="text-decoration:none;display:inline-block">表示</a>'+confirmBtn+'</td>';
+      tbody.appendChild(tr);
+    });
   }
+  buildRecvRows(delayDocs,'admin-uploads-tbody-delay',false);
+  buildRecvRows(carDocs,'admin-uploads-tbody-carinsurance',true);
+  buildRecvRows(otherDocs,'admin-uploads-tbody-other',false);
 }
 var _currentAddressDetailId=null;
 async function initSummaryMonthSelect(){
