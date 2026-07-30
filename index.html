@@ -358,20 +358,6 @@ input:disabled{background:#f5f4f0;color:#aaa;border-color:#e8e6e0}
     <div class="sub-tabs">
       <button class="sub-tab active" onclick="showSub2('recv',this)">スタッフからの提出書類</button>
       <button class="sub-tab" onclick="showSub2('sent',this)">派遣元からの送付書類</button>
-      <button id="nav-subtab-address" class="sub-tab" onclick="showSub2('address',this)">住所変更届</button>
-    </div>
-    <div id="uploads-address" class="sp" style="display:none">
-      <div class="card">
-        <div class="ch"><span class="ct">住所・通勤経路変更届の一覧</span></div>
-        <div class="tbl-scroll">
-          <table class="tbl">
-            <thead><tr><th>名前</th><th>届出日</th><th>転居日</th><th>新住所</th><th>状態</th><th></th></tr></thead>
-            <tbody id="admin-address-tbody">
-<tr><td colspan="6" style="text-align:center;color:#888;padding:20px">読み込み中...</td></tr>
-            </tbody>
-          </table>
-        </div>
-      </div>
     </div>
     <div id="uploads-recv" class="sp active">
       <div class="card">
@@ -379,6 +365,7 @@ input:disabled{background:#f5f4f0;color:#aaa;border-color:#e8e6e0}
         <div style="display:flex;gap:4px;margin-bottom:12px;border-bottom:2px solid #e8e5e0">
           <button id="recv-tab-delay" onclick="switchRecvTab('delay')" style="padding:6px 16px;font-size:13px;font-weight:700;border:none;background:#5b21b6;color:#fff;border-radius:6px 6px 0 0;cursor:pointer">遅延証明書</button>
           <button id="recv-tab-carinsurance" onclick="switchRecvTab('carinsurance')" style="padding:6px 16px;font-size:13px;font-weight:400;border:none;background:#e8e5e0;color:#555;border-radius:6px 6px 0 0;cursor:pointer">自動車保険証券</button>
+          <button id="recv-tab-address" onclick="switchRecvTab('address')" style="padding:6px 16px;font-size:13px;font-weight:400;border:none;background:#e8e5e0;color:#555;border-radius:6px 6px 0 0;cursor:pointer">住所・通勤変更届</button>
           <button id="recv-tab-other" onclick="switchRecvTab('other')" style="padding:6px 16px;font-size:13px;font-weight:400;border:none;background:#e8e5e0;color:#555;border-radius:6px 6px 0 0;cursor:pointer">その他書類</button>
         </div>
         <div class="tbl-scroll">
@@ -391,6 +378,12 @@ input:disabled{background:#f5f4f0;color:#aaa;border-color:#e8e6e0}
           <table class="tbl" id="recv-table-carinsurance" style="display:none">
             <thead><tr><th>名前</th><th>手続き区分</th><th>提出日</th><th>状態</th><th>保険期限日</th><th></th></tr></thead>
             <tbody id="admin-uploads-tbody-carinsurance">
+<tr><td colspan="6" style="text-align:center;color:#888;padding:20px">読み込み中...</td></tr>
+            </tbody>
+          </table>
+          <table class="tbl" id="recv-table-address" style="display:none">
+            <thead><tr><th>名前</th><th>届出日</th><th>転居日</th><th>新住所</th><th>状態</th><th></th></tr></thead>
+            <tbody id="admin-address-tbody">
 <tr><td colspan="6" style="text-align:center;color:#888;padding:20px">読み込み中...</td></tr>
             </tbody>
           </table>
@@ -1879,7 +1872,7 @@ function goToInbox(){
   if(tab)tab.click();
 }
 function switchRecvTab(tab){
-  ['delay','carinsurance','other'].forEach(function(t){
+  ['delay','carinsurance','address','other'].forEach(function(t){
     var table=document.getElementById('recv-table-'+t);
     var btn=document.getElementById('recv-tab-'+t);
     var active=t===tab;
@@ -2140,7 +2133,7 @@ async function submitAddressChange(){
     +'<tr><td style="padding:4px 10px;border:1px solid #ddd">変更内容</td><td style="padding:4px 10px;border:1px solid #ddd">'+(payload.change_types||'-')+'</td></tr>'
     +'<tr><td style="padding:4px 10px;border:1px solid #ddd">転居日</td><td style="padding:4px 10px;border:1px solid #ddd">'+relocationDate.replace(/-/g,'/')+'</td></tr>'
     +'<tr><td style="padding:4px 10px;border:1px solid #ddd">新住所</td><td style="padding:4px 10px;border:1px solid #ddd">'+(newAddress||'-')+'</td></tr></table>'
-    +'<p style="color:#888;font-size:12px;margin-top:12px">管理画面の「書類授受」→「住所変更届」タブからご確認ください。</p></div>'
+    +'<p style="color:#888;font-size:12px;margin-top:12px">管理画面の「書類授受」→「スタッフからの提出書類」→「住所・通勤変更届」タブからご確認ください。</p></div>'
   );
   setTimeout(function(){closeModal('address-change');loadMyAddressChanges();},1200);
 }
@@ -2903,7 +2896,7 @@ function showSub(pg,id,btn){
 }
 
 function showSub2(id,btn){
-  ['recv','sent','address'].forEach(function(k){
+  ['recv','sent'].forEach(function(k){
     var el=document.getElementById('uploads-'+k);
     if(el){el.style.display='none';el.classList.remove('active');}
   });
