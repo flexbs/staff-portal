@@ -1120,6 +1120,47 @@ input:disabled{background:#f5f4f0;color:#aaa;border-color:#e8e6e0}
       <div class="fg"><label class="fl">雇用保険番号</label><input type="text" id="add-insurance" placeholder="例：1234-567890-1"></div>
     </div>
     <div class="fg"><label class="fl">備考</label><textarea id="add-note" rows="2" placeholder="メモなど"></textarea></div>
+    <div class="section-divider">住所・通勤情報（任意）</div>
+    <div class="g2">
+      <div class="fg"><label class="fl">郵便番号</label><input type="text" id="as-postal" placeholder="例：810-0001"></div>
+      <div class="fg"><label class="fl">住所</label><input type="text" id="as-address" placeholder="市区町村・番地・建物名など"></div>
+    </div>
+    <div style="font-size:12px;font-weight:700;color:#555;margin:10px 0 6px">通勤手段（あてはまるものすべて）</div>
+    <div class="fg" style="display:flex;flex-wrap:wrap;gap:10px 16px">
+      <label style="display:flex;align-items:center;gap:6px;font-size:13px;cursor:pointer"><input type="checkbox" id="as-cm-train" style="width:16px;height:16px"> 電車</label>
+      <label style="display:flex;align-items:center;gap:6px;font-size:13px;cursor:pointer"><input type="checkbox" id="as-cm-bus" style="width:16px;height:16px"> バス</label>
+      <label style="display:flex;align-items:center;gap:6px;font-size:13px;cursor:pointer"><input type="checkbox" id="as-cm-car" onchange="autoCalcNewStaffCommuteAllowance()" style="width:16px;height:16px"> 自家用車</label>
+      <label style="display:flex;align-items:center;gap:6px;font-size:13px;cursor:pointer"><input type="checkbox" id="as-cm-bicycle" style="width:16px;height:16px"> 自転車</label>
+      <label style="display:flex;align-items:center;gap:6px;font-size:13px;cursor:pointer"><input type="checkbox" id="as-cm-walk" style="width:16px;height:16px"> 徒歩</label>
+      <label style="display:flex;align-items:center;gap:6px;font-size:13px;cursor:pointer"><input type="checkbox" id="as-cm-other" style="width:16px;height:16px"> その他</label>
+    </div>
+    <div style="background:#f7f6f2;border-radius:8px;padding:10px 12px;font-size:12px;color:#666;margin:14px 0">交通機関を利用する方のみ、通勤経路をご記入ください。</div>
+    <div style="font-size:12px;font-weight:700;color:#555;margin-bottom:6px">通勤経路①</div>
+    <div class="fg"><label class="fl">交通機関名</label><input type="text" id="as-route1-company" placeholder="例：西鉄バス"></div>
+    <div class="fg"><label class="fl">乗車区間</label><input type="text" id="as-route1-section" placeholder="例：〇〇駅 〜 △△駅"></div>
+    <div style="display:flex;gap:8px">
+      <div class="fg" style="flex:1"><label class="fl">片道運賃</label><input type="number" id="as-route1-fare" placeholder="円"></div>
+      <div class="fg" style="flex:1"><label class="fl">定期代（1ヶ月）</label><input type="number" id="as-route1-pass" placeholder="円"></div>
+    </div>
+    <div style="font-size:12px;font-weight:700;color:#555;margin-bottom:6px">通勤経路②</div>
+    <div class="fg"><label class="fl">交通機関名</label><input type="text" id="as-route2-company" placeholder="例：JR"></div>
+    <div class="fg"><label class="fl">乗車区間</label><input type="text" id="as-route2-section" placeholder="例：〇〇駅 〜 △△駅"></div>
+    <div style="display:flex;gap:8px">
+      <div class="fg" style="flex:1"><label class="fl">片道運賃</label><input type="number" id="as-route2-fare" placeholder="円"></div>
+      <div class="fg" style="flex:1"><label class="fl">定期代（1ヶ月）</label><input type="number" id="as-route2-pass" placeholder="円"></div>
+    </div>
+    <div style="background:#f7f6f2;border-radius:8px;padding:10px 12px;font-size:12px;color:#666;margin:14px 0">自動車通勤の方のみご記入ください。</div>
+    <div style="display:flex;gap:8px">
+      <div class="fg" style="flex:1"><label class="fl">通勤距離（片道）</label><input type="number" step="0.1" id="as-distance" oninput="autoCalcNewStaffCommuteAllowance()" placeholder="km"></div>
+      <div class="fg" style="flex:1"><label class="fl">通勤時間（片道）</label><input type="number" id="as-time" placeholder="分"></div>
+    </div>
+    <div id="as-allowance-row" class="fg" style="display:none">
+      <label class="fl">通勤費（車通勤・自動計算）</label>
+      <div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap">
+        <input type="number" id="as-allowance-input" style="width:110px" onwheel="this.blur()"><span style="font-size:12px;color:#888">円</span>
+      </div>
+      <input type="text" id="as-allowance-basis-input" readonly style="margin-top:6px;width:100%;font-size:12px;color:#666;background:#f7f6f2;border:none;padding:6px 8px;border-radius:6px">
+    </div>
     <div id="add-staff-status" style="display:none;font-size:13px;margin-top:8px;padding:10px;border-radius:8px"></div>
     <div class="ma">
       <button class="btn btn-sm" onclick="closeModal('add-staff')">キャンセル</button>
@@ -2326,6 +2367,25 @@ function autoCalcCommuteAllowance(){
   if(basisInput)basisInput.value='700円×'+d.commute_distance_km+'km='+amount+'円';
 }
 
+function autoCalcNewStaffCommuteAllowance(){
+  var carChecked=!!document.getElementById('as-cm-car').checked;
+  var row=document.getElementById('as-allowance-row');
+  var input=document.getElementById('as-allowance-input');
+  var basisInput=document.getElementById('as-allowance-basis-input');
+  var distEl=document.getElementById('as-distance');
+  var dist=(distEl&&distEl.value!=='')?parseFloat(distEl.value):null;
+  if(!carChecked||!dist){
+    if(row)row.style.display='none';
+    if(input)input.value='';
+    if(basisInput)basisInput.value='';
+    return;
+  }
+  var amount=Math.round(700*dist);
+  if(input)input.value=amount;
+  if(basisInput)basisInput.value='700円×'+dist+'km='+amount+'円';
+  if(row)row.style.display='block';
+}
+
 async function cancelDocument(docId,fileUrl,bucket){
   if(!supabaseClient){alert('接続エラーです');return;}
   var ok=window.confirm('この書類の送付を取り消します。よろしいですか？\n（スタッフ画面からも見えなくなります）');
@@ -3522,16 +3582,68 @@ async function confirmMyNotice(recipientId){
     pension_number:pension,
     insurance_number:insurance,
     note:note
-  });
+  }).select('id').single();
   if(ins.error){
     statusEl.style.background='#fee2e2';statusEl.style.color='#991b1b';
     statusEl.textContent='登録に失敗しました：'+ins.error.message;return;
   }
+  var addrWarning='';
+  var newStaffAddress=document.getElementById('as-address').value.trim();
+  if(newStaffAddress){
+    statusEl.textContent='住所・通勤情報を登録中...';
+    var av=function(id){var el=document.getElementById(id);return (el&&el.value!=='')?el.value:null;};
+    var avInt=function(id){var v=av(id);return v!==null?parseInt(v):null;};
+    var avFloat=function(id){var v=av(id);return v!==null?parseFloat(v):null;};
+    var avChecked=function(id){var el=document.getElementById(id);return !!(el&&el.checked);};
+    var commuteMethods=[];
+    if(avChecked('as-cm-train'))commuteMethods.push('電車');
+    if(avChecked('as-cm-bus'))commuteMethods.push('バス');
+    if(avChecked('as-cm-car'))commuteMethods.push('自家用車');
+    if(avChecked('as-cm-bicycle'))commuteMethods.push('自転車');
+    if(avChecked('as-cm-walk'))commuteMethods.push('徒歩');
+    if(avChecked('as-cm-other'))commuteMethods.push('その他');
+    var allowanceInput=document.getElementById('as-allowance-input');
+    var basisInput=document.getElementById('as-allowance-basis-input');
+    var confirmerName=myStaffData?(myStaffData.name||'管理者'):'管理者';
+    var addrIns=await supabaseClient.from('address_change_requests').insert({
+      staff_id: ins.data.id,
+      relocation_date: new Date().toISOString().slice(0,10),
+      change_types: '新規登録',
+      commute_methods: commuteMethods.length?commuteMethods.join('、'):null,
+      old_postal_code: null,
+      old_address: null,
+      new_postal_code: av('as-postal'),
+      new_address: newStaffAddress,
+      route1_company: av('as-route1-company'),
+      route1_section: av('as-route1-section'),
+      route1_fare: avInt('as-route1-fare'),
+      route1_pass_fare: avInt('as-route1-pass'),
+      route2_company: av('as-route2-company'),
+      route2_section: av('as-route2-section'),
+      route2_fare: avInt('as-route2-fare'),
+      route2_pass_fare: avInt('as-route2-pass'),
+      commute_distance_km: avFloat('as-distance'),
+      commute_time_minutes: avInt('as-time'),
+      commute_allowance: (allowanceInput&&allowanceInput.value!=='')?parseInt(allowanceInput.value):null,
+      commute_allowance_basis: (basisInput&&basisInput.value.trim()!=='')?basisInput.value.trim():null,
+      confirmed_at: new Date().toISOString(),
+      confirmed_by: confirmerName
+    });
+    if(addrIns.error){
+      console.log('住所・通勤情報の登録に失敗:',addrIns.error);
+      addrWarning='（住所・通勤情報の登録には失敗しました：'+addrIns.error.message+'）';
+    }
+  }
   statusEl.style.background='#e6f4d7';statusEl.style.color='#2d6a10';
-  statusEl.textContent='追加しました！メール：'+email+'　初期パスワード：'+password;
-  ['add-employee-id','add-name','add-name-kana','add-workplace','add-workplace-address','add-dispatch-start','add-contract-start','add-contract-end','add-restriction','add-pension','add-insurance','add-note'].forEach(function(id){
+  statusEl.textContent='追加しました！メール：'+email+'　初期パスワード：'+password+addrWarning;
+  ['add-employee-id','add-name','add-name-kana','add-workplace','add-workplace-address','add-dispatch-start','add-contract-start','add-contract-end','add-restriction','add-pension','add-insurance','add-note',
+   'as-postal','as-address','as-route1-company','as-route1-section','as-route1-fare','as-route1-pass','as-route2-company','as-route2-section','as-route2-fare','as-route2-pass','as-distance','as-time','as-allowance-input','as-allowance-basis-input'].forEach(function(id){
     var el=document.getElementById(id);if(el)el.value='';
   });
+  ['as-cm-train','as-cm-bus','as-cm-car','as-cm-bicycle','as-cm-walk','as-cm-other'].forEach(function(id){
+    var el=document.getElementById(id);if(el)el.checked=false;
+  });
+  var allowanceRow=document.getElementById('as-allowance-row');if(allowanceRow)allowanceRow.style.display='none';
   document.getElementById('add-status').value='稼働中';
   setTimeout(function(){
     closeModal('add-staff');
