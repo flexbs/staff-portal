@@ -1125,6 +1125,7 @@ input:disabled{background:#f5f4f0;color:#aaa;border-color:#e8e6e0}
       <div class="fg"><label class="fl">郵便番号</label><input type="text" id="as-postal" placeholder="例：810-0001"></div>
       <div class="fg"><label class="fl">住所</label><input type="text" id="as-address" placeholder="市区町村・番地・建物名など"></div>
     </div>
+    <div style="margin:-8px 0 14px;text-align:right"><a href="#" onclick="return openNewStaffCommuteRouteOnMap()" style="font-size:12px;color:#5b21b6;text-decoration:underline">🚗 自宅から会社までの経路をGoogleマップで見る</a></div>
     <div style="font-size:12px;font-weight:700;color:#555;margin:10px 0 6px">通勤手段（あてはまるものすべて）</div>
     <div class="fg" style="display:flex;flex-wrap:wrap;gap:10px 16px">
       <label style="display:flex;align-items:center;gap:6px;font-size:13px;cursor:pointer"><input type="checkbox" id="as-cm-train" style="width:16px;height:16px"> 電車</label>
@@ -2068,6 +2069,15 @@ function openCommuteRouteOnMap(){
   if(!origin.trim()){alert('先に新しい住所を入力してください');return false;}
   var dest=(myStaffData&&myStaffData.workplace_address)?myStaffData.workplace_address:'';
   if(!dest){alert('派遣先の住所がまだ登録されていません。担当者にご確認ください');return false;}
+  window.open('https://www.google.com/maps/dir/?api=1&origin='+encodeURIComponent(origin)+'&destination='+encodeURIComponent(dest),'_blank');
+  return false;
+}
+
+function openNewStaffCommuteRouteOnMap(){
+  var origin=(document.getElementById('as-address').value||'').trim();
+  if(!origin){alert('先に住所を入力してください');return false;}
+  var dest=(document.getElementById('add-workplace-address').value||'').trim();
+  if(!dest){alert('派遣先住所がまだ入力されていません');return false;}
   window.open('https://www.google.com/maps/dir/?api=1&origin='+encodeURIComponent(origin)+'&destination='+encodeURIComponent(dest),'_blank');
   return false;
 }
