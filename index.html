@@ -871,6 +871,45 @@ input:disabled{background:#f5f4f0;color:#aaa;border-color:#e8e6e0}
     <div class="profile-row"><span class="profile-label">派遣先</span><input type="text" id="modal-workplace" style="width:auto;font-size:12px;padding:4px 8px;text-align:right;flex:1"></div>
     <div class="profile-row"><span class="profile-label">派遣先住所</span><input type="text" id="modal-workplace-address" placeholder="例：福岡市中央区六本松2-3-6 7F" style="width:auto;font-size:12px;padding:4px 8px;text-align:right;flex:1"></div>
     <div class="profile-row"><span class="profile-label">通勤費<br><span style="font-size:10px;color:#aaa;font-weight:400">（住所・通勤変更届で確認済みの最新額）</span></span><span class="profile-val" id="modal-commute-allowance" style="color:#534AB7;font-weight:600">-</span></div>
+    <div class="section-divider">住所・通勤情報<span style="font-size:11px;color:#aaa;font-weight:400">（変更すると住所・通勤変更届の履歴として登録されます）</span></div>
+    <div class="g2">
+      <div class="fg"><label class="fl">郵便番号</label><input type="text" id="mod-postal" placeholder="例：810-0001"></div>
+      <div class="fg"><label class="fl">住所</label><input type="text" id="mod-address" placeholder="市区町村・番地・建物名など"></div>
+    </div>
+    <div style="margin:-8px 0 14px;text-align:right"><a href="#" onclick="return openModCommuteRouteOnMap()" style="font-size:12px;color:#5b21b6;text-decoration:underline">🚗 自宅から会社までの経路をGoogleマップで見る</a></div>
+    <div style="font-size:12px;font-weight:700;color:#555;margin:10px 0 6px">通勤手段（あてはまるものすべて）</div>
+    <div class="fg" style="display:flex;flex-wrap:wrap;gap:10px 16px">
+      <label style="display:flex;align-items:center;gap:6px;font-size:13px;cursor:pointer"><input type="checkbox" id="mod-cm-train" style="width:16px;height:16px"> 電車</label>
+      <label style="display:flex;align-items:center;gap:6px;font-size:13px;cursor:pointer"><input type="checkbox" id="mod-cm-bus" style="width:16px;height:16px"> バス</label>
+      <label style="display:flex;align-items:center;gap:6px;font-size:13px;cursor:pointer"><input type="checkbox" id="mod-cm-car" onchange="autoCalcModCommuteAllowance()" style="width:16px;height:16px"> 自家用車</label>
+      <label style="display:flex;align-items:center;gap:6px;font-size:13px;cursor:pointer"><input type="checkbox" id="mod-cm-bicycle" style="width:16px;height:16px"> 自転車</label>
+      <label style="display:flex;align-items:center;gap:6px;font-size:13px;cursor:pointer"><input type="checkbox" id="mod-cm-walk" style="width:16px;height:16px"> 徒歩</label>
+      <label style="display:flex;align-items:center;gap:6px;font-size:13px;cursor:pointer"><input type="checkbox" id="mod-cm-other" style="width:16px;height:16px"> その他</label>
+    </div>
+    <div style="background:#f7f6f2;border-radius:8px;padding:10px 12px;font-size:12px;color:#666;margin:14px 0">交通機関を利用する方のみ、通勤経路をご記入ください。</div>
+    <div style="font-size:12px;font-weight:700;color:#555;margin-bottom:6px">通勤経路①</div>
+    <div class="fg"><label class="fl">交通機関名</label><input type="text" id="mod-route1-company" placeholder="例：西鉄バス"></div>
+    <div class="fg"><label class="fl">乗車区間</label><input type="text" id="mod-route1-section" placeholder="例：〇〇駅 〜 △△駅"></div>
+    <div style="display:flex;gap:8px">
+      <div class="fg" style="flex:1"><label class="fl">片道運賃</label><input type="number" id="mod-route1-fare" placeholder="円"></div>
+      <div class="fg" style="flex:1"><label class="fl">定期代（1ヶ月）</label><input type="number" id="mod-route1-pass" placeholder="円"></div>
+    </div>
+    <div style="font-size:12px;font-weight:700;color:#555;margin-bottom:6px">通勤経路②</div>
+    <div class="fg"><label class="fl">交通機関名</label><input type="text" id="mod-route2-company" placeholder="例：JR"></div>
+    <div class="fg"><label class="fl">乗車区間</label><input type="text" id="mod-route2-section" placeholder="例：〇〇駅 〜 △△駅"></div>
+    <div style="display:flex;gap:8px">
+      <div class="fg" style="flex:1"><label class="fl">片道運賃</label><input type="number" id="mod-route2-fare" placeholder="円"></div>
+      <div class="fg" style="flex:1"><label class="fl">定期代（1ヶ月）</label><input type="number" id="mod-route2-pass" placeholder="円"></div>
+    </div>
+    <div style="background:#f7f6f2;border-radius:8px;padding:10px 12px;font-size:12px;color:#666;margin:14px 0">自動車通勤の方のみご記入ください。</div>
+    <div class="fg"><label class="fl">通勤距離（片道）</label><input type="number" step="0.1" id="mod-distance" oninput="autoCalcModCommuteAllowance()" placeholder="km"></div>
+    <div id="mod-allowance-row" class="fg" style="display:none">
+      <label class="fl">通勤費（車通勤・自動計算）</label>
+      <div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap">
+        <input type="number" id="mod-allowance-input" style="width:110px" onwheel="this.blur()"><span style="font-size:12px;color:#888">円</span>
+      </div>
+      <input type="text" id="mod-allowance-basis-input" readonly style="margin-top:6px;width:100%;font-size:12px;color:#666;background:#f7f6f2;border:none;padding:6px 8px;border-radius:6px">
+    </div>
     <div class="profile-row"><span class="profile-label">派遣開始日</span><input type="date" id="modal-dispatch-start" style="width:auto;font-size:12px;padding:4px 8px"></div>
     <div class="profile-row"><span class="profile-label">現契約期間</span><input type="text" id="modal-contract" style="width:auto;font-size:12px;padding:4px 8px;text-align:right"></div>
     <div class="profile-row"><span class="profile-label">個人抵触日</span><input type="date" id="modal-restriction" style="width:auto;font-size:12px;padding:4px 8px"></div><div class="profile-row"><span class="profile-label">有給取得日</span><input type="date" id="modal-paid-leave-date" style="width:auto;font-size:12px;padding:4px 8px"></div>
@@ -2080,6 +2119,15 @@ function openNewStaffCommuteRouteOnMap(){
   return false;
 }
 
+function openModCommuteRouteOnMap(){
+  var origin=(document.getElementById('mod-address').value||'').trim();
+  if(!origin){alert('先に住所を入力してください');return false;}
+  var dest=(document.getElementById('modal-workplace-address').value||'').trim();
+  if(!dest){alert('派遣先住所がまだ入力されていません');return false;}
+  window.open('https://www.google.com/maps/dir/?api=1&origin='+encodeURIComponent(origin)+'&destination='+encodeURIComponent(dest),'_blank');
+  return false;
+}
+
 function splitRouteSection(section){
   var seps=['〜','～','~','−','-','ー','−'];
   for(var i=0;i<seps.length;i++){
@@ -2381,6 +2429,25 @@ function autoCalcNewStaffCommuteAllowance(){
   var input=document.getElementById('as-allowance-input');
   var basisInput=document.getElementById('as-allowance-basis-input');
   var distEl=document.getElementById('as-distance');
+  var dist=(distEl&&distEl.value!=='')?parseFloat(distEl.value):null;
+  if(!carChecked||!dist){
+    if(row)row.style.display='none';
+    if(input)input.value='';
+    if(basisInput)basisInput.value='';
+    return;
+  }
+  var amount=Math.round(700*dist);
+  if(input)input.value=amount;
+  if(basisInput)basisInput.value='700円×'+dist+'km='+amount+'円';
+  if(row)row.style.display='block';
+}
+
+function autoCalcModCommuteAllowance(){
+  var carChecked=!!document.getElementById('mod-cm-car').checked;
+  var row=document.getElementById('mod-allowance-row');
+  var input=document.getElementById('mod-allowance-input');
+  var basisInput=document.getElementById('mod-allowance-basis-input');
+  var distEl=document.getElementById('mod-distance');
   var dist=(distEl&&distEl.value!=='')?parseFloat(distEl.value):null;
   if(!carChecked||!dist){
     if(row)row.style.display='none';
@@ -2834,7 +2901,51 @@ async function saveStaffProfile(){
     const paidLeaveNote=document.getElementById('modal-paid-leave-note')?(document.getElementById('modal-paid-leave-note').value||null):null;
     const{error}=await supabaseClient.from('staffs').update({status:staffStatus,workplace:workplace,workplace_address:workplaceAddress,dispatch_start_date:dispatchStart,restriction_date:restrictionDate,resignation_date:resignationDate,contract_end_date:contractEnd,paid_leave_grant_date:paidLeaveDate,paid_leave_grant_days:paidLeaveDays,paid_leave_exempt:paidLeaveExempt,paid_leave_remaining:paidLeaveRemaining,paid_leave_note:paidLeaveNote,work_minutes_per_day:workMinutesPerDay,pension_number:pensionNumber,insurance_number:insuranceNumber,note:staffNote,hourly_leave_note:hourlyLeaveNote}).eq('employee_id',empId);
     if(error){alert('保存失敗：'+error.message);return;}
-    alert('保存しました！');
+    var modAddress=document.getElementById('mod-address')?document.getElementById('mod-address').value.trim():'';
+    var addrWarning='';
+    if(modAddress&&window._currentStaffProfileId){
+      var mv=function(id){var el=document.getElementById(id);return (el&&el.value!=='')?el.value:null;};
+      var mvInt=function(id){var v=mv(id);return v!==null?parseInt(v):null;};
+      var mvFloat=function(id){var v=mv(id);return v!==null?parseFloat(v):null;};
+      var mChecked=function(id){var el=document.getElementById(id);return !!(el&&el.checked);};
+      var modCommuteMethods=[];
+      if(mChecked('mod-cm-train'))modCommuteMethods.push('電車');
+      if(mChecked('mod-cm-bus'))modCommuteMethods.push('バス');
+      if(mChecked('mod-cm-car'))modCommuteMethods.push('自家用車');
+      if(mChecked('mod-cm-bicycle'))modCommuteMethods.push('自転車');
+      if(mChecked('mod-cm-walk'))modCommuteMethods.push('徒歩');
+      if(mChecked('mod-cm-other'))modCommuteMethods.push('その他');
+      var modAllowanceInput=document.getElementById('mod-allowance-input');
+      var modBasisInput=document.getElementById('mod-allowance-basis-input');
+      var modConfirmerName=myStaffData?(myStaffData.name||'管理者'):'管理者';
+      var modAddrIns=await supabaseClient.from('address_change_requests').insert({
+        staff_id: window._currentStaffProfileId,
+        relocation_date: new Date().toISOString().slice(0,10),
+        change_types: '管理者による更新',
+        commute_methods: modCommuteMethods.length?modCommuteMethods.join('、'):null,
+        old_postal_code: null,
+        old_address: null,
+        new_postal_code: mv('mod-postal'),
+        new_address: modAddress,
+        route1_company: mv('mod-route1-company'),
+        route1_section: mv('mod-route1-section'),
+        route1_fare: mvInt('mod-route1-fare'),
+        route1_pass_fare: mvInt('mod-route1-pass'),
+        route2_company: mv('mod-route2-company'),
+        route2_section: mv('mod-route2-section'),
+        route2_fare: mvInt('mod-route2-fare'),
+        route2_pass_fare: mvInt('mod-route2-pass'),
+        commute_distance_km: mvFloat('mod-distance'),
+        commute_allowance: (modAllowanceInput&&modAllowanceInput.value!=='')?parseInt(modAllowanceInput.value):null,
+        commute_allowance_basis: (modBasisInput&&modBasisInput.value.trim()!=='')?modBasisInput.value.trim():null,
+        confirmed_at: new Date().toISOString(),
+        confirmed_by: modConfirmerName
+      });
+      if(modAddrIns.error){
+        addrWarning='（住所・通勤情報の登録には失敗しました：'+modAddrIns.error.message+'）';
+      }
+    }
+    alert('保存しました！'+addrWarning);
     closeModal('staff-profile');
   }catch(e){alert('エラー：'+e.message);}
 }
@@ -3060,6 +3171,43 @@ async function openStaffDetail(empId){
     var wmEl=document.getElementById('modal-work-mins');
     if(whEl)whEl.value=wmpd!==null?Math.floor(wmpd/60):'';
     if(wmEl)wmEl.value=wmpd!==null?wmpd%60:'';
+    window._currentStaffProfileId=data.id;
+    var {data:latestAddr}=await supabaseClient.from('address_change_requests')
+      .select('*')
+      .eq('staff_id',data.id)
+      .order('created_at',{ascending:false})
+      .limit(1)
+      .maybeSingle();
+    var setV=function(id,v){var el=document.getElementById(id);if(el)el.value=v||'';};
+    var setC=function(id,v){var el=document.getElementById(id);if(el)el.checked=!!v;};
+    if(latestAddr){
+      setV('mod-postal',latestAddr.new_postal_code);
+      setV('mod-address',latestAddr.new_address);
+      var methods=(latestAddr.commute_methods||'');
+      setC('mod-cm-train',methods.indexOf('電車')>-1);
+      setC('mod-cm-bus',methods.indexOf('バス')>-1);
+      setC('mod-cm-car',methods.indexOf('自家用車')>-1);
+      setC('mod-cm-bicycle',methods.indexOf('自転車')>-1);
+      setC('mod-cm-walk',methods.indexOf('徒歩')>-1);
+      setC('mod-cm-other',methods.indexOf('その他')>-1);
+      setV('mod-route1-company',latestAddr.route1_company);
+      setV('mod-route1-section',latestAddr.route1_section);
+      setV('mod-route1-fare',latestAddr.route1_fare);
+      setV('mod-route1-pass',latestAddr.route1_pass_fare);
+      setV('mod-route2-company',latestAddr.route2_company);
+      setV('mod-route2-section',latestAddr.route2_section);
+      setV('mod-route2-fare',latestAddr.route2_fare);
+      setV('mod-route2-pass',latestAddr.route2_pass_fare);
+      setV('mod-distance',latestAddr.commute_distance_km);
+      setV('mod-allowance-input',latestAddr.commute_allowance);
+      setV('mod-allowance-basis-input',latestAddr.commute_allowance_basis);
+    }else{
+      ['mod-postal','mod-address','mod-route1-company','mod-route1-section','mod-route1-fare','mod-route1-pass',
+       'mod-route2-company','mod-route2-section','mod-route2-fare','mod-route2-pass','mod-distance',
+       'mod-allowance-input','mod-allowance-basis-input'].forEach(function(id){setV(id,'');});
+      ['mod-cm-train','mod-cm-bus','mod-cm-car','mod-cm-bicycle','mod-cm-walk','mod-cm-other'].forEach(function(id){setC(id,false);});
+    }
+    autoCalcModCommuteAllowance();
     var commuteEl=document.getElementById('modal-commute-allowance');
     if(commuteEl){
       commuteEl.textContent='読み込み中…';
