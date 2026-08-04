@@ -2448,33 +2448,29 @@ function autoCalcNewStaffCommuteAllowance(){
   var dist=(distEl&&distEl.value!=='')?parseFloat(distEl.value):null;
   var gasMode=!!(document.getElementById('as-calc-mode-gas')&&document.getElementById('as-calc-mode-gas').checked);
   var gasPriceRow=document.getElementById('as-gas-price-row');
-  if(gasPriceRow)gasPriceRow.style.display=(carChecked&&gasMode)?'block':'none';
-  if(!carChecked||!dist){
+  if(!carChecked){
     if(row)row.style.display='none';
     if(input)input.value='';
     if(basisInput)basisInput.value='';
+    if(gasPriceRow)gasPriceRow.style.display='none';
     return;
   }
+  if(row)row.style.display='block';
+  if(gasPriceRow)gasPriceRow.style.display=gasMode?'block':'none';
+  if(!dist)return;
   if(gasMode){
     var gasPriceEl=document.getElementById('as-gas-price');
     var gasPrice=(gasPriceEl&&gasPriceEl.value!=='')?parseFloat(gasPriceEl.value):null;
-    if(!gasPrice){
-      if(input)input.value='';
-      if(basisInput)basisInput.value='';
-      if(row)row.style.display='block';
-      return;
-    }
+    if(!gasPrice)return;
     var roundTrip=dist*2;
     var amountG=Math.round((roundTrip/10)*gasPrice);
     if(input)input.value=amountG;
     if(basisInput)basisInput.value='ガソリン'+gasPrice+'円/L×往復'+roundTrip+'km÷燃費10km/L='+amountG+'円';
-    if(row)row.style.display='block';
     return;
   }
   var amount=Math.round(700*dist);
   if(input)input.value=amount;
   if(basisInput)basisInput.value='700円×'+dist+'km='+amount+'円';
-  if(row)row.style.display='block';
 }
 
 function autoCalcModCommuteAllowance(){
@@ -2486,33 +2482,29 @@ function autoCalcModCommuteAllowance(){
   var dist=(distEl&&distEl.value!=='')?parseFloat(distEl.value):null;
   var gasMode=!!(document.getElementById('mod-calc-mode-gas')&&document.getElementById('mod-calc-mode-gas').checked);
   var gasPriceRow=document.getElementById('mod-gas-price-row');
-  if(gasPriceRow)gasPriceRow.style.display=(carChecked&&gasMode)?'block':'none';
-  if(!carChecked||!dist){
+  if(!carChecked){
     if(row)row.style.display='none';
     if(input)input.value='';
     if(basisInput)basisInput.value='';
+    if(gasPriceRow)gasPriceRow.style.display='none';
     return;
   }
+  if(row)row.style.display='block';
+  if(gasPriceRow)gasPriceRow.style.display=gasMode?'block':'none';
+  if(!dist)return;
   if(gasMode){
     var gasPriceEl=document.getElementById('mod-gas-price');
     var gasPrice=(gasPriceEl&&gasPriceEl.value!=='')?parseFloat(gasPriceEl.value):null;
-    if(!gasPrice){
-      if(input)input.value='';
-      if(basisInput)basisInput.value='';
-      if(row)row.style.display='block';
-      return;
-    }
+    if(!gasPrice)return;
     var roundTrip=dist*2;
     var amountG=Math.round((roundTrip/10)*gasPrice);
     if(input)input.value=amountG;
     if(basisInput)basisInput.value='ガソリン'+gasPrice+'円/L×往復'+roundTrip+'km÷燃費10km/L='+amountG+'円';
-    if(row)row.style.display='block';
     return;
   }
   var amount=Math.round(700*dist);
   if(input)input.value=amount;
   if(basisInput)basisInput.value='700円×'+dist+'km='+amount+'円';
-  if(row)row.style.display='block';
 }
 
 async function cancelDocument(docId,fileUrl,bucket){
