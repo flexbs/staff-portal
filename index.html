@@ -903,12 +903,20 @@ input:disabled{background:#f5f4f0;color:#aaa;border-color:#e8e6e0}
     </div>
     <div style="background:#f7f6f2;border-radius:8px;padding:10px 12px;font-size:12px;color:#666;margin:14px 0">自動車通勤の方のみご記入ください。</div>
     <div class="fg"><label class="fl">通勤距離（片道）</label><input type="number" step="0.1" id="mod-distance" oninput="autoCalcModCommuteAllowance()" placeholder="km"></div>
+    <div class="fg" style="display:flex;flex-wrap:wrap;gap:10px 16px;margin-bottom:8px">
+      <label style="display:flex;align-items:center;gap:6px;font-size:13px;cursor:pointer"><input type="radio" name="mod-calc-mode" id="mod-calc-mode-normal" checked onchange="autoCalcModCommuteAllowance()" style="width:16px;height:16px">700円×kmで計算（通常・フルタイムなど）</label>
+      <label style="display:flex;align-items:center;gap:6px;font-size:13px;cursor:pointer"><input type="radio" name="mod-calc-mode" id="mod-calc-mode-gas" onchange="autoCalcModCommuteAllowance()" style="width:16px;height:16px">ガソリン実費で計算（週3日勤務など）</label>
+    </div>
+    <div id="mod-gas-price-row" class="fg" style="display:none">
+      <label class="fl">ガソリン価格（1リットルあたり）</label>
+      <input type="number" id="mod-gas-price" oninput="autoCalcModCommuteAllowance()" placeholder="例：170" style="width:110px"><span style="font-size:12px;color:#888;margin-left:6px">円/L　※燃費10km/L・往復距離で計算します</span>
+    </div>
     <div id="mod-allowance-row" class="fg" style="display:none">
       <label class="fl">通勤費（車通勤・自動計算）</label>
       <div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap">
         <input type="number" id="mod-allowance-input" style="width:110px" onwheel="this.blur()"><span style="font-size:12px;color:#888">円</span>
       </div>
-      <input type="text" id="mod-allowance-basis-input" readonly style="margin-top:6px;width:100%;font-size:12px;color:#666;background:#f7f6f2;border:none;padding:6px 8px;border-radius:6px">
+      <input type="text" id="mod-allowance-basis-input" placeholder="例：日額350円×週3日など、実際の計算方法" style="margin-top:6px;width:100%;font-size:12px;color:#333;background:#fff;border:1px solid #ddd;padding:6px 8px;border-radius:6px">
     </div>
     <div class="profile-row"><span class="profile-label">派遣開始日</span><input type="date" id="modal-dispatch-start" style="width:auto;font-size:12px;padding:4px 8px"></div>
     <div class="profile-row"><span class="profile-label">現契約期間</span><input type="text" id="modal-contract" style="width:auto;font-size:12px;padding:4px 8px;text-align:right"></div>
@@ -1192,12 +1200,20 @@ input:disabled{background:#f5f4f0;color:#aaa;border-color:#e8e6e0}
     </div>
     <div style="background:#f7f6f2;border-radius:8px;padding:10px 12px;font-size:12px;color:#666;margin:14px 0">自動車通勤の方のみご記入ください。</div>
     <div class="fg"><label class="fl">通勤距離（片道）</label><input type="number" step="0.1" id="as-distance" oninput="autoCalcNewStaffCommuteAllowance()" placeholder="km"></div>
+    <div class="fg" style="display:flex;flex-wrap:wrap;gap:10px 16px;margin-bottom:8px">
+      <label style="display:flex;align-items:center;gap:6px;font-size:13px;cursor:pointer"><input type="radio" name="as-calc-mode" id="as-calc-mode-normal" checked onchange="autoCalcNewStaffCommuteAllowance()" style="width:16px;height:16px">700円×kmで計算（通常・フルタイムなど）</label>
+      <label style="display:flex;align-items:center;gap:6px;font-size:13px;cursor:pointer"><input type="radio" name="as-calc-mode" id="as-calc-mode-gas" onchange="autoCalcNewStaffCommuteAllowance()" style="width:16px;height:16px">ガソリン実費で計算（週3日勤務など）</label>
+    </div>
+    <div id="as-gas-price-row" class="fg" style="display:none">
+      <label class="fl">ガソリン価格（1リットルあたり）</label>
+      <input type="number" id="as-gas-price" oninput="autoCalcNewStaffCommuteAllowance()" placeholder="例：170" style="width:110px"><span style="font-size:12px;color:#888;margin-left:6px">円/L　※燃費10km/L・往復距離で計算します</span>
+    </div>
     <div id="as-allowance-row" class="fg" style="display:none">
       <label class="fl">通勤費（車通勤・自動計算）</label>
       <div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap">
         <input type="number" id="as-allowance-input" style="width:110px" onwheel="this.blur()"><span style="font-size:12px;color:#888">円</span>
       </div>
-      <input type="text" id="as-allowance-basis-input" readonly style="margin-top:6px;width:100%;font-size:12px;color:#666;background:#f7f6f2;border:none;padding:6px 8px;border-radius:6px">
+      <input type="text" id="as-allowance-basis-input" placeholder="例：日額350円×週3日など、実際の計算方法" style="margin-top:6px;width:100%;font-size:12px;color:#333;background:#fff;border:1px solid #ddd;padding:6px 8px;border-radius:6px">
     </div>
     <div id="add-staff-status" style="display:none;font-size:13px;margin-top:8px;padding:10px;border-radius:8px"></div>
     <div class="ma">
@@ -2430,10 +2446,29 @@ function autoCalcNewStaffCommuteAllowance(){
   var basisInput=document.getElementById('as-allowance-basis-input');
   var distEl=document.getElementById('as-distance');
   var dist=(distEl&&distEl.value!=='')?parseFloat(distEl.value):null;
+  var gasMode=!!(document.getElementById('as-calc-mode-gas')&&document.getElementById('as-calc-mode-gas').checked);
+  var gasPriceRow=document.getElementById('as-gas-price-row');
+  if(gasPriceRow)gasPriceRow.style.display=(carChecked&&gasMode)?'block':'none';
   if(!carChecked||!dist){
     if(row)row.style.display='none';
     if(input)input.value='';
     if(basisInput)basisInput.value='';
+    return;
+  }
+  if(gasMode){
+    var gasPriceEl=document.getElementById('as-gas-price');
+    var gasPrice=(gasPriceEl&&gasPriceEl.value!=='')?parseFloat(gasPriceEl.value):null;
+    if(!gasPrice){
+      if(input)input.value='';
+      if(basisInput)basisInput.value='';
+      if(row)row.style.display='block';
+      return;
+    }
+    var roundTrip=dist*2;
+    var amountG=Math.round((roundTrip/10)*gasPrice);
+    if(input)input.value=amountG;
+    if(basisInput)basisInput.value='ガソリン'+gasPrice+'円/L×往復'+roundTrip+'km÷燃費10km/L='+amountG+'円';
+    if(row)row.style.display='block';
     return;
   }
   var amount=Math.round(700*dist);
@@ -2449,10 +2484,29 @@ function autoCalcModCommuteAllowance(){
   var basisInput=document.getElementById('mod-allowance-basis-input');
   var distEl=document.getElementById('mod-distance');
   var dist=(distEl&&distEl.value!=='')?parseFloat(distEl.value):null;
+  var gasMode=!!(document.getElementById('mod-calc-mode-gas')&&document.getElementById('mod-calc-mode-gas').checked);
+  var gasPriceRow=document.getElementById('mod-gas-price-row');
+  if(gasPriceRow)gasPriceRow.style.display=(carChecked&&gasMode)?'block':'none';
   if(!carChecked||!dist){
     if(row)row.style.display='none';
     if(input)input.value='';
     if(basisInput)basisInput.value='';
+    return;
+  }
+  if(gasMode){
+    var gasPriceEl=document.getElementById('mod-gas-price');
+    var gasPrice=(gasPriceEl&&gasPriceEl.value!=='')?parseFloat(gasPriceEl.value):null;
+    if(!gasPrice){
+      if(input)input.value='';
+      if(basisInput)basisInput.value='';
+      if(row)row.style.display='block';
+      return;
+    }
+    var roundTrip=dist*2;
+    var amountG=Math.round((roundTrip/10)*gasPrice);
+    if(input)input.value=amountG;
+    if(basisInput)basisInput.value='ガソリン'+gasPrice+'円/L×往復'+roundTrip+'km÷燃費10km/L='+amountG+'円';
+    if(row)row.style.display='block';
     return;
   }
   var amount=Math.round(700*dist);
