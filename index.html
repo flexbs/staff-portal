@@ -2701,6 +2701,33 @@ async function approveLeaveRequest(reqId){
     var u=await supabaseClient.from('staffs').update({paid_leave_remaining:newRemaining}).eq('id',reqData.staff_id);
     if(u.error){alert('承認はしましたが、有給残の更新に失敗しました：'+u.error.message);loadAdminLeaveRequests();return;}
   }
+  try{
+    if(deductDays>0){
+      var today=new Date().toISOString().substring(0,10);
+      var {data:grants,error:grantsErr}=await supabaseClient.from('leave_grants').select('*').eq('staff_id',reqData.staff_id).gte('expire_date',today).gt('remaining_days',0).order('expire_date',{ascending:true});
+      if(grantsErr){
+        console.error('leave_grants取得に失敗しました:',grantsErr.message);
+      }else if(grants&&grants.length>0){
+        var remainToDeduct=deductDays;
+        var grantUpdates=[];
+        for(var i=0;i<grants.length&&remainToDeduct>0;i++){
+          var g=grants[i];
+          var deductFromThis=Math.min(g.remaining_days,remainToDeduct);
+          if(deductFromThis>0){
+            grantUpdates.push({id:g.id,remaining_days:g.remaining_days-deductFromThis});
+            remainToDeduct-=deductFromThis;
+          }
+        }
+        for(var j=0;j<grantUpdates.length;j++){
+          var gu=grantUpdates[j];
+          var gr=await supabaseClient.from('leave_grants').update({remaining_days:gu.remaining_days}).eq('id',gu.id);
+          if(gr.error)console.error('leave_grants更新に失敗しました(id='+gu.id+'):',gr.error.message);
+        }
+      }
+    }
+  }catch(e){
+    console.error('leave_grants内訳の更新中にエラーが発生しました:',e);
+  }
   alert('承認しました。');
   loadAdminLeaveRequests();
 }
@@ -2727,7 +2754,7 @@ async function cancelLeaveRequest(reqId,currentStatus,leaveDate){
       var currentRemaining=(staffData&&staffData.paid_leave_remaining!==null&&staffData.paid_leave_remaining!==undefined)?staffData.paid_leave_remaining:null;
       if(currentRemaining!==null){
         var newRemaining=currentRemaining+restoreDays;
-        restoreInfo={staffId:reqData.staff_id,newRemaining:newRemaining};
+        restoreInfo={staffId:reqData.staff_id,newRemaining:newRemaining,restoreDays:restoreDays};
         msg+='\n有給残：'+currentRemaining+'日 → '+newRemaining+'日（'+restoreDays+'日分を自動で戻します）';
       }
     }
@@ -2750,6 +2777,33 @@ async function cancelLeaveRequest(reqId,currentStatus,leaveDate){
   if(restoreInfo){
     var u=await supabaseClient.from('staffs').update({paid_leave_remaining:restoreInfo.newRemaining}).eq('id',restoreInfo.staffId);
     if(u.error){alert('取消はしましたが、有給残の更新に失敗しました：'+u.error.message);loadAdminLeaveRequests();return;}
+  }
+  try{
+    if(restoreInfo&&restoreInfo.restoreDays>0){
+      var {data:grants,error:grantsErr}=await supabaseClient.from('leave_grants').select('*').eq('staff_id',restoreInfo.staffId).gte('expire_date',today).order('expire_date',{ascending:false});
+      if(grantsErr){
+        console.error('leave_grants取得に失敗しました:',grantsErr.message);
+      }else if(grants&&grants.length>0){
+        var remainToRestore=restoreInfo.restoreDays;
+        var grantUpdates=[];
+        for(var i=0;i<grants.length&&remainToRestore>0;i++){
+          var g=grants[i];
+          var capacity=g.grant_days-g.remaining_days;
+          var restoreToThis=Math.min(capacity,remainToRestore);
+          if(restoreToThis>0){
+            grantUpdates.push({id:g.id,remaining_days:g.remaining_days+restoreToThis});
+            remainToRestore-=restoreToThis;
+          }
+        }
+        for(var j=0;j<grantUpdates.length;j++){
+          var gu=grantUpdates[j];
+          var gr=await supabaseClient.from('leave_grants').update({remaining_days:gu.remaining_days}).eq('id',gu.id);
+          if(gr.error)console.error('leave_grants更新に失敗しました(id='+gu.id+'):',gr.error.message);
+        }
+      }
+    }
+  }catch(e){
+    console.error('leave_grants内訳の復元中にエラーが発生しました:',e);
   }
   alert('取消しました。');
   loadAdminLeaveRequests();
