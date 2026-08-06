@@ -863,7 +863,7 @@ input:disabled{background:#f5f4f0;color:#aaa;border-color:#e8e6e0}
   <div class="modal" style="max-width:420px">
     <div class="mt">有給承認</div>
     <div id="approve-leave-info" style="font-size:12px;color:#666;background:#f5f4f0;border-radius:8px;padding:10px 12px;margin-bottom:14px;line-height:1.6"></div>
-    <div class="fg">
+    <div class="fg" id="approve-type-choice-wrap">
       <label style="display:flex;align-items:center;gap:8px;margin-bottom:10px;cursor:pointer;font-size:13px">
         <input type="radio" name="approve-leave-type" id="approve-type-normal" checked onchange="onApproveLeaveTypeChange()">
         <span>通常通り承認する（有給残から控除）</span>
@@ -2768,34 +2768,12 @@ async function approveLeaveRequest(reqId){
   var deductDays=reqData.day_type==='full'?1:(reqData.day_type==='am'||reqData.day_type==='pm')?0.5:0;
   var {data:staffData}=await supabaseClient.from('staffs').select('paid_leave_remaining,employee_id,hourly_leave_remaining').eq('id',reqData.staff_id).single();
   var currentRemaining=(staffData&&staffData.paid_leave_remaining!==null&&staffData.paid_leave_remaining!==undefined)?staffData.paid_leave_remaining:null;
-  var isHourlyEligible=staffData&&HOURLY_LEAVE_ELIGIBLE_IDS.includes(staffData.employee_id);
-  if(isHourlyEligible){
-    var currentHourlyRemaining=(staffData&&staffData.hourly_leave_remaining!==null&&staffData.hourly_leave_remaining!==undefined)?staffData.hourly_leave_remaining:null;
-    openApproveLeaveChoiceModal(reqId,reqData,deductDays,currentRemaining,currentHourlyRemaining);
-    return;
-  }
-  var newRemaining=(currentRemaining!==null)?(currentRemaining-deductDays):null;
-  var msg='この申請を承認しますか?';
-  if(currentRemaining!==null){
-    msg+='\n有給残：'+currentRemaining+'日 → '+newRemaining+'日（'+deductDays+'日分を自動で差し引きます）';
-  }else{
-    msg+='\n※有給残日数が未入力のため、自動での差し引きは行われません';
-  }
-  var ok=window.confirm(msg);
-  if(!ok)return;
-  var now=new Date().toISOString();
-  var r=await supabaseClient.from('leave_requests').update({status:'approved',updated_at:now}).eq('id',reqId);
-  if(r.error){alert('承認に失敗しました:'+r.error.message);return;}
-  if(currentRemaining!==null){
-    var u=await supabaseClient.from('staffs').update({paid_leave_remaining:newRemaining}).eq('id',reqData.staff_id);
-    if(u.error){alert('承認はしましたが、有給残の更新に失敗しました：'+u.error.message);loadAdminLeaveRequests();return;}
-  }
-  await deductFromLeaveGrants(reqData.staff_id,deductDays);
-  alert('承認しました。');
-  loadAdminLeaveRequests();
+  var isHourlyEligible=staffData&&HOURLY_LEAVE_ELIGIBLE_IDS.includes(String(staffData.employee_id));
+  var currentHourlyRemaining=(staffData&&staffData.hourly_leave_remaining!==null&&staffData.hourly_leave_remaining!==undefined)?staffData.hourly_leave_remaining:null;
+  openApproveLeaveChoiceModal(reqId,reqData,deductDays,currentRemaining,currentHourlyRemaining,isHourlyEligible);
 }
 
-function openApproveLeaveChoiceModal(reqId,reqData,deductDays,currentRemaining,currentHourlyRemaining){
+function openApproveLeaveChoiceModal(reqId,reqData,deductDays,currentRemaining,currentHourlyRemaining,isHourlyEligible){
   _pendingApproval={reqId:reqId,staffId:reqData.staff_id,deductDays:deductDays,currentRemaining:currentRemaining,currentHourlyRemaining:currentHourlyRemaining};
   var normalRadio=document.getElementById('approve-type-normal');
   var hourlyRadio=document.getElementById('approve-type-hourly');
@@ -2805,8 +2783,21 @@ function openApproveLeaveChoiceModal(reqId,reqData,deductDays,currentRemaining,c
   if(hoursInput)hoursInput.value='';
   var wrap=document.getElementById('approve-hourly-input-wrap');
   if(wrap)wrap.style.display='none';
-  var info='通常承認の場合：有給残 '+(currentRemaining!==null?currentRemaining+'日':'未入力')+'（'+deductDays+'日分を控除）';
-  info+='<br>時間休残：'+((currentHourlyRemaining!==null&&currentHourlyRemaining!==undefined)?currentHourlyRemaining+'時間':'未入力');
+  var choiceWrap=document.getElementById('approve-type-choice-wrap');
+  if(choiceWrap)choiceWrap.style.display=isHourlyEligible?'block':'none';
+  var newRemaining=(currentRemaining!==null)?(currentRemaining-deductDays):null;
+  var isNegative=newRemaining!==null&&newRemaining<0;
+  var info='有給残：'+(currentRemaining!==null?currentRemaining+'日':'未入力');
+  if(newRemaining!==null){
+    info+=' → '+(isNegative?('<span style="color:#dc2626;font-weight:700">'+newRemaining+'日</span>'):(newRemaining+'日'));
+  }
+  info+='（'+deductDays+'日分を控除）';
+  if(isNegative){
+    info+='<div style="color:#dc2626;font-weight:700;margin-top:6px">⚠️ 有給残がマイナスになります。本当に承認しますか？</div>';
+  }
+  if(isHourlyEligible){
+    info+='<br>時間休残：'+((currentHourlyRemaining!==null&&currentHourlyRemaining!==undefined)?currentHourlyRemaining+'時間':'未入力');
+  }
   var infoEl=document.getElementById('approve-leave-info');
   if(infoEl)infoEl.innerHTML=info;
   openModal('approve-leave');
