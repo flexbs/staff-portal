@@ -3153,7 +3153,7 @@ async function saveStaffProfile(){
     if(error){alert('保存失敗：'+error.message);return;}
     var modAddress=document.getElementById('mod-address')?document.getElementById('mod-address').value.trim():'';
     var addrWarning='';
-    if(modAddress&&window._currentStaffProfileId){
+    if(modAddress&&window._currentStaffProfileId&&modAddress!==(window._currentStaffOriginalAddress||'')){
       var mv=function(id){var el=document.getElementById(id);return (el&&el.value!=='')?el.value:null;};
       var mvInt=function(id){var v=mv(id);return v!==null?parseInt(v):null;};
       var mvFloat=function(id){var v=mv(id);return v!==null?parseFloat(v):null;};
@@ -3462,6 +3462,7 @@ async function openStaffDetail(empId){
        'mod-allowance-input','mod-allowance-basis-input'].forEach(function(id){setV(id,'');});
       ['mod-cm-train','mod-cm-bus','mod-cm-car','mod-cm-bicycle','mod-cm-walk','mod-cm-other'].forEach(function(id){setC(id,false);});
     }
+    window._currentStaffOriginalAddress=(latestAddr&&latestAddr.new_address)?latestAddr.new_address.trim():'';
     autoCalcModCommuteAllowance();
     var commuteEl=document.getElementById('modal-commute-allowance');
     if(commuteEl){
