@@ -859,6 +859,31 @@ input:disabled{background:#f5f4f0;color:#aaa;border-color:#e8e6e0}
   </div>
 </div>
 
+<div class="mbg" id="modal-approve-leave">
+  <div class="modal" style="max-width:420px">
+    <div class="mt">有給承認</div>
+    <div id="approve-leave-info" style="font-size:12px;color:#666;background:#f5f4f0;border-radius:8px;padding:10px 12px;margin-bottom:14px;line-height:1.6"></div>
+    <div class="fg">
+      <label style="display:flex;align-items:center;gap:8px;margin-bottom:10px;cursor:pointer;font-size:13px">
+        <input type="radio" name="approve-leave-type" id="approve-type-normal" checked onchange="onApproveLeaveTypeChange()">
+        <span>通常通り承認する（有給残から控除）</span>
+      </label>
+      <label style="display:flex;align-items:center;gap:8px;cursor:pointer;font-size:13px">
+        <input type="radio" name="approve-leave-type" id="approve-type-hourly" onchange="onApproveLeaveTypeChange()">
+        <span>時間休として承認する（時間休残から控除）</span>
+      </label>
+    </div>
+    <div class="fg" id="approve-hourly-input-wrap" style="display:none">
+      <label class="fl">控除する時間数</label>
+      <input type="number" id="approve-hourly-hours" min="0" step="0.5" placeholder="例：2">
+    </div>
+    <div class="ma">
+      <button class="btn btn-sm" onclick="closeModal('approve-leave')">キャンセル</button>
+      <button class="btn btn-sm btn-p" onclick="submitApproveLeaveChoice()">承認する</button>
+    </div>
+  </div>
+</div>
+
 <div class="mbg" id="modal-staff-profile">
   <div class="modal">
     <div class="mt">スタッフ詳細情報</div>
@@ -2678,33 +2703,14 @@ function printLeaveRequests(){
   w.focus();
   setTimeout(function(){w.print();},500);
 }
-async function approveLeaveRequest(reqId){
-  if(!supabaseClient){alert('接続エラー');return;}
-  var {data:reqData,error:reqErr}=await supabaseClient.from('leave_requests').select('*').eq('id',reqId).single();
-  if(reqErr||!reqData){alert('申請データの取得に失敗しました');return;}
-  var deductDays=reqData.day_type==='full'?1:(reqData.day_type==='am'||reqData.day_type==='pm')?0.5:0;
-  var {data:staffData}=await supabaseClient.from('staffs').select('paid_leave_remaining').eq('id',reqData.staff_id).single();
-  var currentRemaining=(staffData&&staffData.paid_leave_remaining!==null&&staffData.paid_leave_remaining!==undefined)?staffData.paid_leave_remaining:null;
-  var newRemaining=(currentRemaining!==null)?(currentRemaining-deductDays):null;
-  var msg='この申請を承認しますか?';
-  if(currentRemaining!==null){
-    msg+='\n有給残：'+currentRemaining+'日 → '+newRemaining+'日（'+deductDays+'日分を自動で差し引きます）';
-  }else{
-    msg+='\n※有給残日数が未入力のため、自動での差し引きは行われません';
-  }
-  var ok=window.confirm(msg);
-  if(!ok)return;
-  var now=new Date().toISOString();
-  var r=await supabaseClient.from('leave_requests').update({status:'approved',updated_at:now}).eq('id',reqId);
-  if(r.error){alert('承認に失敗しました:'+r.error.message);return;}
-  if(currentRemaining!==null){
-    var u=await supabaseClient.from('staffs').update({paid_leave_remaining:newRemaining}).eq('id',reqData.staff_id);
-    if(u.error){alert('承認はしましたが、有給残の更新に失敗しました：'+u.error.message);loadAdminLeaveRequests();return;}
-  }
+var HOURLY_LEAVE_ELIGIBLE_IDS=['6018','1040','7036','5008','7075'];
+var _pendingApproval=null;
+
+async function deductFromLeaveGrants(staffId,deductDays){
   try{
     if(deductDays>0){
       var today=new Date().toISOString().substring(0,10);
-      var {data:grants,error:grantsErr}=await supabaseClient.from('leave_grants').select('*').eq('staff_id',reqData.staff_id).gte('expire_date',today).gt('remaining_days',0).order('expire_date',{ascending:true});
+      var {data:grants,error:grantsErr}=await supabaseClient.from('leave_grants').select('*').eq('staff_id',staffId).gte('expire_date',today).gt('remaining_days',0).order('expire_date',{ascending:true});
       if(grantsErr){
         console.error('leave_grants取得に失敗しました:',grantsErr.message);
       }else if(grants&&grants.length>0){
@@ -2728,7 +2734,104 @@ async function approveLeaveRequest(reqId){
   }catch(e){
     console.error('leave_grants内訳の更新中にエラーが発生しました:',e);
   }
+}
+
+async function approveLeaveRequest(reqId){
+  if(!supabaseClient){alert('接続エラー');return;}
+  var {data:reqData,error:reqErr}=await supabaseClient.from('leave_requests').select('*').eq('id',reqId).single();
+  if(reqErr||!reqData){alert('申請データの取得に失敗しました');return;}
+  var deductDays=reqData.day_type==='full'?1:(reqData.day_type==='am'||reqData.day_type==='pm')?0.5:0;
+  var {data:staffData}=await supabaseClient.from('staffs').select('paid_leave_remaining,employee_id,hourly_leave_remaining').eq('id',reqData.staff_id).single();
+  var currentRemaining=(staffData&&staffData.paid_leave_remaining!==null&&staffData.paid_leave_remaining!==undefined)?staffData.paid_leave_remaining:null;
+  var isHourlyEligible=staffData&&HOURLY_LEAVE_ELIGIBLE_IDS.includes(staffData.employee_id);
+  if(isHourlyEligible){
+    var currentHourlyRemaining=(staffData&&staffData.hourly_leave_remaining!==null&&staffData.hourly_leave_remaining!==undefined)?staffData.hourly_leave_remaining:null;
+    openApproveLeaveChoiceModal(reqId,reqData,deductDays,currentRemaining,currentHourlyRemaining);
+    return;
+  }
+  var newRemaining=(currentRemaining!==null)?(currentRemaining-deductDays):null;
+  var msg='この申請を承認しますか?';
+  if(currentRemaining!==null){
+    msg+='\n有給残：'+currentRemaining+'日 → '+newRemaining+'日（'+deductDays+'日分を自動で差し引きます）';
+  }else{
+    msg+='\n※有給残日数が未入力のため、自動での差し引きは行われません';
+  }
+  var ok=window.confirm(msg);
+  if(!ok)return;
+  var now=new Date().toISOString();
+  var r=await supabaseClient.from('leave_requests').update({status:'approved',updated_at:now}).eq('id',reqId);
+  if(r.error){alert('承認に失敗しました:'+r.error.message);return;}
+  if(currentRemaining!==null){
+    var u=await supabaseClient.from('staffs').update({paid_leave_remaining:newRemaining}).eq('id',reqData.staff_id);
+    if(u.error){alert('承認はしましたが、有給残の更新に失敗しました：'+u.error.message);loadAdminLeaveRequests();return;}
+  }
+  await deductFromLeaveGrants(reqData.staff_id,deductDays);
   alert('承認しました。');
+  loadAdminLeaveRequests();
+}
+
+function openApproveLeaveChoiceModal(reqId,reqData,deductDays,currentRemaining,currentHourlyRemaining){
+  _pendingApproval={reqId:reqId,staffId:reqData.staff_id,deductDays:deductDays,currentRemaining:currentRemaining,currentHourlyRemaining:currentHourlyRemaining};
+  var normalRadio=document.getElementById('approve-type-normal');
+  var hourlyRadio=document.getElementById('approve-type-hourly');
+  if(normalRadio)normalRadio.checked=true;
+  if(hourlyRadio)hourlyRadio.checked=false;
+  var hoursInput=document.getElementById('approve-hourly-hours');
+  if(hoursInput)hoursInput.value='';
+  var wrap=document.getElementById('approve-hourly-input-wrap');
+  if(wrap)wrap.style.display='none';
+  var info='通常承認の場合：有給残 '+(currentRemaining!==null?currentRemaining+'日':'未入力')+'（'+deductDays+'日分を控除）';
+  info+='<br>時間休残：'+((currentHourlyRemaining!==null&&currentHourlyRemaining!==undefined)?currentHourlyRemaining+'時間':'未入力');
+  var infoEl=document.getElementById('approve-leave-info');
+  if(infoEl)infoEl.innerHTML=info;
+  openModal('approve-leave');
+}
+
+function onApproveLeaveTypeChange(){
+  var isHourly=document.getElementById('approve-type-hourly').checked;
+  document.getElementById('approve-hourly-input-wrap').style.display=isHourly?'block':'none';
+}
+
+async function submitApproveLeaveChoice(){
+  if(!_pendingApproval)return;
+  var isHourly=document.getElementById('approve-type-hourly').checked;
+  if(isHourly){
+    await approveAsHourlyLeave(_pendingApproval);
+  }else{
+    await approveAsNormalLeave(_pendingApproval);
+  }
+}
+
+async function approveAsNormalLeave(pending){
+  var newRemaining=(pending.currentRemaining!==null)?(pending.currentRemaining-pending.deductDays):null;
+  closeModal('approve-leave');
+  var now=new Date().toISOString();
+  var r=await supabaseClient.from('leave_requests').update({status:'approved',updated_at:now,approved_as:'normal'}).eq('id',pending.reqId);
+  if(r.error){alert('承認に失敗しました:'+r.error.message);return;}
+  if(pending.currentRemaining!==null){
+    var u=await supabaseClient.from('staffs').update({paid_leave_remaining:newRemaining}).eq('id',pending.staffId);
+    if(u.error){alert('承認はしましたが、有給残の更新に失敗しました：'+u.error.message);loadAdminLeaveRequests();return;}
+  }
+  await deductFromLeaveGrants(pending.staffId,pending.deductDays);
+  _pendingApproval=null;
+  alert('承認しました。');
+  loadAdminLeaveRequests();
+}
+
+async function approveAsHourlyLeave(pending){
+  var hoursInput=document.getElementById('approve-hourly-hours');
+  var hours=hoursInput?parseFloat(hoursInput.value):NaN;
+  if(!hours||isNaN(hours)||hours<=0){alert('時間数を正しく入力してください');return;}
+  var current=(pending.currentHourlyRemaining!==null&&pending.currentHourlyRemaining!==undefined)?pending.currentHourlyRemaining:0;
+  var newHourly=Math.max(0,current-hours);
+  closeModal('approve-leave');
+  var now=new Date().toISOString();
+  var r=await supabaseClient.from('leave_requests').update({status:'approved',updated_at:now,approved_as:'hourly',hourly_hours_deducted:hours}).eq('id',pending.reqId);
+  if(r.error){alert('承認に失敗しました:'+r.error.message);return;}
+  var u=await supabaseClient.from('staffs').update({hourly_leave_remaining:newHourly}).eq('id',pending.staffId);
+  if(u.error){alert('承認はしましたが、時間休残の更新に失敗しました：'+u.error.message);loadAdminLeaveRequests();return;}
+  _pendingApproval=null;
+  alert('時間休として承認しました。');
   loadAdminLeaveRequests();
 }
 
@@ -2748,13 +2851,20 @@ async function cancelLeaveRequest(reqId,currentStatus,leaveDate){
   var restoreInfo=null;
   if(currentStatus==='approved'){
     var {data:reqData}=await supabaseClient.from('leave_requests').select('*').eq('id',reqId).single();
-    if(reqData){
+    if(reqData&&reqData.approved_as==='hourly'){
+      var {data:staffData}=await supabaseClient.from('staffs').select('hourly_leave_remaining').eq('id',reqData.staff_id).single();
+      var currentHourlyRemaining=(staffData&&staffData.hourly_leave_remaining!==null&&staffData.hourly_leave_remaining!==undefined)?staffData.hourly_leave_remaining:0;
+      var restoreHours=reqData.hourly_hours_deducted||0;
+      var newHourlyRemaining=currentHourlyRemaining+restoreHours;
+      restoreInfo={type:'hourly',staffId:reqData.staff_id,newHourlyRemaining:newHourlyRemaining,restoreHours:restoreHours};
+      msg+='\n時間休残：'+currentHourlyRemaining+'時間 → '+newHourlyRemaining+'時間（'+restoreHours+'時間分を自動で戻します）';
+    }else if(reqData){
       var restoreDays=reqData.day_type==='full'?1:(reqData.day_type==='am'||reqData.day_type==='pm')?0.5:0;
       var {data:staffData}=await supabaseClient.from('staffs').select('paid_leave_remaining').eq('id',reqData.staff_id).single();
       var currentRemaining=(staffData&&staffData.paid_leave_remaining!==null&&staffData.paid_leave_remaining!==undefined)?staffData.paid_leave_remaining:null;
       if(currentRemaining!==null){
         var newRemaining=currentRemaining+restoreDays;
-        restoreInfo={staffId:reqData.staff_id,newRemaining:newRemaining,restoreDays:restoreDays};
+        restoreInfo={type:'normal',staffId:reqData.staff_id,newRemaining:newRemaining,restoreDays:restoreDays};
         msg+='\n有給残：'+currentRemaining+'日 → '+newRemaining+'日（'+restoreDays+'日分を自動で戻します）';
       }
     }
@@ -2774,12 +2884,15 @@ async function cancelLeaveRequest(reqId,currentStatus,leaveDate){
   if(adminStaffId)updateData.cancelled_by=adminStaffId;
   var r=await supabaseClient.from('leave_requests').update(updateData).eq('id',reqId);
   if(r.error){alert('取消に失敗しました:'+r.error.message);return;}
-  if(restoreInfo){
+  if(restoreInfo&&restoreInfo.type==='hourly'){
+    var u=await supabaseClient.from('staffs').update({hourly_leave_remaining:restoreInfo.newHourlyRemaining}).eq('id',restoreInfo.staffId);
+    if(u.error){alert('取消はしましたが、時間休残の更新に失敗しました：'+u.error.message);loadAdminLeaveRequests();return;}
+  }else if(restoreInfo){
     var u=await supabaseClient.from('staffs').update({paid_leave_remaining:restoreInfo.newRemaining}).eq('id',restoreInfo.staffId);
     if(u.error){alert('取消はしましたが、有給残の更新に失敗しました：'+u.error.message);loadAdminLeaveRequests();return;}
   }
   try{
-    if(restoreInfo&&restoreInfo.restoreDays>0){
+    if(restoreInfo&&restoreInfo.type!=='hourly'&&restoreInfo.restoreDays>0){
       var {data:grants,error:grantsErr}=await supabaseClient.from('leave_grants').select('*').eq('staff_id',restoreInfo.staffId).gte('expire_date',today).order('expire_date',{ascending:false});
       if(grantsErr){
         console.error('leave_grants取得に失敗しました:',grantsErr.message);
