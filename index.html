@@ -875,7 +875,8 @@ input:disabled{background:#f5f4f0;color:#aaa;border-color:#e8e6e0}
     </div>
     <div class="fg" id="approve-hourly-input-wrap" style="display:none">
       <label class="fl">控除する時間数</label>
-      <input type="number" id="approve-hourly-hours" min="0" step="0.5" placeholder="例：2">
+      <input type="number" id="approve-hourly-hours" min="0" step="0.5" placeholder="例：2" oninput="checkHourlyLeaveOverInput()">
+      <div id="approve-hourly-over-warning" style="display:none;color:#dc2626;font-size:12px;font-weight:700;margin-top:4px"></div>
     </div>
     <div class="ma">
       <button class="btn btn-sm" onclick="closeModal('approve-leave')">キャンセル</button>
@@ -2783,6 +2784,8 @@ function openApproveLeaveChoiceModal(reqId,reqData,deductDays,currentRemaining,c
   if(hoursInput)hoursInput.value='';
   var wrap=document.getElementById('approve-hourly-input-wrap');
   if(wrap)wrap.style.display='none';
+  var overWarnEl=document.getElementById('approve-hourly-over-warning');
+  if(overWarnEl)overWarnEl.style.display='none';
   var choiceWrap=document.getElementById('approve-type-choice-wrap');
   if(choiceWrap)choiceWrap.style.display=isHourlyEligible?'block':'none';
   var newRemaining=(currentRemaining!==null)?(currentRemaining-deductDays):null;
@@ -2806,6 +2809,21 @@ function openApproveLeaveChoiceModal(reqId,reqData,deductDays,currentRemaining,c
 function onApproveLeaveTypeChange(){
   var isHourly=document.getElementById('approve-type-hourly').checked;
   document.getElementById('approve-hourly-input-wrap').style.display=isHourly?'block':'none';
+  checkHourlyLeaveOverInput();
+}
+
+function checkHourlyLeaveOverInput(){
+  var warnEl=document.getElementById('approve-hourly-over-warning');
+  if(!warnEl)return;
+  var current=_pendingApproval?_pendingApproval.currentHourlyRemaining:null;
+  var hoursInput=document.getElementById('approve-hourly-hours');
+  var hours=hoursInput?parseFloat(hoursInput.value):NaN;
+  if(current!==null&&current!==undefined&&!isNaN(hours)&&hours>current){
+    warnEl.textContent='時間休残('+current+'時間)を超えています';
+    warnEl.style.display='block';
+  }else{
+    warnEl.style.display='none';
+  }
 }
 
 async function submitApproveLeaveChoice(){
