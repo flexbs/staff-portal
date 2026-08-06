@@ -955,6 +955,7 @@ input:disabled{background:#f5f4f0;color:#aaa;border-color:#e8e6e0}
     <div id="modal-next-grant-alert" style="display:none;background:#fee2e2;border-radius:8px;padding:8px 12px;font-size:12px;color:#991b1b;font-weight:700;margin-bottom:8px"></div>
     <div class="profile-row"><span class="profile-label">有給対象外</span><label style="display:flex;align-items:center;gap:6px;cursor:pointer"><input type="checkbox" id="modal-paid-leave-exempt" style="width:16px;height:16px;accent-color:#534AB7"><span style="font-size:12px;color:#666">チェックするとスタッフ画面の有給情報が非表示になります</span></label></div>
     <div class="profile-row"><span class="profile-label">有給残日数</span><input type="number" id="modal-paid-leave-remaining" placeholder="未入力" step="0.5" min="0" style="width:80px;font-size:12px;padding:4px 8px"> <span style="font-size:12px;color:#888">日（<span id="leave-remaining-label"></span>現在の残日数を入力）</span></div>
+    <div class="profile-row" id="modal-hourly-leave-remaining-row" style="display:none"><span class="profile-label">時間休残</span><input type="number" id="modal-hourly-leave-remaining" placeholder="未入力" step="1" min="0" style="width:80px;font-size:12px;padding:4px 8px"> <span style="font-size:12px;color:#888">時間</span></div>
     <div class="profile-row" style="align-items:flex-start"><span class="profile-label">有給残メモ<br><span style="font-size:10px;color:#aaa;font-weight:400">（比例付与など）</span></span><textarea id="modal-paid-leave-note" placeholder="例：比例付与のため通常より少なめ" rows="2" style="width:auto;font-size:12px;padding:4px 8px;flex:1"></textarea></div>
     <div class="profile-row"><span class="profile-label">所定労働時間</span><input type="number" id="modal-work-hours" placeholder="7" min="0" max="12" style="width:50px;font-size:12px;padding:4px 8px"> <span style="font-size:12px;color:#888">時間</span> <input type="number" id="modal-work-mins" placeholder="0" min="0" max="59" style="width:50px;font-size:12px;padding:4px 8px;margin-left:6px"> <span style="font-size:12px;color:#888">分</span></div>
     <div class="ma"><button class="btn btn-sm" onclick="closeModal('staff-profile')">閉じる</button><button class="btn btn-sm btn-p" onclick="saveStaffProfile()">保存する →</button></div>
@@ -1837,13 +1838,15 @@ function renderStaffListOnly(list){
     var tr=document.createElement('tr');
     var statusBdg=s.status==='稼働中'?'<span class="bdg bg">稼働中</span>':s.status==='契約終了'?'<span class="bdg bz">契約終了</span>':s.status==='育休中'?'<span class="bdg ba">育休中</span>':s.status==='休業中'?'<span class="bdg bo">休業中</span>':s.status==='短期・単発'?'<span class="bdg bb">短期・単発</span>':s.status==='請負'?'<span class="bdg bp">請負</span>':s.status==='管理者'?'<span class="bdg" style="background:#7c3aed;color:#fff">管理者</span>':'<span class="bdg bz">-</span>';
     var remDays=(s.paid_leave_remaining!==null&&s.paid_leave_remaining!==undefined)?s.paid_leave_remaining:'-';
+    var isHourlyEligible=HOURLY_LEAVE_ELIGIBLE_IDS.includes(String(s.employee_id));
+    var hourlySuffix=(isHourlyEligible&&s.hourly_leave_remaining!==null&&s.hourly_leave_remaining!==undefined)?' / '+s.hourly_leave_remaining+'時間':'';
     var remLabel;
     if(s.status==='契約終了'){
       var endStr=s.resignation_date?s.resignation_date.replace(/-/g,'/'):'-';
       remLabel='<span style="color:#555">'+endStr+'</span>';
     }else{
       var remColor=remDays<=3?'#991b1b':remDays<=7?'#8a5a00':'#1a6b1a';
-      remLabel=remDays!=='-'?('<span style="font-weight:700;color:'+remColor+';cursor:pointer;text-decoration:underline" onclick="goToStaffLeave(\''+s.id+'\',\''+s.name+'\')">'+remDays+'日</span>'):'<span style="color:#aaa">-</span>';
+      remLabel=remDays!=='-'?('<span style="font-weight:700;color:'+remColor+';cursor:pointer;text-decoration:underline" onclick="goToStaffLeave(\''+s.id+'\',\''+s.name+'\')">'+remDays+'日'+hourlySuffix+'</span>'):('<span style="color:#aaa">-'+hourlySuffix+'</span>');
     }
     tr.innerHTML='<td>'+s.name+'</td><td>'+statusBdg+'</td><td>'+String(s.employee_id).padStart(4,'0')+'</td><td>'+(s.workplace||'')+'</td><td style="text-align:center">'+remLabel+'</td><td><button class="btn btn-sm" onclick="openStaffDetail('+s.employee_id+')">プロフィール</button></td>';
     tbody.appendChild(tr);
@@ -3100,6 +3103,9 @@ async function saveStaffProfile(){
     const paidLeaveDays=document.getElementById('modal-paid-leave-days').value?parseInt(document.getElementById('modal-paid-leave-days').value):null;
     const paidLeaveExempt=document.getElementById('modal-paid-leave-exempt').checked;
     const paidLeaveRemaining=document.getElementById('modal-paid-leave-remaining').value!==''?parseFloat(document.getElementById('modal-paid-leave-remaining').value):null;
+    const isHourlyEligible=HOURLY_LEAVE_ELIGIBLE_IDS.includes(String(empId));
+    const hourlyLeaveRemainingEl=document.getElementById('modal-hourly-leave-remaining');
+    const hourlyLeaveRemaining=(isHourlyEligible&&hourlyLeaveRemainingEl&&hourlyLeaveRemainingEl.value!=='')?parseFloat(hourlyLeaveRemainingEl.value):null;
     const workHours=document.getElementById('modal-work-hours').value!==''?parseInt(document.getElementById('modal-work-hours').value):null;
     const workMins=document.getElementById('modal-work-mins').value!==''?parseInt(document.getElementById('modal-work-mins').value):0;
     const workMinutesPerDay=(workHours!==null)?(workHours*60+workMins):null;
@@ -3112,7 +3118,7 @@ async function saveStaffProfile(){
     const staffNote=document.getElementById('modal-note').value||null;
     const hourlyLeaveNote=document.getElementById('modal-hourly-leave-note')?(document.getElementById('modal-hourly-leave-note').value||null):null;
     const paidLeaveNote=document.getElementById('modal-paid-leave-note')?(document.getElementById('modal-paid-leave-note').value||null):null;
-    const{error}=await supabaseClient.from('staffs').update({status:staffStatus,workplace:workplace,workplace_address:workplaceAddress,dispatch_start_date:dispatchStart,restriction_date:restrictionDate,resignation_date:resignationDate,contract_end_date:contractEnd,paid_leave_grant_date:paidLeaveDate,paid_leave_grant_days:paidLeaveDays,paid_leave_exempt:paidLeaveExempt,paid_leave_remaining:paidLeaveRemaining,paid_leave_note:paidLeaveNote,work_minutes_per_day:workMinutesPerDay,pension_number:pensionNumber,insurance_number:insuranceNumber,note:staffNote,hourly_leave_note:hourlyLeaveNote}).eq('employee_id',empId);
+    const{error}=await supabaseClient.from('staffs').update({status:staffStatus,workplace:workplace,workplace_address:workplaceAddress,dispatch_start_date:dispatchStart,restriction_date:restrictionDate,resignation_date:resignationDate,contract_end_date:contractEnd,paid_leave_grant_date:paidLeaveDate,paid_leave_grant_days:paidLeaveDays,paid_leave_exempt:paidLeaveExempt,paid_leave_remaining:paidLeaveRemaining,paid_leave_note:paidLeaveNote,work_minutes_per_day:workMinutesPerDay,pension_number:pensionNumber,insurance_number:insuranceNumber,note:staffNote,hourly_leave_note:hourlyLeaveNote,...(isHourlyEligible?{hourly_leave_remaining:hourlyLeaveRemaining}:{})}).eq('employee_id',empId);
     if(error){alert('保存失敗：'+error.message);return;}
     var modAddress=document.getElementById('mod-address')?document.getElementById('mod-address').value.trim():'';
     var addrWarning='';
@@ -3379,6 +3385,11 @@ async function openStaffDetail(empId){
     document.getElementById('modal-paid-leave-exempt').checked=data.paid_leave_exempt||false;
     var remEl=document.getElementById('modal-paid-leave-remaining');
     if(remEl)remEl.value=(data.paid_leave_remaining!==null&&data.paid_leave_remaining!==undefined)?data.paid_leave_remaining:'';
+    var hourlyRemRow=document.getElementById('modal-hourly-leave-remaining-row');
+    var hourlyRemEl=document.getElementById('modal-hourly-leave-remaining');
+    var isHourlyEligible=HOURLY_LEAVE_ELIGIBLE_IDS.includes(String(data.employee_id));
+    if(hourlyRemRow)hourlyRemRow.style.display=isHourlyEligible?'flex':'none';
+    if(hourlyRemEl)hourlyRemEl.value=(isHourlyEligible&&data.hourly_leave_remaining!==null&&data.hourly_leave_remaining!==undefined)?data.hourly_leave_remaining:'';
     var wmpd=data.work_minutes_per_day||null;
     var whEl=document.getElementById('modal-work-hours');
     var wmEl=document.getElementById('modal-work-mins');
