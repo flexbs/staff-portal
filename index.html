@@ -1829,6 +1829,24 @@ function filterStaffList(filter){
   renderStaffListOnly(filtered);
 }
 
+function calcNextGrantInfo(s){
+  if(s.paid_leave_exempt)return null;
+  var grantDate=s.paid_leave_grant_date;
+  if(!grantDate&&s.dispatch_start_date){
+    var start=new Date(s.dispatch_start_date);
+    var today=new Date();
+    var months=(today.getFullYear()-start.getFullYear())*12+(today.getMonth()-start.getMonth());
+    var thresholds=[{m:6,d:10},{m:18,d:11},{m:30,d:12},{m:42,d:14},{m:54,d:16},{m:66,d:18},{m:78,d:20}];
+    var idx=0;for(var i=0;i<thresholds.length;i++){if(months>=thresholds[i].m)idx=i;}
+    var grantD=new Date(start);grantD.setMonth(grantD.getMonth()+6);
+    while(grantD<=today){var next=new Date(grantD);next.setFullYear(next.getFullYear()+1);if(next>today)break;grantD=next;}
+    grantDate=grantD.toISOString().split('T')[0];
+  }
+  if(!grantDate)return null;
+  var nextGrantDate=new Date(grantDate);nextGrantDate.setFullYear(nextGrantDate.getFullYear()+1);
+  var daysUntilNext=Math.ceil((nextGrantDate-new Date())/(1000*60*60*24));
+  return {nextGrantDate:nextGrantDate,daysUntilNext:daysUntilNext};
+}
 function renderStaffListOnly(list){
   var tbody=document.getElementById('admin-stafflist-tbody');
   if(!tbody)return;
@@ -1847,6 +1865,10 @@ function renderStaffListOnly(list){
     }else{
       var remColor=remDays<=3?'#991b1b':remDays<=7?'#8a5a00':'#1a6b1a';
       remLabel=remDays!=='-'?('<span style="font-weight:700;color:'+remColor+';cursor:pointer;text-decoration:underline" onclick="goToStaffLeave(\''+s.id+'\',\''+s.name+'\')">'+remDays+'日'+hourlySuffix+'</span>'):('<span style="color:#aaa">-'+hourlySuffix+'</span>');
+      var grantInfo=calcNextGrantInfo(s);
+      if(grantInfo&&grantInfo.daysUntilNext>=0&&grantInfo.daysUntilNext<=30){
+        remLabel+='<br><span style="color:#991b1b;font-size:10px;font-weight:700">⚠️あと'+grantInfo.daysUntilNext+'日で付与</span>';
+      }
     }
     tr.innerHTML='<td>'+s.name+'</td><td>'+statusBdg+'</td><td>'+String(s.employee_id).padStart(4,'0')+'</td><td>'+(s.workplace||'')+'</td><td style="text-align:center">'+remLabel+'</td><td><button class="btn btn-sm" onclick="openStaffDetail('+s.employee_id+')">プロフィール</button></td>';
     tbody.appendChild(tr);
