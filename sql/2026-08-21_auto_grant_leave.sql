@@ -66,98 +66,98 @@ COMMENT ON COLUMN staffs.weekly_working_days IS '週所定労働日数。標準�
 -- ============================================================
 -- 実行前に必ずSELECTで現状を確認し、若松さんの目視確認を経てから実行してください。
 
-UPDATE staffs SET hire_date = '2024-09-02' WHERE employee_id = 1007; -- 安達亜希子
-UPDATE staffs SET hire_date = '2005-07-25' WHERE employee_id = 1040; -- 伊藤竜也
-UPDATE staffs SET hire_date = '2018-03-29' WHERE employee_id = 1042; -- 稲田美紀
-UPDATE staffs SET hire_date = '2025-07-28' WHERE employee_id = 1143; -- 岡村真人
-UPDATE staffs SET hire_date = '2011-05-23' WHERE employee_id = 1105; -- 尾上知佳
-UPDATE staffs SET hire_date = '2018-07-01' WHERE employee_id = 3044; -- 片倉早紀
-UPDATE staffs SET hire_date = '2025-03-20' WHERE employee_id = 2019; -- 角屋克博
-UPDATE staffs SET hire_date = '2005-05-30' WHERE employee_id = 2024; -- 川井さおり
-UPDATE staffs SET hire_date = '2022-05-01' WHERE employee_id = 2102; -- 川本せりあ
-UPDATE staffs SET hire_date = '2021-04-19' WHERE employee_id = 2098; -- 久保理絵
-UPDATE staffs SET hire_date = '2016-08-01' WHERE employee_id = 2091; -- 近藤真美
-UPDATE staffs SET hire_date = '2013-06-04' WHERE employee_id = 3004; -- 境妙
-UPDATE staffs SET hire_date = '2002-09-01' WHERE employee_id = 3048; -- 末武真奈美
-UPDATE staffs SET hire_date = '2018-01-25' WHERE employee_id = 3053; -- 杉野亜由美
-UPDATE staffs SET hire_date = '2025-06-01' WHERE employee_id = 3079; -- 諏訪聡子
-UPDATE staffs SET hire_date = '2020-07-06' WHERE employee_id = 1120; -- 相原かおり(単発要員・有給対象外)
-UPDATE staffs SET hire_date = '2024-09-02' WHERE employee_id = 4108; -- 田中穂乃香
-UPDATE staffs SET hire_date = '2022-01-21' WHERE employee_id = 4063; -- 土屋和美
-UPDATE staffs SET hire_date = '2026-04-16' WHERE employee_id = 4113; -- 東矢ひろみ
-UPDATE staffs SET hire_date = '2026-02-16' WHERE employee_id = 4111; -- 外池宏次
-UPDATE staffs SET hire_date = '2016-12-21' WHERE employee_id = 5008; -- 中島一雄(特殊対応・自動化対象外)
-UPDATE staffs SET hire_date = '2004-03-01' WHERE employee_id = 5013; -- 中嶋美幸
-UPDATE staffs SET hire_date = '2023-08-16' WHERE employee_id = 5074; -- 中山由美
-UPDATE staffs SET hire_date = '2011-03-29' WHERE employee_id = 5040; -- 西嶋大輔
-UPDATE staffs SET hire_date = '2024-11-21' WHERE employee_id = 5079; -- 西山愛
-UPDATE staffs SET hire_date = '2025-05-01' WHERE employee_id = 5080; -- 納冨悠希
-UPDATE staffs SET hire_date = '2026-01-13' WHERE employee_id = 6113; -- 濵田友華
-UPDATE staffs SET hire_date = '2016-03-07' WHERE employee_id = 6018; -- 早高祥子
-UPDATE staffs SET hire_date = '2005-03-07' WHERE employee_id = 6032; -- 樋口聡明
-UPDATE staffs SET hire_date = '2022-02-01' WHERE employee_id = 6103; -- 平田愛
-UPDATE staffs SET hire_date = '2025-01-14' WHERE employee_id = 6111; -- 渕上秋美
-UPDATE staffs SET hire_date = '2024-12-16' WHERE employee_id = 6094; -- 細川浩一
-UPDATE staffs SET hire_date = '2021-02-17' WHERE employee_id = 6100; -- 堀英人
-UPDATE staffs SET hire_date = '2002-05-17' WHERE employee_id = 7036; -- 溝上祥代
-UPDATE staffs SET hire_date = '2025-01-16' WHERE employee_id = 7083; -- 三岳直子
-UPDATE staffs SET hire_date = '2023-06-06' WHERE employee_id = 7089; -- 本村晴美
-UPDATE staffs SET hire_date = '2020-01-06' WHERE employee_id = 7075; -- 森岡純子
-UPDATE staffs SET hire_date = '2024-12-01' WHERE employee_id = 7092; -- 森下結
-UPDATE staffs SET hire_date = '2025-04-21' WHERE employee_id = 8073; -- 大和晴菜
-UPDATE staffs SET hire_date = '2025-11-01' WHERE employee_id = 1148; -- 岩本茉子
-UPDATE staffs SET hire_date = '2017-02-21' WHERE employee_id = 1073; -- 瓜生祥子
-UPDATE staffs SET hire_date = '2016-08-18' WHERE employee_id = 1072; -- 瓜生純子
-UPDATE staffs SET hire_date = '2016-05-06' WHERE employee_id = 5050; -- 江口恵美
-UPDATE staffs SET hire_date = '2025-05-01' WHERE employee_id = 1142; -- 榎並佳織
-UPDATE staffs SET hire_date = '2023-10-01' WHERE employee_id = 1136; -- 大田司
-UPDATE staffs SET hire_date = '2016-08-10' WHERE employee_id = 2068; -- 黒木良太
-UPDATE staffs SET hire_date = '2026-04-01' WHERE employee_id = 3080; -- 坂田萌子
-UPDATE staffs SET hire_date = '2011-07-13' WHERE employee_id = 3015; -- 坂本夏子
-UPDATE staffs SET hire_date = '2022-05-09' WHERE employee_id = 3071; -- 佐多薫
-UPDATE staffs SET hire_date = '2018-09-03' WHERE employee_id = 3022; -- 佐藤正治
-UPDATE staffs SET hire_date = '2010-08-27' WHERE employee_id = 3031; -- 柴田絵理
-UPDATE staffs SET hire_date = '2016-09-20' WHERE employee_id = 3060; -- 善明弘美
-UPDATE staffs SET hire_date = '2026-04-01' WHERE employee_id = 4097; -- 武部将士
-UPDATE staffs SET hire_date = '2026-04-01' WHERE employee_id = 4112; -- 田中理恵
-UPDATE staffs SET hire_date = '2023-09-14' WHERE employee_id = 8071; -- 中川萌
-UPDATE staffs SET hire_date = '2023-01-10' WHERE employee_id = 1130; -- 中西直子
-UPDATE staffs SET hire_date = '2008-04-07' WHERE employee_id = 5017; -- 長島弘子
-UPDATE staffs SET hire_date = '2010-06-01' WHERE employee_id = 7002; -- 前川亜理沙
-UPDATE staffs SET hire_date = '2025-02-04' WHERE employee_id = 7093; -- 満田望
-UPDATE staffs SET hire_date = '2026-01-29' WHERE employee_id = 8075; -- 山口茉都香
-UPDATE staffs SET hire_date = '2018-03-21' WHERE employee_id = 8038; -- 吉田貴司
-UPDATE staffs SET hire_date = '2024-03-01' WHERE employee_id = 9012; -- 渡邊淳
-UPDATE staffs SET hire_date = '2015-04-23' WHERE employee_id = 2023; -- 池田純香
-UPDATE staffs SET hire_date = '2005-02-10' WHERE employee_id = 2037; -- 河東奈津子
-UPDATE staffs SET hire_date = '2026-07-01' WHERE employee_id = 3081; -- 菅原彩乃
-UPDATE staffs SET hire_date = '2026-08-17' WHERE employee_id = 3082; -- 下川舞優
-UPDATE staffs SET hire_date = '2026-08-17' WHERE employee_id = 4096; -- 高田圭江
-UPDATE staffs SET hire_date = '2026-08-17' WHERE employee_id = 5045; -- 西山彩
-UPDATE staffs SET hire_date = '2026-07-01' WHERE employee_id = 1149; -- 今村千絵
-UPDATE staffs SET hire_date = '2026-07-13' WHERE employee_id = 8076; -- 山本楓
-UPDATE staffs SET hire_date = '2026-08-17' WHERE employee_id = 5081; -- 西原あゆみ
+UPDATE staffs SET hire_date = '2024-09-02' WHERE employee_id = '1007'; -- 安達亜希子
+UPDATE staffs SET hire_date = '2005-07-25' WHERE employee_id = '1040'; -- 伊藤竜也
+UPDATE staffs SET hire_date = '2018-03-29' WHERE employee_id = '1042'; -- 稲田美紀
+UPDATE staffs SET hire_date = '2025-07-28' WHERE employee_id = '1143'; -- 岡村真人
+UPDATE staffs SET hire_date = '2011-05-23' WHERE employee_id = '1105'; -- 尾上知佳
+UPDATE staffs SET hire_date = '2018-07-01' WHERE employee_id = '3044'; -- 片倉早紀
+UPDATE staffs SET hire_date = '2025-03-20' WHERE employee_id = '2019'; -- 角屋克博
+UPDATE staffs SET hire_date = '2005-05-30' WHERE employee_id = '2024'; -- 川井さおり
+UPDATE staffs SET hire_date = '2022-05-01' WHERE employee_id = '2102'; -- 川本せりあ
+UPDATE staffs SET hire_date = '2021-04-19' WHERE employee_id = '2098'; -- 久保理絵
+UPDATE staffs SET hire_date = '2016-08-01' WHERE employee_id = '2091'; -- 近藤真美
+UPDATE staffs SET hire_date = '2013-06-04' WHERE employee_id = '3004'; -- 境妙
+UPDATE staffs SET hire_date = '2002-09-01' WHERE employee_id = '3048'; -- 末武真奈美
+UPDATE staffs SET hire_date = '2018-01-25' WHERE employee_id = '3053'; -- 杉野亜由美
+UPDATE staffs SET hire_date = '2025-06-01' WHERE employee_id = '3079'; -- 諏訪聡子
+UPDATE staffs SET hire_date = '2020-07-06' WHERE employee_id = '1120'; -- 相原かおり(単発要員・有給対象外)
+UPDATE staffs SET hire_date = '2024-09-02' WHERE employee_id = '4108'; -- 田中穂乃香
+UPDATE staffs SET hire_date = '2022-01-21' WHERE employee_id = '4063'; -- 土屋和美
+UPDATE staffs SET hire_date = '2026-04-16' WHERE employee_id = '4113'; -- 東矢ひろみ
+UPDATE staffs SET hire_date = '2026-02-16' WHERE employee_id = '4111'; -- 外池宏次
+UPDATE staffs SET hire_date = '2016-12-21' WHERE employee_id = '5008'; -- 中島一雄(特殊対応・自動化対象外)
+UPDATE staffs SET hire_date = '2004-03-01' WHERE employee_id = '5013'; -- 中嶋美幸
+UPDATE staffs SET hire_date = '2023-08-16' WHERE employee_id = '5074'; -- 中山由美
+UPDATE staffs SET hire_date = '2011-03-29' WHERE employee_id = '5040'; -- 西嶋大輔
+UPDATE staffs SET hire_date = '2024-11-21' WHERE employee_id = '5079'; -- 西山愛
+UPDATE staffs SET hire_date = '2025-05-01' WHERE employee_id = '5080'; -- 納冨悠希
+UPDATE staffs SET hire_date = '2026-01-13' WHERE employee_id = '6113'; -- 濵田友華
+UPDATE staffs SET hire_date = '2016-03-07' WHERE employee_id = '6018'; -- 早高祥子
+UPDATE staffs SET hire_date = '2005-03-07' WHERE employee_id = '6032'; -- 樋口聡明
+UPDATE staffs SET hire_date = '2022-02-01' WHERE employee_id = '6103'; -- 平田愛
+UPDATE staffs SET hire_date = '2025-01-14' WHERE employee_id = '6111'; -- 渕上秋美
+UPDATE staffs SET hire_date = '2024-12-16' WHERE employee_id = '6094'; -- 細川浩一
+UPDATE staffs SET hire_date = '2021-02-17' WHERE employee_id = '6100'; -- 堀英人
+UPDATE staffs SET hire_date = '2002-05-17' WHERE employee_id = '7036'; -- 溝上祥代
+UPDATE staffs SET hire_date = '2025-01-16' WHERE employee_id = '7083'; -- 三岳直子
+UPDATE staffs SET hire_date = '2023-06-06' WHERE employee_id = '7089'; -- 本村晴美
+UPDATE staffs SET hire_date = '2020-01-06' WHERE employee_id = '7075'; -- 森岡純子
+UPDATE staffs SET hire_date = '2024-12-01' WHERE employee_id = '7092'; -- 森下結
+UPDATE staffs SET hire_date = '2025-04-21' WHERE employee_id = '8073'; -- 大和晴菜
+UPDATE staffs SET hire_date = '2025-11-01' WHERE employee_id = '1148'; -- 岩本茉子
+UPDATE staffs SET hire_date = '2017-02-21' WHERE employee_id = '1073'; -- 瓜生祥子
+UPDATE staffs SET hire_date = '2016-08-18' WHERE employee_id = '1072'; -- 瓜生純子
+UPDATE staffs SET hire_date = '2016-05-06' WHERE employee_id = '5050'; -- 江口恵美
+UPDATE staffs SET hire_date = '2025-05-01' WHERE employee_id = '1142'; -- 榎並佳織
+UPDATE staffs SET hire_date = '2023-10-01' WHERE employee_id = '1136'; -- 大田司
+UPDATE staffs SET hire_date = '2016-08-10' WHERE employee_id = '2068'; -- 黒木良太
+UPDATE staffs SET hire_date = '2026-04-01' WHERE employee_id = '3080'; -- 坂田萌子
+UPDATE staffs SET hire_date = '2011-07-13' WHERE employee_id = '3015'; -- 坂本夏子
+UPDATE staffs SET hire_date = '2022-05-09' WHERE employee_id = '3071'; -- 佐多薫
+UPDATE staffs SET hire_date = '2018-09-03' WHERE employee_id = '3022'; -- 佐藤正治
+UPDATE staffs SET hire_date = '2010-08-27' WHERE employee_id = '3031'; -- 柴田絵理
+UPDATE staffs SET hire_date = '2016-09-20' WHERE employee_id = '3060'; -- 善明弘美
+UPDATE staffs SET hire_date = '2026-04-01' WHERE employee_id = '4097'; -- 武部将士
+UPDATE staffs SET hire_date = '2026-04-01' WHERE employee_id = '4112'; -- 田中理恵
+UPDATE staffs SET hire_date = '2023-09-14' WHERE employee_id = '8071'; -- 中川萌
+UPDATE staffs SET hire_date = '2023-01-10' WHERE employee_id = '1130'; -- 中西直子
+UPDATE staffs SET hire_date = '2008-04-07' WHERE employee_id = '5017'; -- 長島弘子
+UPDATE staffs SET hire_date = '2010-06-01' WHERE employee_id = '7002'; -- 前川亜理沙
+UPDATE staffs SET hire_date = '2025-02-04' WHERE employee_id = '7093'; -- 満田望
+UPDATE staffs SET hire_date = '2026-01-29' WHERE employee_id = '8075'; -- 山口茉都香
+UPDATE staffs SET hire_date = '2018-03-21' WHERE employee_id = '8038'; -- 吉田貴司
+UPDATE staffs SET hire_date = '2024-03-01' WHERE employee_id = '9012'; -- 渡邊淳
+UPDATE staffs SET hire_date = '2015-04-23' WHERE employee_id = '2023'; -- 池田純香
+UPDATE staffs SET hire_date = '2005-02-10' WHERE employee_id = '2037'; -- 河東奈津子
+UPDATE staffs SET hire_date = '2026-07-01' WHERE employee_id = '3081'; -- 菅原彩乃
+UPDATE staffs SET hire_date = '2026-08-17' WHERE employee_id = '3082'; -- 下川舞優
+UPDATE staffs SET hire_date = '2026-08-17' WHERE employee_id = '4096'; -- 高田圭江
+UPDATE staffs SET hire_date = '2026-08-17' WHERE employee_id = '5045'; -- 西山彩
+UPDATE staffs SET hire_date = '2026-07-01' WHERE employee_id = '1149'; -- 今村千絵
+UPDATE staffs SET hire_date = '2026-07-13' WHERE employee_id = '8076'; -- 山本楓
+UPDATE staffs SET hire_date = '2026-08-17' WHERE employee_id = '5081'; -- 西原あゆみ
 
 
 -- ============================================================
 -- STEP 3: weekly_working_daysの設定(比例付与9名)
 -- ============================================================
 
-UPDATE staffs SET weekly_working_days = 4 WHERE employee_id = 1149; -- 今村千絵
-UPDATE staffs SET weekly_working_days = 4 WHERE employee_id = 1142; -- 榎並佳織
-UPDATE staffs SET weekly_working_days = 3 WHERE employee_id = 1136; -- 大田司
-UPDATE staffs SET weekly_working_days = 4 WHERE employee_id = 1143; -- 岡村真人
-UPDATE staffs SET weekly_working_days = 3 WHERE employee_id = 2098; -- 久保理絵
-UPDATE staffs SET weekly_working_days = 3 WHERE employee_id = 4108; -- 田中穂乃香
-UPDATE staffs SET weekly_working_days = 2 WHERE employee_id = 7083; -- 三岳直子
-UPDATE staffs SET weekly_working_days = 3 WHERE employee_id = 7093; -- 満田望
+UPDATE staffs SET weekly_working_days = 4 WHERE employee_id = '1149'; -- 今村千絵
+UPDATE staffs SET weekly_working_days = 4 WHERE employee_id = '1142'; -- 榎並佳織
+UPDATE staffs SET weekly_working_days = 3 WHERE employee_id = '1136'; -- 大田司
+UPDATE staffs SET weekly_working_days = 4 WHERE employee_id = '1143'; -- 岡村真人
+UPDATE staffs SET weekly_working_days = 3 WHERE employee_id = '2098'; -- 久保理絵
+UPDATE staffs SET weekly_working_days = 3 WHERE employee_id = '4108'; -- 田中穂乃香
+UPDATE staffs SET weekly_working_days = 2 WHERE employee_id = '7083'; -- 三岳直子
+UPDATE staffs SET weekly_working_days = 3 WHERE employee_id = '7093'; -- 満田望
 
--- 中島一雄(employee_id = 5008) = 4日/週
+-- 中島一雄(employee_id = '5008') = 4日/週
 -- ※2026/6/1に週4日→週5日に変更、2027/6/21の付与から日数体系が変わる特殊ケース。
 -- 自動化対象から除外し、2027/6/21のタイミングで手動対応する方針(ノート記載の通り)。
 -- 参考値としてweekly_working_daysは設定しておくが、STEP4の関数内で
--- employee_id = 5008 を明示的に除外している。
-UPDATE staffs SET weekly_working_days = 4 WHERE employee_id = 5008; -- 中島一雄(自動化対象外)
+-- employee_id = '5008' を明示的に除外している。
+UPDATE staffs SET weekly_working_days = 4 WHERE employee_id = '5008'; -- 中島一雄(自動化対象外)
 
 
 -- ============================================================
@@ -202,7 +202,7 @@ BEGIN
     FROM staffs s
     WHERE s.hire_date IS NOT NULL
       AND s.status NOT IN ('契約終了', '管理者', '短期・単発')  -- 若松さん確認済み:短期・単発は除外、請負は対象
-      AND s.employee_id <> 5008  -- 中島一雄さんは特殊対応のため自動化対象から除外
+      AND s.employee_id <> '5008'  -- 中島一雄さんは特殊対応のため自動化対象から除外
   LOOP
     -- 入社日からの経過月数(完了した月数)
     months_service := (
@@ -309,7 +309,7 @@ SELECT cron.schedule(
 -- FROM staffs s
 -- WHERE s.hire_date IS NOT NULL
 --   AND s.status NOT IN ('契約終了','管理者','短期・単発')
---   AND s.employee_id <> 5008;
+--   AND s.employee_id <> '5008';
 --
 -- 6-b. 上記で対象になりそうな人がいれば、まずauto_grant_leave()を試験実行し、
 --      leave_grantsに想定通りの行が追加されるか確認してからstaffs.paid_leave_remaining
