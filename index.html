@@ -232,8 +232,8 @@ input:disabled{background:#f5f4f0;color:#aaa;border-color:#e8e6e0}
       <div class="ch">
         <span class="ct">書類送付管理</span>
         <div class="btn-row">
-          <button class="btn btn-sm btn-p" onclick="openModal('send-payslip')">給与明細送付</button>
-          <button class="btn btn-sm" onclick="openModal('send-contract')">契約書送付</button>
+          <button id="send-payslip-btn" class="btn btn-sm btn-p" onclick="switchDocsTab('payslip');openModal('send-payslip')">給与明細送付</button>
+          <button id="send-contract-btn" class="btn btn-sm" onclick="switchDocsTab('contract');openModal('send-contract')">契約書送付</button>
         </div>
       </div>
       <div style="display:flex;gap:4px;margin-bottom:12px;border-bottom:2px solid #e8e5e0">
@@ -1924,6 +1924,10 @@ function switchDocsTab(tab){
   document.getElementById('docs-tab-contract').style.background = isPayslip ? '#e8e5e0' : '#5b21b6';
   document.getElementById('docs-tab-contract').style.color = isPayslip ? '#555' : '#fff';
   document.getElementById('docs-tab-contract').style.fontWeight = isPayslip ? '400' : '700';
+  var payslipBtn = document.getElementById('send-payslip-btn');
+  var contractBtn = document.getElementById('send-contract-btn');
+  if(payslipBtn) payslipBtn.classList.toggle('btn-p', isPayslip);
+  if(contractBtn) contractBtn.classList.toggle('btn-p', !isPayslip);
   window._docsCurrentTab = tab;
   filterAdminDocs();
 }
