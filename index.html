@@ -3153,7 +3153,10 @@ async function saveStaffProfile(){
     if(error){alert('保存失敗：'+error.message);return;}
     var modAddress=document.getElementById('mod-address')?document.getElementById('mod-address').value.trim():'';
     var addrWarning='';
-    if(modAddress&&window._currentStaffProfileId&&modAddress!==(window._currentStaffOriginalAddress||'')){
+    var hasConfirmedAddress=!!window._currentStaffHasConfirmedAddress;
+    var addressUnchanged=hasConfirmedAddress&&modAddress===(window._currentStaffOriginalAddress||'');
+    if(modAddress&&window._currentStaffProfileId&&!addressUnchanged){
+      var isInitialAddress=!hasConfirmedAddress;
       var mv=function(id){var el=document.getElementById(id);return (el&&el.value!=='')?el.value:null;};
       var mvInt=function(id){var v=mv(id);return v!==null?parseInt(v):null;};
       var mvFloat=function(id){var v=mv(id);return v!==null?parseFloat(v):null;};
@@ -3171,7 +3174,7 @@ async function saveStaffProfile(){
       var modAddrIns=await supabaseClient.from('address_change_requests').insert({
         staff_id: window._currentStaffProfileId,
         relocation_date: new Date().toISOString().slice(0,10),
-        change_types: '管理者による更新',
+        change_types: isInitialAddress?'初回登録':'管理者による更新',
         commute_methods: modCommuteMethods.length?modCommuteMethods.join('、'):null,
         old_postal_code: null,
         old_address: null,
@@ -3188,8 +3191,8 @@ async function saveStaffProfile(){
         commute_distance_km: mvFloat('mod-distance'),
         commute_allowance: (modAllowanceInput&&modAllowanceInput.value!=='')?parseInt(modAllowanceInput.value):null,
         commute_allowance_basis: (modBasisInput&&modBasisInput.value.trim()!=='')?modBasisInput.value.trim():null,
-        confirmed_at: new Date().toISOString(),
-        confirmed_by: modConfirmerName
+        confirmed_at: isInitialAddress?new Date().toISOString():null,
+        confirmed_by: isInitialAddress?modConfirmerName:null
       });
       if(modAddrIns.error){
         addrWarning='（住所・通勤情報の登録には失敗しました：'+modAddrIns.error.message+'）';
@@ -3462,7 +3465,15 @@ async function openStaffDetail(empId){
        'mod-allowance-input','mod-allowance-basis-input'].forEach(function(id){setV(id,'');});
       ['mod-cm-train','mod-cm-bus','mod-cm-car','mod-cm-bicycle','mod-cm-walk','mod-cm-other'].forEach(function(id){setC(id,false);});
     }
-    window._currentStaffOriginalAddress=(latestAddr&&latestAddr.new_address)?latestAddr.new_address.trim():'';
+    var {data:latestConfirmedAddr}=await supabaseClient.from('address_change_requests')
+      .select('new_address')
+      .eq('staff_id',data.id)
+      .not('confirmed_at','is',null)
+      .order('created_at',{ascending:false})
+      .limit(1)
+      .maybeSingle();
+    window._currentStaffHasConfirmedAddress=!!(latestConfirmedAddr&&latestConfirmedAddr.new_address);
+    window._currentStaffOriginalAddress=(latestConfirmedAddr&&latestConfirmedAddr.new_address)?latestConfirmedAddr.new_address.trim():'';
     autoCalcModCommuteAllowance();
     var commuteEl=document.getElementById('modal-commute-allowance');
     if(commuteEl){
