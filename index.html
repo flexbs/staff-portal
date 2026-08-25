@@ -3872,10 +3872,12 @@ async function checkUnreadNotices(){
     var contractCnt=docs.filter(function(d){return d.type==='contract';}).length;
     var payslipCnt=docs.filter(function(d){return d.type==='payslip';}).length;
     var otherCnt=docs.filter(function(d){return d.type!=='contract'&&d.type!=='payslip';}).length;
-    var dl='<span style="font-size:11px;cursor:pointer;text-decoration:underline" onclick="goDocsTab()">'+'\u78BA\u8A8D\u3059\u308B \u2192</span>';
-    if(contractCnt>0)rows.push('<div style="display:flex;justify-content:space-between;align-items:center"><span>\uD83D\uDCC4 \u5C31\u696D\u6761\u4EF6\u660E\u793A\u66F8\u304C'+contractCnt+'\u4EF6\u672A\u78BA\u8A8D\u3067\u3059</span>'+dl+'</div>');
-    if(payslipCnt>0)rows.push('<div style="display:flex;justify-content:space-between;align-items:center"><span>\uD83D\uDCB4 \u7D66\u4E0E\u660E\u7D30\u304C'+payslipCnt+'\u4EF6\u672A\u78BA\u8A8D\u3067\u3059</span>'+dl+'</div>');
-    if(otherCnt>0)rows.push('<div style="display:flex;justify-content:space-between;align-items:center"><span>\uD83D\uDCC4 \u66F8\u985E\u304C'+otherCnt+'\u4EF6\u672A\u78BA\u8A8D\u3067\u3059</span>'+dl+'</div>');
+    var dlContract='<span style="font-size:11px;cursor:pointer;text-decoration:underline" onclick="goDocsTab(&quot;contract&quot;)">'+'\u78BA\u8A8D\u3059\u308B \u2192</span>';
+    var dlPayslip='<span style="font-size:11px;cursor:pointer;text-decoration:underline" onclick="goDocsTab(&quot;payslip&quot;)">'+'\u78BA\u8A8D\u3059\u308B \u2192</span>';
+    var dlOther='<span style="font-size:11px;cursor:pointer;text-decoration:underline" onclick="goDocsTab(&quot;contract&quot;)">'+'\u78BA\u8A8D\u3059\u308B \u2192</span>';
+    if(contractCnt>0)rows.push('<div style="display:flex;justify-content:space-between;align-items:center"><span>\uD83D\uDCC4 \u5C31\u696D\u6761\u4EF6\u660E\u793A\u66F8\u304C'+contractCnt+'\u4EF6\u672A\u78BA\u8A8D\u3067\u3059</span>'+dlContract+'</div>');
+    if(payslipCnt>0)rows.push('<div style="display:flex;justify-content:space-between;align-items:center"><span>\uD83D\uDCB4 \u7D66\u4E0E\u660E\u7D30\u304C'+payslipCnt+'\u4EF6\u672A\u78BA\u8A8D\u3067\u3059</span>'+dlPayslip+'</div>');
+    if(otherCnt>0)rows.push('<div style="display:flex;justify-content:space-between;align-items:center"><span>\uD83D\uDCC4 \u66F8\u985E\u304C'+otherCnt+'\u4EF6\u672A\u78BA\u8A8D\u3067\u3059</span>'+dlOther+'</div>');
   }
   var banner=document.getElementById('notice-unread-banner');
   if(!banner)return;
@@ -3885,7 +3887,13 @@ async function checkUnreadNotices(){
   banner.style.display='flex';
 }
 function goNoticeTab(){var t=document.getElementById('staff-notice-tab');if(t)t.click();}
-function goDocsTab(){var tabs=document.querySelectorAll('#page-staff .sub-tab');if(tabs&&tabs[0])tabs[0].click();}
+function goDocsTab(docType){
+  var tabs=document.querySelectorAll('#page-staff .sub-tab');
+  if(tabs&&tabs[0])tabs[0].click();
+  if(docType==='payslip'||docType==='contract'){switchStaffDocsTab(docType);}
+  var container=document.getElementById('staff-docs-container');
+  if(container)container.scrollIntoView({behavior:'smooth',block:'start'});
+}
 function clearNoticeBadge(){
   var badge=document.getElementById('notice-badge');
   if(badge){badge.style.display='none';badge.textContent='';}
