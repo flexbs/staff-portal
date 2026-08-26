@@ -1107,6 +1107,17 @@ input:disabled{background:#f5f4f0;color:#aaa;border-color:#e8e6e0}
     </div>
   </div>
 </div> 
+<div class="mbg" id="modal-doc-message">
+  <div class="modal" style="max-width:420px">
+    <div class="mt" id="doc-message-title">書類のご確認</div>
+    <div id="doc-message-body" style="background:#f5f4f0;border-radius:8px;padding:12px 14px;font-size:13px;line-height:1.8;white-space:pre-wrap;margin-bottom:16px"></div>
+    <div class="ma">
+      <button class="btn btn-sm" onclick="closeModal('doc-message')">閉じる</button>
+      <a class="btn btn-sm" id="doc-message-download-btn" download style="text-decoration:none">ダウンロード</a>
+      <a class="btn btn-sm btn-p" id="doc-message-open-btn" target="_blank" rel="noopener" style="text-decoration:none">PDFを開く →</a>
+    </div>
+  </div>
+</div>
 <div class="mbg" id="modal-notice-soon"><div class="modal"><div style="padding:40px 20px;text-align:center;color:#888"><div style="font-size:48px;margin-bottom:12px">📢</div><div style="font-size:18px;font-weight:600;color:#555;margin-bottom:8px">お知らせ機能は準備中です</div><div style="font-size:13px;line-height:1.7;margin-bottom:20px">この機能は現在開発中です。<br>公開までもうしばらくお待ちください。</div><button class="btn btn-sm btn-p" onclick="closeModal('notice-soon')">閉じる</button></div></div></div>
 <div class="mbg" id="modal-apply-leave">
   <div class="modal">
@@ -3015,7 +3026,7 @@ async function sendPayslip(){
   var status=document.getElementById('payslip-status');
   var isResend=document.getElementById('payslip-resend')?document.getElementById('payslip-resend').checked:false;
   var messageEl=document.getElementById('payslip-message');
-  var message=messageEl&&messageEl.value.trim()!==''?messageEl.value.trim():null;
+  var message=messageEl&&messageEl.value.trim()!==''?messageEl.value.trim():'内容をご確認のうえ、ご確認後は「確認しました」ボタンを押していただけますと幸いです。どうぞよろしくお願いいたします。';
   if(!fileInput.files||!fileInput.files[0]){alert('PDFファイルを選択してください');return;}
   var targetName=document.getElementById('payslip-target').options[document.getElementById('payslip-target').selectedIndex].text;
   if(!confirm(targetName+'に'+month+'分の給与明細を'+(isResend?'再送':'送付')+'します。よろしいですか？'))return;
@@ -3085,7 +3096,7 @@ async function sendContract(){
   var fileInput=document.getElementById('contract-file');
   var status=document.getElementById('contract-status');
   var messageEl=document.getElementById('contract-message');
-  var message=messageEl&&messageEl.value.trim()!==''?messageEl.value.trim():null;
+  var message=messageEl&&messageEl.value.trim()!==''?messageEl.value.trim():'内容をご確認のうえ、送付（確認）後5日以内に署名ボタンを押していただけますと幸いです。どうぞよろしくお願いいたします。';
   if(!fileInput.files||!fileInput.files[0]){alert('PDFファイルを選択してください');return;}
   var targetName=document.getElementById('contract-target').options[document.getElementById('contract-target').selectedIndex].text;
   if(!confirm(targetName+'に就業条件明示書を送付します。よろしいですか？'))return;
@@ -3614,6 +3625,19 @@ var pending=document.querySelectorAll('#admin-paid .bdg.ba').length;
 var el=document.getElementById('adminReqCount');
 if(el)el.textContent=pending+'件';
 }
+function openDocMessageModal(docId){
+  var info=(window._docViewMap||{})[docId];
+  if(!info)return;
+  var titleEl=document.getElementById('doc-message-title');
+  if(titleEl)titleEl.textContent=info.title||'書類のご確認';
+  var bodyEl=document.getElementById('doc-message-body');
+  if(bodyEl)bodyEl.textContent=info.message||'';
+  var openBtn=document.getElementById('doc-message-open-btn');
+  var dlBtn=document.getElementById('doc-message-download-btn');
+  if(openBtn)openBtn.href=info.url;
+  if(dlBtn)dlBtn.href=info.url;
+  openModal('doc-message');
+}
 async function loadMyDocuments(){
   if(!supabaseClient||!myStaffData)return;
   var {data:docs,error}=await supabaseClient.from('documents').select('*').eq('staff_id',myStaffData.id).is('cancelled_at',null).order('created_at',{ascending:false});
@@ -3639,11 +3663,19 @@ async function loadMyDocuments(){
       else{st='<span class="bdg bo">署名待ち</span>';pending++;}
       var su='';var rv=await supabaseClient.storage.from(bk).createSignedUrl(d.file_url,3600);if(rv.data&&rv.data.signedUrl)su=rv.data.signedUrl;
       var eid=d.id;
-      var bt=su?'<a class="btn btn-sm" href="'+su+'" target="_blank" rel="noopener" style="text-decoration:none;display:inline-block">表示</a> <a class="btn btn-sm" href="'+su+'" download style="text-decoration:none;display:inline-block">ダウンロード</a>':'<button class="btn btn-sm">表示</button>';
+      var bt;
+      if(su&&d.message){
+        window._docViewMap=window._docViewMap||{};
+        window._docViewMap[eid]={title:d.title||ts,message:d.message,url:su};
+        bt='<button class="btn btn-sm" onclick="openDocMessageModal(&quot;'+eid+'&quot;)">表示</button> <a class="btn btn-sm" href="'+su+'" download style="text-decoration:none;display:inline-block">ダウンロード</a>';
+      }else if(su){
+        bt='<a class="btn btn-sm" href="'+su+'" target="_blank" rel="noopener" style="text-decoration:none;display:inline-block">表示</a> <a class="btn btn-sm" href="'+su+'" download style="text-decoration:none;display:inline-block">ダウンロード</a>';
+      }else{
+        bt='<button class="btn btn-sm">表示</button>';
+      }
       if(ns&&!sg){bt+=' <label style="font-size:11px"><input type="checkbox" id="ck-'+eid+'" onchange="toggleDocBtn(this,&quot;s'+eid+'&quot;)"> PDF確認済</label> <button class="btn btn-sm btn-p" id="s'+eid+'" onclick="signMyDocument(&quot;'+eid+'&quot;)" disabled style="opacity:0.4">署名する</button>';}
       else if(!ns&&!sg){bt+=' <label style="font-size:11px"><input type="checkbox" id="ck-'+eid+'" onchange="toggleDocBtn(this,&quot;c'+eid+'&quot;)"> PDF確認済</label> <button class="btn btn-sm btn-p" id="c'+eid+'" onclick="confirmMyDocument(&quot;'+eid+'&quot;)" disabled style="opacity:0.4">確認しました</button>';}
-      var msgHtml=d.message?'<div style="font-size:11px;color:#666;margin-top:3px;line-height:1.5">💬 '+d.message.replace(/\n/g,'<br>')+'</div>':'';
-      r+='<tr><td>'+(d.title||ts)+msgHtml+'</td><td style="white-space:nowrap">'+ds+'</td><td>'+st+'</td><td style="white-space:nowrap">'+bt+'</td></tr>';
+      r+='<tr><td>'+(d.title||ts)+'</td><td style="white-space:nowrap">'+ds+'</td><td>'+st+'</td><td style="white-space:nowrap">'+bt+'</td></tr>';
     }
     el.innerHTML='<div style="overflow-x:auto"><table style="width:100%;border-collapse:collapse"><thead><tr style="text-align:left;color:#888;font-size:12px"><th style="padding:8px">タイトル</th><th style="padding:8px">受信日</th><th style="padding:8px">状態</th><th style="padding:8px">操作</th></tr></thead><tbody>'+r+'</tbody></table></div>';
   }
