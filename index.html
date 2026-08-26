@@ -3202,27 +3202,45 @@ async function saveStaffProfile(){
     const staffNote=document.getElementById('modal-note').value||null;
     const hourlyLeaveNote=document.getElementById('modal-hourly-leave-note')?(document.getElementById('modal-hourly-leave-note').value||null):null;
     const paidLeaveNote=document.getElementById('modal-paid-leave-note')?(document.getElementById('modal-paid-leave-note').value||null):null;
-    const{error}=await supabaseClient.from('staffs').update({status:staffStatus,workplace:workplace,workplace_address:workplaceAddress,dispatch_start_date:dispatchStart,restriction_date:restrictionDate,resignation_date:resignationDate,contract_end_date:contractEnd,paid_leave_grant_date:paidLeaveDate,paid_leave_grant_days:paidLeaveDays,paid_leave_exempt:paidLeaveExempt,paid_leave_remaining:paidLeaveRemaining,paid_leave_note:paidLeaveNote,work_minutes_per_day:workMinutesPerDay,pension_number:pensionNumber,insurance_number:insuranceNumber,note:staffNote,hourly_leave_note:hourlyLeaveNote,...(isHourlyEligible?{hourly_leave_remaining:hourlyLeaveRemaining}:{})}).eq('employee_id',empId);
+    if(!window._currentStaffProfileId){alert('保存失敗：対象スタッフの特定に失敗しました。一度モーダルを閉じて、プロフィールを開き直してください。');return;}
+    const{error}=await supabaseClient.from('staffs').update({status:staffStatus,workplace:workplace,workplace_address:workplaceAddress,dispatch_start_date:dispatchStart,restriction_date:restrictionDate,resignation_date:resignationDate,contract_end_date:contractEnd,paid_leave_grant_date:paidLeaveDate,paid_leave_grant_days:paidLeaveDays,paid_leave_exempt:paidLeaveExempt,paid_leave_remaining:paidLeaveRemaining,paid_leave_note:paidLeaveNote,work_minutes_per_day:workMinutesPerDay,pension_number:pensionNumber,insurance_number:insuranceNumber,note:staffNote,hourly_leave_note:hourlyLeaveNote,...(isHourlyEligible?{hourly_leave_remaining:hourlyLeaveRemaining}:{})}).eq('id',window._currentStaffProfileId);
     if(error){alert('保存失敗：'+error.message);return;}
     var modAddress=document.getElementById('mod-address')?document.getElementById('mod-address').value.trim():'';
     var addrWarning='';
     var hasConfirmedAddress=!!window._currentStaffHasConfirmedAddress;
-    var addressUnchanged=hasConfirmedAddress&&modAddress===(window._currentStaffOriginalAddress||'');
-    if(modAddress&&window._currentStaffProfileId&&!addressUnchanged){
+    var mv=function(id){var el=document.getElementById(id);return (el&&el.value!=='')?el.value:null;};
+    var mvInt=function(id){var v=mv(id);return v!==null?parseInt(v):null;};
+    var mvFloat=function(id){var v=mv(id);return v!==null?parseFloat(v):null;};
+    var mChecked=function(id){var el=document.getElementById(id);return !!(el&&el.checked);};
+    var modCommuteMethods=[];
+    if(mChecked('mod-cm-train'))modCommuteMethods.push('電車');
+    if(mChecked('mod-cm-bus'))modCommuteMethods.push('バス');
+    if(mChecked('mod-cm-car'))modCommuteMethods.push('自家用車');
+    if(mChecked('mod-cm-bicycle'))modCommuteMethods.push('自転車');
+    if(mChecked('mod-cm-walk'))modCommuteMethods.push('徒歩');
+    if(mChecked('mod-cm-other'))modCommuteMethods.push('その他');
+    var modAllowanceInput=document.getElementById('mod-allowance-input');
+    var modBasisInput=document.getElementById('mod-allowance-basis-input');
+    // 住所自体が変わっていなくても、通勤経路・運賃・通勤費など何か1つでも変更されていれば保存対象にする
+    var currentCommuteSignature=JSON.stringify({
+      postal:mv('mod-postal')||'',
+      address:modAddress,
+      methods:modCommuteMethods.join('、'),
+      r1c:mv('mod-route1-company')||'',
+      r1s:mv('mod-route1-section')||'',
+      r1f:mvInt('mod-route1-fare')!==null?String(mvInt('mod-route1-fare')):'',
+      r1p:mvInt('mod-route1-pass')!==null?String(mvInt('mod-route1-pass')):'',
+      r2c:mv('mod-route2-company')||'',
+      r2s:mv('mod-route2-section')||'',
+      r2f:mvInt('mod-route2-fare')!==null?String(mvInt('mod-route2-fare')):'',
+      r2p:mvInt('mod-route2-pass')!==null?String(mvInt('mod-route2-pass')):'',
+      dist:mvFloat('mod-distance')!==null?String(mvFloat('mod-distance')):'',
+      allowance:(modAllowanceInput&&modAllowanceInput.value!=='')?String(parseInt(modAllowanceInput.value)):'',
+      basis:(modBasisInput&&modBasisInput.value.trim()!=='')?modBasisInput.value.trim():''
+    });
+    var commuteInfoChanged=currentCommuteSignature!==(window._currentStaffOriginalCommuteSignature||'');
+    if(modAddress&&window._currentStaffProfileId&&commuteInfoChanged){
       var isInitialAddress=!hasConfirmedAddress;
-      var mv=function(id){var el=document.getElementById(id);return (el&&el.value!=='')?el.value:null;};
-      var mvInt=function(id){var v=mv(id);return v!==null?parseInt(v):null;};
-      var mvFloat=function(id){var v=mv(id);return v!==null?parseFloat(v):null;};
-      var mChecked=function(id){var el=document.getElementById(id);return !!(el&&el.checked);};
-      var modCommuteMethods=[];
-      if(mChecked('mod-cm-train'))modCommuteMethods.push('電車');
-      if(mChecked('mod-cm-bus'))modCommuteMethods.push('バス');
-      if(mChecked('mod-cm-car'))modCommuteMethods.push('自家用車');
-      if(mChecked('mod-cm-bicycle'))modCommuteMethods.push('自転車');
-      if(mChecked('mod-cm-walk'))modCommuteMethods.push('徒歩');
-      if(mChecked('mod-cm-other'))modCommuteMethods.push('その他');
-      var modAllowanceInput=document.getElementById('mod-allowance-input');
-      var modBasisInput=document.getElementById('mod-allowance-basis-input');
       var modConfirmerName=myStaffData?(myStaffData.name||'管理者'):'管理者';
       var modAddrIns=await supabaseClient.from('address_change_requests').insert({
         staff_id: window._currentStaffProfileId,
@@ -3518,6 +3536,22 @@ async function openStaffDetail(empId){
        'mod-allowance-input','mod-allowance-basis-input'].forEach(function(id){setV(id,'');});
       ['mod-cm-train','mod-cm-bus','mod-cm-car','mod-cm-bicycle','mod-cm-walk','mod-cm-other'].forEach(function(id){setC(id,false);});
     }
+    window._currentStaffOriginalCommuteSignature=JSON.stringify({
+      postal:latestAddr?(latestAddr.new_postal_code||''):'',
+      address:latestAddr?(latestAddr.new_address||'').trim():'',
+      methods:latestAddr?(latestAddr.commute_methods||''):'',
+      r1c:latestAddr?(latestAddr.route1_company||''):'',
+      r1s:latestAddr?(latestAddr.route1_section||''):'',
+      r1f:(latestAddr&&latestAddr.route1_fare!==null&&latestAddr.route1_fare!==undefined)?String(latestAddr.route1_fare):'',
+      r1p:(latestAddr&&latestAddr.route1_pass_fare!==null&&latestAddr.route1_pass_fare!==undefined)?String(latestAddr.route1_pass_fare):'',
+      r2c:latestAddr?(latestAddr.route2_company||''):'',
+      r2s:latestAddr?(latestAddr.route2_section||''):'',
+      r2f:(latestAddr&&latestAddr.route2_fare!==null&&latestAddr.route2_fare!==undefined)?String(latestAddr.route2_fare):'',
+      r2p:(latestAddr&&latestAddr.route2_pass_fare!==null&&latestAddr.route2_pass_fare!==undefined)?String(latestAddr.route2_pass_fare):'',
+      dist:(latestAddr&&latestAddr.commute_distance_km!==null&&latestAddr.commute_distance_km!==undefined)?String(latestAddr.commute_distance_km):'',
+      allowance:(latestAddr&&latestAddr.commute_allowance!==null&&latestAddr.commute_allowance!==undefined)?String(latestAddr.commute_allowance):'',
+      basis:latestAddr?(latestAddr.commute_allowance_basis||''):''
+    });
     var {data:latestConfirmedAddr}=await supabaseClient.from('address_change_requests')
       .select('new_address')
       .eq('staff_id',data.id)
