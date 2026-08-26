@@ -194,6 +194,7 @@ input:disabled{background:#f5f4f0;color:#aaa;border-color:#e8e6e0}
     <button id="nav-tab-uploads" class="sub-tab" onclick="showSub('admin','uploads',this);loadAdminUploads()">書類授受</button>
     <button class="sub-tab" onclick="showSub('admin','mynumber',this)">マイナンバー</button>
     <button class="sub-tab" onclick="showSub('admin','notice',this);loadAdminNotices()">お知らせ</button>
+    <button class="sub-tab" onclick="showSub('admin','training',this);loadAdminTraining()">研修</button>
     <button class="sub-tab" onclick="showSub('admin','kintai',this);initAdminKintai()">勤怠（単発）</button>
     <button class="sub-tab" onclick="showSub('admin','settings',this)">設定</button>
   </div>
@@ -512,6 +513,14 @@ input:disabled{background:#f5f4f0;color:#aaa;border-color:#e8e6e0}
       <div class="tbl-scroll" id="admin-notices-container"><table class="tbl"><thead><tr><th>タイトル</th><th>送信先</th><th>確認状況</th><th>送信日</th><th></th></tr></thead><tbody id="admin-notices-tbody"><tr><td colspan="5" style="text-align:center;color:#888;padding:20px">読み込み中...</td></tr></tbody></table></div>
     </div>
   </div>
+
+  <div id="admin-training" class="sp">
+    <div class="card">
+      <div class="ch"><span class="ct">研修動画一覧</span><button class="btn btn-sm btn-p" onclick="openTrainingModal()">＋ 研修を追加する</button></div>
+      <div style="font-size:13px;color:#888;padding:4px 0 14px">カテゴリごとに研修動画を管理できます。YouTubeリンクが未登録の研修は、スタッフ画面に「準備中」と表示されます。</div>
+      <div id="admin-training-container">読み込み中...</div>
+    </div>
+  </div>
 </div>
 
 <!-- スタッフ画面 -->
@@ -531,6 +540,7 @@ input:disabled{background:#f5f4f0;color:#aaa;border-color:#e8e6e0}
     <button class="sub-tab" id="staff-tab-kintai" onclick="showSub('staff','skintai',this);loadMyKintai()" style="display:none">勤怠</button>
     <button class="sub-tab" id="staff-tab-spaid" onclick="showSub('staff','spaid',this)">有給</button>
     <button class="sub-tab" id="staff-notice-tab" onclick="showSub('staff','snotice',this);loadMyNotices();clearNoticeBadge()">お知らせ<span id="notice-badge" style="display:none;background:#e53e3e;color:#fff;border-radius:10px;font-size:10px;font-weight:700;padding:1px 6px;margin-left:4px;vertical-align:middle"></span></button>
+    <button class="sub-tab" onclick="showSub('staff','straining',this);loadStaffTraining()">研修</button>
     <button class="sub-tab" id="staff-tab-resign" onclick="showSub('staff','sresign',this);loadMyResignDocs()" style="display:none">退職書類</button>
     <button class="sub-tab" onclick="showSub('staff','supload',this);loadUploadHistory()">アップロード</button>
     <button class="sub-tab" onclick="showSub('staff','sprofile',this)">プロフィール</button>
@@ -815,6 +825,14 @@ input:disabled{background:#f5f4f0;color:#aaa;border-color:#e8e6e0}
     </div>
 </div>
 
+  <div id="staff-straining" class="sp">
+    <div class="card">
+      <div class="ch"><span class="ct">研修動画</span></div>
+      <div style="background:#f7f6f2;border-radius:8px;padding:10px 12px;font-size:12px;color:#666;margin-bottom:14px">📺 各研修動画はYouTubeの限定公開ページで視聴できます。タイトルをタップすると新しいタブで開きます。</div>
+      <div id="staff-training-container">読み込み中...</div>
+    </div>
+  </div>
+
 </div>
 
 <!-- モーダル各種 -->
@@ -1042,6 +1060,26 @@ input:disabled{background:#f5f4f0;color:#aaa;border-color:#e8e6e0}
     <div class="ma">
       <button class="btn btn-sm" onclick="closeModal('send-notice')">キャンセル</button>
       <button class="btn btn-sm btn-p" onclick="sendNotice()">送信する →</button>
+    </div>
+  </div>
+</div>
+
+<div class="mbg" id="modal-training">
+  <div class="modal">
+    <div class="mt" id="training-modal-title">研修を追加する</div>
+    <input type="hidden" id="training-edit-id" value="">
+    <div class="fg"><label class="fl">カテゴリ <span style="color:#991b1b">*必須</span></label>
+      <input type="text" id="training-category" list="training-category-list" placeholder="例：Excel研修、マナー研修、セキュリティ研修">
+      <datalist id="training-category-list"></datalist>
+    </div>
+    <div class="fg"><label class="fl">第◯弾（任意）</label><input type="number" id="training-series" placeholder="例：6"></div>
+    <div class="fg"><label class="fl">タイトル <span style="color:#991b1b">*必須</span></label><input type="text" id="training-title" placeholder="例：Excel研修（初級編）"></div>
+    <div class="fg"><label class="fl">YouTubeリンク（任意）</label><input type="text" id="training-url" placeholder="https://youtu.be/xxxxxxx　未入力の場合は「準備中」と表示されます"></div>
+    <div class="fg"><label class="fl">補足説明（任意）</label><textarea id="training-desc" rows="3" placeholder="研修の内容や対象者など"></textarea></div>
+    <div id="training-status" style="display:none;font-size:13px;margin-top:8px;padding:10px;border-radius:8px"></div>
+    <div class="ma">
+      <button class="btn btn-sm" onclick="closeModal('training')">キャンセル</button>
+      <button class="btn btn-sm btn-p" onclick="saveTraining()">保存する →</button>
     </div>
   </div>
 </div>
@@ -3720,6 +3758,166 @@ async function openNoticeDetail(noticeId){
   openModal('notice-detail');
   var c=document.getElementById('notice-detail-content');
   c.innerHTML='<div style="padding:20px;text-align:center;color:#888">読み込み中...</div>';
+
+// ===== 研修動画機能 =====
+var CATEGORY_ICONS={'Excel研修':'📊','マナー研修':'🤝','セキュリティ研修':'🔒'};
+function categoryIcon(cat){return CATEGORY_ICONS[cat]||'📁';}
+function toYoutubeEmbed(url){
+  if(!url)return null;
+  var m=url.match(/(?:youtu\.be\/|youtube\.com\/(?:watch\?v=|embed\/))([\w-]{6,})/);
+  return m?m[1]:null;
+}
+
+async function loadAdminTraining(){
+  if(!supabaseClient)return;
+  var container=document.getElementById('admin-training-container');
+  if(!container)return;
+  container.innerHTML='<div style="text-align:center;color:#888;padding:20px">読み込み中...</div>';
+  var {data:videos,error}=await supabaseClient.from('training_videos').select('*').order('category').order('series_number',{ascending:true}).order('display_order',{ascending:true});
+  if(error){container.innerHTML='<div style="text-align:center;color:#991b1b;padding:20px">読み込みに失敗しました</div>';return;}
+  if(!videos||videos.length===0){
+    container.innerHTML='<div style="text-align:center;color:#888;padding:40px 20px"><div style="font-size:40px;margin-bottom:10px">🎬</div><div style="font-size:14px">研修動画はまだ登録されていません</div></div>';
+    return;
+  }
+  // カテゴリの一覧をdatalistにも反映
+  var categories=[...new Set(videos.map(function(v){return v.category;}))];
+  var dl=document.getElementById('training-category-list');
+  if(dl)dl.innerHTML=categories.map(function(c){return '<option value="'+c+'">';}).join('');
+
+  var grouped={};
+  videos.forEach(function(v){
+    if(!grouped[v.category])grouped[v.category]=[];
+    grouped[v.category].push(v);
+  });
+  var html='';
+  Object.keys(grouped).forEach(function(cat){
+    html+='<div style="margin-bottom:18px"><div style="font-weight:700;font-size:14px;margin-bottom:8px">'+categoryIcon(cat)+' '+cat+'</div>';
+    html+='<div class="tbl-scroll"><table class="tbl"><thead><tr><th>第</th><th>タイトル</th><th>状態</th><th></th></tr></thead><tbody>';
+    grouped[cat].forEach(function(v){
+      var seriesStr=v.series_number?('第'+v.series_number+'弾'):'-';
+      var statusStr=v.youtube_url?'<span style="color:#1a7f37">✅ 公開中</span>':'<span style="color:#8a5a00">⏳ 準備中</span>';
+      html+='<tr><td style="white-space:nowrap">'+seriesStr+'</td><td>'+(v.title||'')+'</td><td style="white-space:nowrap">'+statusStr+'</td>'
+        +'<td style="white-space:nowrap"><button class="btn btn-sm" onclick="editTraining(\''+v.id+'\')">編集</button> <button class="btn btn-sm" style="color:#991b1b;border-color:#fca5a5" onclick="deleteTraining(\''+v.id+'\',\''+(v.title||'').replace(/'/g,'')+'\')">削除</button></td></tr>';
+    });
+    html+='</tbody></table></div></div>';
+  });
+  container.innerHTML=html;
+}
+
+function openTrainingModal(){
+  document.getElementById('training-modal-title').textContent='研修を追加する';
+  document.getElementById('training-edit-id').value='';
+  document.getElementById('training-category').value='';
+  document.getElementById('training-series').value='';
+  document.getElementById('training-title').value='';
+  document.getElementById('training-url').value='';
+  document.getElementById('training-desc').value='';
+  var st=document.getElementById('training-status');
+  if(st){st.style.display='none';}
+  openModal('training');
+}
+
+async function editTraining(id){
+  if(!supabaseClient)return;
+  var {data:v,error}=await supabaseClient.from('training_videos').select('*').eq('id',id).single();
+  if(error||!v){alert('データの取得に失敗しました');return;}
+  document.getElementById('training-modal-title').textContent='研修を編集する';
+  document.getElementById('training-edit-id').value=v.id;
+  document.getElementById('training-category').value=v.category||'';
+  document.getElementById('training-series').value=v.series_number||'';
+  document.getElementById('training-title').value=v.title||'';
+  document.getElementById('training-url').value=v.youtube_url||'';
+  document.getElementById('training-desc').value=v.description||'';
+  var st=document.getElementById('training-status');
+  if(st){st.style.display='none';}
+  openModal('training');
+}
+
+async function saveTraining(){
+  if(!supabaseClient){alert('接続エラー');return;}
+  var id=document.getElementById('training-edit-id').value;
+  var category=document.getElementById('training-category').value.trim();
+  var seriesRaw=document.getElementById('training-series').value;
+  var title=document.getElementById('training-title').value.trim();
+  var url=document.getElementById('training-url').value.trim();
+  var desc=document.getElementById('training-desc').value.trim();
+  var statusEl=document.getElementById('training-status');
+  if(!category||!title){
+    statusEl.style.display='block';statusEl.style.background='#fee2e2';statusEl.style.color='#991b1b';
+    statusEl.textContent='カテゴリとタイトルは必須です';
+    return;
+  }
+  var payload={
+    category:category,
+    series_number:seriesRaw?parseInt(seriesRaw,10):null,
+    title:title,
+    youtube_url:url||null,
+    description:desc||null,
+    updated_at:new Date().toISOString()
+  };
+  var result;
+  if(id){
+    result=await supabaseClient.from('training_videos').update(payload).eq('id',id);
+  }else{
+    result=await supabaseClient.from('training_videos').insert(payload);
+  }
+  if(result.error){
+    statusEl.style.display='block';statusEl.style.background='#fee2e2';statusEl.style.color='#991b1b';
+    statusEl.textContent='保存に失敗しました：'+result.error.message;
+    return;
+  }
+  statusEl.style.display='block';statusEl.style.background='#dcfce7';statusEl.style.color='#166534';
+  statusEl.textContent='保存しました';
+  setTimeout(function(){closeModal('training');loadAdminTraining();},900);
+}
+
+async function deleteTraining(id,title){
+  if(!confirm('「'+title+'」を削除します。よろしいですか？'))return;
+  if(!supabaseClient)return;
+  var {error}=await supabaseClient.from('training_videos').delete().eq('id',id);
+  if(error){alert('削除に失敗しました');return;}
+  loadAdminTraining();
+}
+
+async function loadStaffTraining(){
+  if(!supabaseClient)return;
+  var container=document.getElementById('staff-training-container');
+  if(!container)return;
+  container.innerHTML='<div style="text-align:center;color:#888;padding:20px">読み込み中...</div>';
+  var {data:videos,error}=await supabaseClient.from('training_videos').select('*').order('category').order('series_number',{ascending:true}).order('display_order',{ascending:true});
+  if(error){container.innerHTML='<div style="text-align:center;color:#991b1b;padding:20px">読み込みに失敗しました</div>';return;}
+  if(!videos||videos.length===0){
+    container.innerHTML='<div style="text-align:center;color:#888;padding:40px 20px"><div style="font-size:40px;margin-bottom:10px">🎬</div><div style="font-size:14px">研修動画はまだ登録されていません</div></div>';
+    return;
+  }
+  var grouped={};
+  videos.forEach(function(v){
+    if(!grouped[v.category])grouped[v.category]=[];
+    grouped[v.category].push(v);
+  });
+  var html='';
+  Object.keys(grouped).forEach(function(cat){
+    html+='<div style="margin-bottom:20px"><div style="font-weight:700;font-size:15px;margin-bottom:10px">'+categoryIcon(cat)+' '+cat+'</div>';
+    grouped[cat].forEach(function(v){
+      var seriesStr=v.series_number?('第'+v.series_number+'弾　'):'';
+      if(v.youtube_url){
+        html+='<a href="'+v.youtube_url+'" target="_blank" rel="noopener" style="text-decoration:none;color:inherit">'
+          +'<div style="display:flex;align-items:center;justify-content:space-between;background:#fafaf8;border:1px solid #e8e6e0;border-radius:10px;padding:14px 16px;margin-bottom:8px">'
+          +'<div><div style="font-size:11px;color:#888">'+seriesStr+'</div><div style="font-weight:700;font-size:14px">'+(v.title||'')+'</div>'+(v.description?'<div style="font-size:12px;color:#888;margin-top:2px">'+v.description+'</div>':'')+'</div>'
+          +'<div style="font-size:12px;color:#5b21b6;white-space:nowrap;margin-left:12px">▶ 視聴する</div>'
+          +'</div></a>';
+      }else{
+        html+='<div style="display:flex;align-items:center;justify-content:space-between;background:#f5f4f0;border:1px solid #e8e6e0;border-radius:10px;padding:14px 16px;margin-bottom:8px;opacity:0.7">'
+          +'<div><div style="font-size:11px;color:#888">'+seriesStr+'</div><div style="font-weight:700;font-size:14px">'+(v.title||'')+'</div>'+(v.description?'<div style="font-size:12px;color:#888;margin-top:2px">'+v.description+'</div>':'')+'</div>'
+          +'<div style="font-size:11px;color:#8a5a00;white-space:nowrap;margin-left:12px;background:#fef3cd;padding:2px 8px;border-radius:6px">準備中</div>'
+          +'</div>';
+      }
+    });
+    html+='</div>';
+  });
+  container.innerHTML=html;
+}
+
   var nRow=await supabaseClient.from('notices').select('*').eq('id',noticeId).single();
   if(nRow.error||!nRow.data){c.innerHTML='<div style="padding:20px;text-align:center;color:#991b1b">読み込みに失敗しました</div>';return;}
   var notice=nRow.data;
