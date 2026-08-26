@@ -1711,6 +1711,16 @@ async function approveKintai(id){
   loadAdminKintai();
 }
 
+async function sendLineNotify(params){
+  try{
+    await fetch('https://wafarcqisrwzlkectrdo.supabase.co/functions/v1/line-notify',{
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body:JSON.stringify(params)
+    });
+  }catch(e){console.log('LINE通知エラー:',e);}
+}
+
 async function doLogout(){
   if(!confirm('ログアウトしますか？'))return;
   await supabaseClient.auth.signOut();
@@ -3026,6 +3036,7 @@ async function sendPayslip(){
   });
   if(ins.error){status.style.color='#991b1b';status.textContent='登録失敗:'+ins.error.message;return;}
   status.style.color='#2d6a10';status.textContent=(isResend?'再送完了!':'送付完了!');
+  sendLineNotify({employee_id:target,type:'payslip'});
   var resendCb=document.getElementById('payslip-resend');if(resendCb)resendCb.checked=false;
   if(messageEl)messageEl.value='';
   setTimeout(()=>{closeModal('send-payslip');loadAdminUploads();if(typeof loadAdminStaffList==='function')loadAdminStaffList();},1000);
@@ -3096,7 +3107,7 @@ async function sendContract(){
     requires_signature:needsSig
   });
   if(ins.error){status.style.color='#991b1b';status.textContent='登録失敗:'+ins.error.message;return;}
-  status.style.color='#2d6a10';status.textContent='送付完了!';const titleVal=document.getElementById('contract-title')?document.getElementById('contract-title').value:'';const dateMatch=titleVal.match(/(\d{4})年(\d{1,2})月(\d{1,2})日[〜～](\d{4})年(\d{1,2})月(\d{1,2})日/);const cStart=dateMatch?dateMatch[1]+'-'+String(dateMatch[2]).padStart(2,'0')+'-'+String(dateMatch[3]).padStart(2,'0'):null;const cEnd=dateMatch?dateMatch[4]+'-'+String(dateMatch[5]).padStart(2,'0')+'-'+String(dateMatch[6]).padStart(2,'0'):null;if(cEnd){await supabaseClient.from('staffs').update({contract_end_date:cEnd,contract_start_date:cStart}).eq('employee_id',target);}
+  status.style.color='#2d6a10';status.textContent='送付完了!';sendLineNotify({employee_id:target,type:'contract'});const titleVal=document.getElementById('contract-title')?document.getElementById('contract-title').value:'';const dateMatch=titleVal.match(/(\d{4})年(\d{1,2})月(\d{1,2})日[〜～](\d{4})年(\d{1,2})月(\d{1,2})日/);const cStart=dateMatch?dateMatch[1]+'-'+String(dateMatch[2]).padStart(2,'0')+'-'+String(dateMatch[3]).padStart(2,'0'):null;const cEnd=dateMatch?dateMatch[4]+'-'+String(dateMatch[5]).padStart(2,'0')+'-'+String(dateMatch[6]).padStart(2,'0'):null;if(cEnd){await supabaseClient.from('staffs').update({contract_end_date:cEnd,contract_start_date:cStart}).eq('employee_id',target);}
   if(messageEl)messageEl.value='';
   setTimeout(()=>{closeModal('send-contract');loadAdminUploads();if(typeof loadAdminStaffList==='function')loadAdminStaffList();},1000);
 }
@@ -3711,6 +3722,7 @@ async function sendNotice(){
   if(recIns.error){statusEl.style.background='#fee2e2';statusEl.style.color='#991b1b';statusEl.textContent='受信者登録失敗:'+recIns.error.message;return;}
   statusEl.style.background='#e6f4d7';statusEl.style.color='#2d6a10';
   statusEl.textContent='送信完了！'+targetStaffIds.length+'名に送信しました。';
+  targetStaffIds.forEach(function(sid){sendLineNotify({staff_id:sid,type:'notice'});});
   document.getElementById('notice-title').value='';
   document.getElementById('notice-body').value='';
   document.getElementById('notice-file').value='';
