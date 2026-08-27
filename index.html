@@ -916,6 +916,10 @@ input:disabled{background:#f5f4f0;color:#aaa;border-color:#e8e6e0}
     <div class="profile-row"><span class="profile-label">派遣先住所</span><input type="text" id="modal-workplace-address" placeholder="例：福岡市中央区六本松2-3-6 7F" style="width:auto;font-size:12px;padding:4px 8px;text-align:right;flex:1"></div>
     <div class="profile-row"><span class="profile-label">通勤費<br><span style="font-size:10px;color:#aaa;font-weight:400">（住所・通勤変更届で確認済みの最新額）</span></span><span class="profile-val" id="modal-commute-allowance" style="color:#534AB7;font-weight:600">-</span></div>
     <div class="section-divider">住所・通勤情報<span style="font-size:11px;color:#aaa;font-weight:400">（変更すると住所・通勤変更届の履歴として登録されます）</span></div>
+    <label style="display:flex;align-items:center;gap:8px;cursor:pointer;padding:9px 12px;background:#fef3cd;border-radius:8px;border:1px solid #f0d878;margin-bottom:12px">
+      <input type="checkbox" id="mod-initial-entry-mode" style="width:18px;height:18px;accent-color:#534AB7;cursor:pointer;flex-shrink:0">
+      <span style="font-size:13px;color:#5a4a00">初回入力中（この保存は「確認待ち」に出さず、初回登録として扱う）</span>
+    </label>
     <div class="g2">
       <div class="fg"><label class="fl">郵便番号</label><input type="text" id="mod-postal" placeholder="例：810-0001"></div>
       <div class="fg"><label class="fl">住所</label><input type="text" id="mod-address" placeholder="市区町村・番地・建物名など"></div>
@@ -3251,7 +3255,8 @@ async function saveStaffProfile(){
     });
     var commuteInfoChanged=currentCommuteSignature!==(window._currentStaffOriginalCommuteSignature||'');
     if(modAddress&&window._currentStaffProfileId&&commuteInfoChanged){
-      var isInitialAddress=!hasConfirmedAddress;
+      var initialEntryModeChecked=mChecked('mod-initial-entry-mode');
+      var isInitialAddress=!hasConfirmedAddress||initialEntryModeChecked;
       var modConfirmerName=myStaffData?(myStaffData.name||'管理者'):'管理者';
       var modAddrIns=await supabaseClient.from('address_change_requests').insert({
         staff_id: window._currentStaffProfileId,
@@ -3440,6 +3445,8 @@ async function openStaffDetail(empId){
   var lastDay=new Date(now.getFullYear(),now.getMonth()+1,0);
   var labelEl=document.getElementById('leave-remaining-label');
   if(labelEl)labelEl.textContent=lastDay.getFullYear()+'年'+(lastDay.getMonth()+1)+'月'+lastDay.getDate()+'日';
+  var initEntryCb=document.getElementById('mod-initial-entry-mode');
+  if(initEntryCb)initEntryCb.checked=false;
   try{
     const {data,error}=await supabaseClient.from('staffs').select('*').eq('employee_id',empId).single();
     if(error){alert('取得失敗:'+error.message);return;}
