@@ -4023,6 +4023,17 @@ async function deleteTraining(id,title){
   loadAdminTraining();
 }
 
+async function recordTrainingView(videoId,url){
+  try{
+    if(supabaseClient&&myStaffData){
+      await supabaseClient.from('training_views').insert(
+        {staff_id:myStaffData.id,training_video_id:videoId,viewed_at:new Date().toISOString()}
+      );
+    }
+  }catch(e){console.log('視聴記録エラー:',e);}
+  window.open(url,'_blank','noopener');
+}
+
 async function loadStaffTraining(){
   if(!supabaseClient)return;
   var container=document.getElementById('staff-training-container');
@@ -4050,11 +4061,11 @@ async function loadStaffTraining(){
     grouped[cat].forEach(function(v){
       var seriesStr=v.series_number?('第'+v.series_number+'弾　'):'';
       if(v.youtube_url){
-        html+='<a href="'+v.youtube_url+'" target="_blank" rel="noopener" style="text-decoration:none;color:inherit">'
+        html+='<div onclick="recordTrainingView(&quot;'+v.id+'&quot;,&quot;'+v.youtube_url.replace(/"/g,'&quot;')+'&quot;)" style="text-decoration:none;color:inherit;cursor:pointer">'
           +'<div style="display:flex;align-items:center;justify-content:space-between;background:#fafaf8;border:1px solid #e8e6e0;border-radius:10px;padding:14px 16px;margin-bottom:8px">'
           +'<div><div style="font-size:11px;color:#888">'+seriesStr+'</div><div style="font-weight:700;font-size:14px">'+(v.title||'')+'</div>'+(v.description?'<div style="font-size:12px;color:#888;margin-top:2px">'+v.description+'</div>':'')+'</div>'
           +'<div style="font-size:12px;color:#5b21b6;white-space:nowrap;margin-left:12px">▶ 視聴する</div>'
-          +'</div></a>';
+          +'</div></div>';
       }else{
         html+='<div style="display:flex;align-items:center;justify-content:space-between;background:#f5f4f0;border:1px solid #e8e6e0;border-radius:10px;padding:14px 16px;margin-bottom:8px;opacity:0.7">'
           +'<div><div style="font-size:11px;color:#888">'+seriesStr+'</div><div style="font-weight:700;font-size:14px">'+(v.title||'')+'</div>'+(v.description?'<div style="font-size:12px;color:#888;margin-top:2px">'+v.description+'</div>':'')+'</div>'
