@@ -233,8 +233,8 @@ input:disabled{background:#f5f4f0;color:#aaa;border-color:#e8e6e0}
       <div class="ch">
         <span class="ct">書類送付管理</span>
         <div class="btn-row">
-          <button id="send-payslip-btn" class="btn btn-sm btn-p" onclick="switchDocsTab('payslip');openModal('send-payslip')">給与明細送付</button>
-          <button id="send-contract-btn" class="btn btn-sm" onclick="switchDocsTab('contract');openModal('send-contract')">契約書送付</button>
+         <button id="send-payslip-btn" class="btn btn-sm btn-p" onclick="switchDocsTab('payslip');resetDocPreview('payslip');openModal('send-payslip')">給与明細送付</button>
+<button id="send-contract-btn" class="btn btn-sm" onclick="switchDocsTab('contract');resetDocPreview('contract');openModal('send-contract')">契約書送付</button> 
         </div>
       </div>
       <div style="display:flex;gap:4px;margin-bottom:12px;border-bottom:2px solid #e8e5e0">
@@ -1009,7 +1009,14 @@ input:disabled{background:#f5f4f0;color:#aaa;border-color:#e8e6e0}
     <div class="mt">給与明細PDFを送付する</div>
 <div class="fg"><label class="fl">対象月</label><select id="payslip-month"><option value="2026-05">2026年5月分</option><option value="2026-06">2026年6月分</option><option value="2026-07">2026年7月分</option><option value="2026-08">2026年8月分</option><option value="2026-09">2026年9月分</option><option value="2026-10">2026年10月分</option><option value="2026-11">2026年11月分</option><option value="2026-12">2026年12月分</option><option value="2027-01">2027年1月分</option><option value="2027-02">2027年2月分</option><option value="2027-03">2027年3月分</option><option value="2027-04">2027年4月分</option><option value="2027-05">2027年5月分</option><option value="2027-06">2027年6月分</option><option value="2027-07">2027年7月分</option><option value="2027-08">2027年8月分</option><option value="2027-09">2027年9月分</option><option value="2027-10">2027年10月分</option><option value="2027-11">2027年11月分</option><option value="2027-12">2027年12月分</option><option value="2028-01">2028年1月分</option><option value="2028-02">2028年2月分</option><option value="2028-03">2028年3月分</option><option value="2028-04">2028年4月分</option></select></div>
 <div class="fg"><label class="fl">送付先</label><select id="payslip-target" onchange="checkPaperPayslip()"><option>読み込み中...</option></select></div>
-    <div class="fg"><label class="fl">PDFファイル</label><input type="file" id="payslip-file" accept=".pdf"></div>
+    <div class="fg"><label class="fl">PDFファイル</label><input type="file" id="payslip-file" accept=".pdf" onchange="previewSelectedPdf('payslip')"></div>
+<div id="payslip-preview-area" style="display:none;margin:-4px 0 12px">
+  <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px">
+    <span style="font-size:12px;font-weight:700;color:#555">📄 送付前プレビュー</span>
+    <a id="payslip-preview-newtab" href="#" target="_blank" rel="noopener" style="font-size:12px;color:#5b21b6;text-decoration:underline">新しいタブで開く</a>
+  </div>
+  <iframe id="payslip-preview-frame" style="width:100%;height:320px;border:1px solid #d8d6d0;border-radius:8px;background:#fff"></iframe>
+</div>
     <div class="fg"><label class="fl">一言コメント（任意）</label><textarea id="payslip-message" rows="2" placeholder="例：以前送付していましたが、指揮命令者などの氏名が変更になった為、再送付です"></textarea></div>
     <div class="fg"><label style="display:flex;align-items:center;gap:6px;cursor:pointer;font-size:13px;color:#555"><input type="checkbox" id="payslip-resend" style="width:16px;height:16px">再送（同じ月をもう一度送る場合はチェック）</label></div>
     <div id="payslip-status" style="display:none;font-size:12px;margin-top:8px"></div>
@@ -1026,7 +1033,14 @@ input:disabled{background:#f5f4f0;color:#aaa;border-color:#e8e6e0}
       <option value="meiji">就業条件明示書（署名あり）</option>
     </select></div>
 <div class="fg"><label class="fl">書類タイトル</label><input type="text" id="contract-title" placeholder="例：就業条件明示書（2026年6月1日〜2026年8月31日）"></div>
-    <div class="fg"><label class="fl">PDFファイル</label><input type="file" id="contract-file" accept=".pdf"></div>
+   <div class="fg"><label class="fl">PDFファイル</label><input type="file" id="contract-file" accept=".pdf" onchange="previewSelectedPdf('contract')"></div>
+<div id="contract-preview-area" style="display:none;margin:-4px 0 12px">
+  <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px">
+    <span style="font-size:12px;font-weight:700;color:#555">📄 送付前プレビュー</span>
+    <a id="contract-preview-newtab" href="#" target="_blank" rel="noopener" style="font-size:12px;color:#5b21b6;text-decoration:underline">新しいタブで開く</a>
+  </div>
+  <iframe id="contract-preview-frame" style="width:100%;height:320px;border:1px solid #d8d6d0;border-radius:8px;background:#fff"></iframe>
+</div>
     <div class="fg"><label class="fl">一言コメント（任意）</label><textarea id="contract-message" rows="2" placeholder="例：以前送付していましたが、指揮命令者などの氏名が変更になった為、再送付です"></textarea></div>
     <div id="contract-status" style="display:none;font-size:12px;margin-top:8px"></div>
     <div id="contract-paper-warning" style="display:none;background:#fee;border:2px solid #c00;border-radius:8px;padding:12px;margin-top:8px;color:#c00;font-weight:bold;font-size:14px;text-align:center">🚨 この方は契約書を紙で受け取る方です<br>ポータルからは送付できません</div>
@@ -3054,7 +3068,7 @@ async function sendPayslip(){
   sendLineNotify({employee_id:target,type:'payslip'});
   var resendCb=document.getElementById('payslip-resend');if(resendCb)resendCb.checked=false;
   if(messageEl)messageEl.value='';
-  setTimeout(()=>{closeModal('send-payslip');loadAdminUploads();if(typeof loadAdminStaffList==='function')loadAdminStaffList();},1000);
+ setTimeout(()=>{closeModal('send-payslip');resetDocPreview('payslip');loadAdminUploads();if(typeof loadAdminStaffList==='function')loadAdminStaffList();},1000);
 }
 async function checkPaperContract(){
   var target=document.getElementById('contract-target').value;
@@ -3124,7 +3138,7 @@ async function sendContract(){
   if(ins.error){status.style.color='#991b1b';status.textContent='登録失敗:'+ins.error.message;return;}
   status.style.color='#2d6a10';status.textContent='送付完了!';sendLineNotify({employee_id:target,type:'contract'});const titleVal=document.getElementById('contract-title')?document.getElementById('contract-title').value:'';const dateMatch=titleVal.match(/(\d{4})年(\d{1,2})月(\d{1,2})日[〜～](\d{4})年(\d{1,2})月(\d{1,2})日/);const cStart=dateMatch?dateMatch[1]+'-'+String(dateMatch[2]).padStart(2,'0')+'-'+String(dateMatch[3]).padStart(2,'0'):null;const cEnd=dateMatch?dateMatch[4]+'-'+String(dateMatch[5]).padStart(2,'0')+'-'+String(dateMatch[6]).padStart(2,'0'):null;if(cEnd){await supabaseClient.from('staffs').update({contract_end_date:cEnd,contract_start_date:cStart}).eq('employee_id',target);}
   if(messageEl)messageEl.value='';
-  setTimeout(()=>{closeModal('send-contract');loadAdminUploads();if(typeof loadAdminStaffList==='function')loadAdminStaffList();},1000);
+  setTimeout(()=>{closeModal('send-contract');resetDocPreview('contract');loadAdminUploads();if(typeof loadAdminStaffList==='function')loadAdminStaffList();},1000);
 }
   function displayPaidLeaveInfo(data){
   const el=document.getElementById('paid-leave-info');
@@ -3438,7 +3452,42 @@ function showSub3(id,btn){
 
 function openModal(id){document.getElementById('modal-'+id).classList.add('open');}
 function closeModal(id){document.getElementById('modal-'+id).classList.remove('open');}
+function openModal(id){document.getElementById('modal-'+id).classList.add('open');}
+function closeModal(id){document.getElementById('modal-'+id).classList.remove('open');}
 
+var _docPreviewUrls={};
+function previewSelectedPdf(kind){
+  var input=document.getElementById(kind+'-file');
+  var area=document.getElementById(kind+'-preview-area');
+  var frame=document.getElementById(kind+'-preview-frame');
+  var newTabLink=document.getElementById(kind+'-preview-newtab');
+  if(!input||!input.files||!input.files[0]){
+    if(area)area.style.display='none';
+    return;
+  }
+  var file=input.files[0];
+  if(file.type!=='application/pdf'){
+    alert('PDFファイルを選択してください');
+    input.value='';
+    if(area)area.style.display='none';
+    return;
+  }
+  if(_docPreviewUrls[kind])URL.revokeObjectURL(_docPreviewUrls[kind]);
+  var url=URL.createObjectURL(file);
+  _docPreviewUrls[kind]=url;
+  if(frame)frame.src=url;
+  if(newTabLink)newTabLink.href=url;
+  if(area)area.style.display='block';
+}
+function resetDocPreview(kind){
+  var area=document.getElementById(kind+'-preview-area');
+  var frame=document.getElementById(kind+'-preview-frame');
+  if(_docPreviewUrls[kind]){URL.revokeObjectURL(_docPreviewUrls[kind]);delete _docPreviewUrls[kind];}
+  if(frame)frame.src='';
+  if(area)area.style.display='none';
+  var input=document.getElementById(kind+'-file');
+  if(input)input.value='';
+}
 async function openStaffDetail(empId){
   // 今月末の日付ラベルをセット
   var now=new Date();
