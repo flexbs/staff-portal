@@ -2086,7 +2086,7 @@ async function loadAdminMetrics(){
   if(c)c.textContent=unsignedContract+'件';
   var {data:leaveReqs}=await supabaseClient.from('leave_requests').select('id').eq('status','pending');
   var pendingLeave=leaveReqs?leaveReqs.length:0;
-  var {data:addrReqs}=await supabaseClient.from('address_change_requests').select('id').is('confirmed_at',null).or('change_types.neq.初回登録,change_types.is.null');
+  var {data:addrReqs}=await supabaseClient.from('address_change_requests').select('id').is('confirmed_at',null);
   var pendingAddress=addrReqs?addrReqs.length:0;
   var total=pendingLeave+pendingAddress+unconfirmedUpload;
   var t=document.getElementById('combinedPendingCount');
@@ -2221,7 +2221,7 @@ async function loadMonthlySummary(){
   var {data:leaveReqs}=await supabaseClient.from('leave_requests').select('id').gte('leave_date',startDate).lte('leave_date',endDate);
   var lEl=document.getElementById('summary-leave-count');if(lEl)lEl.textContent=(leaveReqs?leaveReqs.length:0)+'件';
 
-  var {data:addrReqs}=await supabaseClient.from('address_change_requests').select('id').gte('created_at',startDate).lt('created_at',nextMonthStart).or('change_types.neq.初回登録,change_types.is.null');
+  var {data:addrReqs}=await supabaseClient.from('address_change_requests').select('id').gte('created_at',startDate).lt('created_at',nextMonthStart);
   var aEl=document.getElementById('summary-address-count');if(aEl)aEl.textContent=(addrReqs?addrReqs.length:0)+'件';
 
   var {data:uploadDocs}=await supabaseClient.from('documents').select('id').eq('type','upload').is('cancelled_at',null).gte('created_at',startDate).lt('created_at',nextMonthStart);
@@ -2407,7 +2407,7 @@ async function loadAdminAddressChanges(){
   if(!supabaseClient)return;
   var tbody=document.getElementById('admin-address-tbody');
   if(!tbody)return;
-  var {data,error}=await supabaseClient.from('address_change_requests').select('*').or('change_types.neq.初回登録,change_types.is.null').order('created_at',{ascending:false});
+  var {data,error}=await supabaseClient.from('address_change_requests').select('*').order('created_at',{ascending:false});
   if(error||!data){tbody.innerHTML='<tr><td colspan="6" style="text-align:center;color:#991b1b;padding:20px">読み込みに失敗しました</td></tr>';return;}
   var {data:staffs}=await supabaseClient.from('staffs').select('id,name,employee_id,workplace_address');
   var staffMap={};(staffs||[]).forEach(function(s){staffMap[s.id]={name:s.name,employee_id:s.employee_id,workplace_address:s.workplace_address};});
@@ -3568,7 +3568,7 @@ async function openStaffDetail(empId){
     if(whEl)whEl.value=wmpd!==null?Math.floor(wmpd/60):'';
     if(wmEl)wmEl.value=wmpd!==null?wmpd%60:'';
     window._currentStaffProfileId=data.id;
-    var {data:latestAddr}=await supabaseClient.from('address_change_requests')
+        var {data:latestAddr}=await supabaseClient.from('staff_current_address')
       .select('*')
       .eq('staff_id',data.id)
       .order('created_at',{ascending:false})
@@ -3619,10 +3619,10 @@ async function openStaffDetail(empId){
       allowance:(latestAddr&&latestAddr.commute_allowance!==null&&latestAddr.commute_allowance!==undefined)?String(latestAddr.commute_allowance):'',
       basis:latestAddr?(latestAddr.commute_allowance_basis||''):''
     });
-    var {data:latestConfirmedAddr}=await supabaseClient.from('address_change_requests')
+        var {data:latestConfirmedAddr}=await supabaseClient.from('staff_current_address')
       .select('new_address')
       .eq('staff_id',data.id)
-      .not('confirmed_at','is',null)
+      .eq('is_confirmed',true)
       .order('created_at',{ascending:false})
       .limit(1)
       .maybeSingle();
@@ -3632,7 +3632,7 @@ async function openStaffDetail(empId){
     var commuteEl=document.getElementById('modal-commute-allowance');
     if(commuteEl){
       commuteEl.textContent='読み込み中…';
-      var {data:addrData}=await supabaseClient.from('address_change_requests')
+            var {data:addrData}=await supabaseClient.from('staff_current_address')
         .select('commute_allowance,commute_allowance_basis')
         .eq('staff_id',data.id)
         .not('commute_allowance','is',null)
