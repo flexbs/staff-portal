@@ -195,6 +195,7 @@ input:disabled{background:#f5f4f0;color:#aaa;border-color:#e8e6e0}
     <button class="sub-tab" onclick="showSub('admin','mynumber',this)">マイナンバー</button>
     <button class="sub-tab" onclick="showSub('admin','notice',this);loadAdminNotices()">お知らせ</button>
     <button class="sub-tab" onclick="showSub('admin','training',this);loadAdminTraining()">研修</button>
+    <button id="nav-tab-health" class="sub-tab" onclick="showSub('admin','health',this);loadAdminHealth()">健康診断</button>
     <button class="sub-tab" onclick="showSub('admin','kintai',this);initAdminKintai()">勤怠（単発）</button>
     <button class="sub-tab" onclick="showSub('admin','settings',this)">設定</button>
   </div>
@@ -519,6 +520,33 @@ input:disabled{background:#f5f4f0;color:#aaa;border-color:#e8e6e0}
       <div class="ch"><span class="ct">研修動画一覧</span><button class="btn btn-sm btn-p" onclick="openTrainingModal()">＋ 研修を追加する</button></div>
       <div style="font-size:13px;color:#888;padding:4px 0 14px">カテゴリごとに研修動画を管理できます。YouTubeリンクが未登録の研修は、スタッフ画面に「準備中」と表示されます。</div>
       <div id="admin-training-container">読み込み中...</div>
+    </div>
+  </div>
+
+  <div id="admin-health" class="sp">
+    <div class="card">
+      <div class="ch">
+        <span class="ct">健康診断 記録一覧</span>
+        <button class="btn btn-sm btn-p" onclick="openHealthModal()">＋ 記録を追加する</button>
+      </div>
+      <div style="margin-bottom:12px;display:flex;align-items:center;gap:8px;flex-wrap:wrap">
+        <label style="font-size:13px;color:#555">スタッフ：</label>
+        <select id="health-filter-staff" onchange="filterAdminHealth()" style="padding:6px 10px;border-radius:8px;border:1px solid #d8d6d0;font-size:13px">
+          <option value="all">全員</option>
+        </select>
+        <label style="display:flex;align-items:center;gap:6px;font-size:13px;color:#555;cursor:pointer;margin-left:6px">
+          <input type="checkbox" id="health-filter-duesoon" onchange="filterAdminHealth()" style="width:16px;height:16px;accent-color:#534AB7;cursor:pointer">
+          次回期限が近い・過ぎている人のみ
+        </label>
+      </div>
+      <div class="tbl-scroll">
+        <table class="tbl">
+          <thead><tr><th>名前</th><th>社員番号</th><th>受診日</th><th>次回期限</th><th>所見メモ</th><th></th></tr></thead>
+          <tbody id="admin-health-tbody">
+            <tr><td colspan="6" style="text-align:center;color:#888;padding:20px">読み込み中...</td></tr>
+          </tbody>
+        </table>
+      </div>
     </div>
   </div>
 </div>
@@ -1102,7 +1130,25 @@ input:disabled{background:#f5f4f0;color:#aaa;border-color:#e8e6e0}
   </div>
 </div>
 
-  <div class="mbg" id="modal-notice-detail">
+  <div class="mbg" id="modal-health">
+  <div class="modal">
+    <div class="mt" id="health-modal-title">健康診断記録を追加する</div>
+    <input type="hidden" id="health-edit-id" value="">
+    <div class="fg"><label class="fl">対象スタッフ <span style="color:#991b1b">*必須</span></label>
+      <select id="health-staff-select"><option value="">スタッフを選択してください</option></select>
+    </div>
+    <div class="fg"><label class="fl">受診日 <span style="color:#991b1b">*必須</span></label><input type="date" id="health-checkup-date"></div>
+    <div class="fg"><label class="fl">次回期限（任意）</label><input type="date" id="health-next-due-date"></div>
+    <div class="fg"><label class="fl">所見メモ（任意）</label><textarea id="health-result-note" rows="3" placeholder="例：要再検査（血圧）、異常なし　など"></textarea></div>
+    <div id="health-status" style="display:none;font-size:13px;margin-top:8px;padding:10px;border-radius:8px"></div>
+    <div class="ma">
+      <button class="btn btn-sm" onclick="closeModal('health')">キャンセル</button>
+      <button class="btn btn-sm btn-p" onclick="saveHealth()">保存する →</button>
+    </div>
+  </div>
+</div>
+
+<div class="mbg" id="modal-notice-detail">
   <div class="modal" style="max-width:560px">
     <div class="mt">お知らせ詳細</div>
     <div id="notice-detail-content">
@@ -4070,6 +4116,134 @@ async function deleteTraining(id,title){
   var {error}=await supabaseClient.from('training_videos').delete().eq('id',id);
   if(error){alert('削除に失敗しました');return;}
   loadAdminTraining();
+}
+
+/* ===== 健康診断管理 ===== */
+var _healthRecordsCache=[];
+async function populateHealthStaffOptions(){
+  if(!supabaseClient)return;
+  var {data:staffs}=await supabaseClient.from('staffs').select('id,name,employee_id').order('name_kana');
+  if(!staffs)return;
+  var opts=staffs.map(function(s){return '<option value="'+s.id+'">'+s.name+'（'+String(s.employee_id).padStart(4,'0')+'）</option>';}).join('');
+  var modalSel=document.getElementById('health-staff-select');
+  if(modalSel)modalSel.innerHTML='<option value="">スタッフを選択してください</option>'+opts;
+  var filterSel=document.getElementById('health-filter-staff');
+  if(filterSel)filterSel.innerHTML='<option value="all">全員</option>'+opts;
+}
+async function loadAdminHealth(){
+  if(!supabaseClient)return;
+  await populateHealthStaffOptions();
+  var tbody=document.getElementById('admin-health-tbody');
+  if(!tbody)return;
+  tbody.innerHTML='<tr><td colspan="6" style="text-align:center;color:#888;padding:20px">読み込み中...</td></tr>';
+  var {data:records,error}=await supabaseClient.from('health_checkups').select('*,staffs(name,employee_id)').order('checkup_date',{ascending:false});
+  if(error){tbody.innerHTML='<tr><td colspan="6" style="text-align:center;color:#991b1b;padding:20px">読み込みに失敗しました</td></tr>';return;}
+  _healthRecordsCache=records||[];
+  renderAdminHealth(_healthRecordsCache);
+}
+function filterAdminHealth(){
+  var staffId=document.getElementById('health-filter-staff').value;
+  var dueSoonOnly=document.getElementById('health-filter-duesoon').checked;
+  var filtered=_healthRecordsCache.filter(function(r){
+    if(staffId!=='all'&&r.staff_id!==staffId)return false;
+    if(dueSoonOnly){
+      if(!r.next_due_date)return false;
+      var daysLeft=(new Date(r.next_due_date)-new Date())/86400000;
+      if(daysLeft>30)return false;
+    }
+    return true;
+  });
+  renderAdminHealth(filtered);
+}
+function renderAdminHealth(records){
+  var tbody=document.getElementById('admin-health-tbody');
+  if(!tbody)return;
+  if(!records||records.length===0){
+    tbody.innerHTML='<tr><td colspan="6" style="text-align:center;color:#888;padding:40px 20px"><div style="font-size:32px;margin-bottom:8px">🩺</div><div>記録はまだありません</div></td></tr>';
+    return;
+  }
+  tbody.innerHTML='';
+  records.forEach(function(r){
+    var name=r.staffs?r.staffs.name:'(不明)';
+    var empId=r.staffs?String(r.staffs.employee_id).padStart(4,'0'):'-';
+    var checkupStr=r.checkup_date?r.checkup_date.replace(/-/g,'/'):'-';
+    var dueStr='-';
+    if(r.next_due_date){
+      var daysLeft=(new Date(r.next_due_date)-new Date())/86400000;
+      var dueColor=daysLeft<0?'#991b1b':(daysLeft<=30?'#8a5a00':'#1a1a1a');
+      dueStr='<span style="color:'+dueColor+';font-weight:'+(daysLeft<=30?'700':'400')+'">'+r.next_due_date.replace(/-/g,'/')+'</span>';
+    }
+    var tr=document.createElement('tr');
+    tr.innerHTML='<td>'+name+'</td><td>'+empId+'</td><td style="white-space:nowrap">'+checkupStr+'</td><td style="white-space:nowrap">'+dueStr+'</td>'
+      +'<td style="font-size:12px;color:#666">'+(r.result_note||'')+'</td>'
+      +'<td style="white-space:nowrap"><button class="btn btn-sm" onclick="editHealth(\''+r.id+'\')">編集</button> <button class="btn btn-sm" style="color:#991b1b;border-color:#fca5a5" onclick="deleteHealth(\''+r.id+'\',\''+name+'\')">削除</button></td>';
+    tbody.appendChild(tr);
+  });
+}
+function openHealthModal(){
+  document.getElementById('health-modal-title').textContent='健康診断記録を追加する';
+  document.getElementById('health-edit-id').value='';
+  document.getElementById('health-staff-select').value='';
+  document.getElementById('health-checkup-date').value='';
+  document.getElementById('health-next-due-date').value='';
+  document.getElementById('health-result-note').value='';
+  var st=document.getElementById('health-status');
+  if(st)st.style.display='none';
+  openModal('health');
+}
+function editHealth(id){
+  var r=_healthRecordsCache.find(function(x){return x.id===id;});
+  if(!r){alert('データの取得に失敗しました');return;}
+  document.getElementById('health-modal-title').textContent='健康診断記録を編集する';
+  document.getElementById('health-edit-id').value=r.id;
+  document.getElementById('health-staff-select').value=r.staff_id;
+  document.getElementById('health-checkup-date').value=r.checkup_date||'';
+  document.getElementById('health-next-due-date').value=r.next_due_date||'';
+  document.getElementById('health-result-note').value=r.result_note||'';
+  var st=document.getElementById('health-status');
+  if(st)st.style.display='none';
+  openModal('health');
+}
+async function saveHealth(){
+  if(!supabaseClient){alert('接続エラー');return;}
+  var id=document.getElementById('health-edit-id').value;
+  var staffId=document.getElementById('health-staff-select').value;
+  var checkupDate=document.getElementById('health-checkup-date').value;
+  var nextDueDate=document.getElementById('health-next-due-date').value;
+  var resultNote=document.getElementById('health-result-note').value.trim();
+  var statusEl=document.getElementById('health-status');
+  if(!staffId||!checkupDate){
+    statusEl.style.display='block';statusEl.style.background='#fee2e2';statusEl.style.color='#991b1b';
+    statusEl.textContent='対象スタッフと受診日は必須です';
+    return;
+  }
+  var payload={
+    staff_id:staffId,
+    checkup_date:checkupDate,
+    next_due_date:nextDueDate||null,
+    result_note:resultNote||null
+  };
+  var result;
+  if(id){
+    result=await supabaseClient.from('health_checkups').update(payload).eq('id',id);
+  }else{
+    result=await supabaseClient.from('health_checkups').insert(payload);
+  }
+  if(result.error){
+    statusEl.style.display='block';statusEl.style.background='#fee2e2';statusEl.style.color='#991b1b';
+    statusEl.textContent='保存に失敗しました：'+result.error.message;
+    return;
+  }
+  statusEl.style.display='block';statusEl.style.background='#dcfce7';statusEl.style.color='#166534';
+  statusEl.textContent='保存しました';
+  setTimeout(function(){closeModal('health');loadAdminHealth();},900);
+}
+async function deleteHealth(id,name){
+  if(!confirm(name+'さんの健康診断記録を削除します。よろしいですか？'))return;
+  if(!supabaseClient)return;
+  var {error}=await supabaseClient.from('health_checkups').delete().eq('id',id);
+  if(error){alert('削除に失敗しました');return;}
+  loadAdminHealth();
 }
 
 async function recordTrainingView(videoId,url){
