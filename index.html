@@ -2760,6 +2760,12 @@ async function loadAdminLeaveRequests(){
   var {data:staffs}=await supabaseClient.from('staffs').select('id,name,employee_id');
   var staffMap={};
   if(staffs){staffs.forEach(s=>{staffMap[s.id]={name:s.name,employee_id:s.employee_id};});}
+  reqs.sort(function(a,b){
+    var empA=parseInt((staffMap[a.staff_id]||{}).employee_id,10)||0;
+    var empB=parseInt((staffMap[b.staff_id]||{}).employee_id,10)||0;
+    if(empA!==empB)return empA-empB;
+    return (a.leave_date||'').localeCompare(b.leave_date||'');
+  });
   tbody.innerHTML='';
   reqs.forEach(function(r){
     var sInfo=staffMap[r.staff_id]||{name:'(不明)',employee_id:''};
@@ -4453,8 +4459,14 @@ function renderLeaveHistory(reqs,staffMap){
     tbody.innerHTML='<tr><td colspan="6" style="text-align:center;color:#888;padding:40px 20px"><div style="font-size:40px;margin-bottom:10px">📋</div><div style="font-size:14px">取得履歴はありません</div></td></tr>';
     return;
   }
+  var sortedReqs=reqs.slice().sort(function(a,b){
+    var empA=parseInt((staffMap[a.staff_id]||{}).employee_id,10)||0;
+    var empB=parseInt((staffMap[b.staff_id]||{}).employee_id,10)||0;
+    if(empA!==empB)return empA-empB;
+    return (a.leave_date||'').localeCompare(b.leave_date||'');
+  });
   tbody.innerHTML='';
-  reqs.forEach(function(r){
+  sortedReqs.forEach(function(r){
     var sInfo=staffMap[r.staff_id]||{name:'(不明)',employee_id:''};
     var dayTypeStr=r.day_type==='full'?'全日':(r.day_type==='am'?'AM半休':(r.day_type==='pm'?'PM半休':r.day_type));
     var leaveDateStr=r.leave_date?r.leave_date.replace(/-/g,'/'):'-';
