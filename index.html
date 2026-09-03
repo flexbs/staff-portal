@@ -536,14 +536,14 @@ input:disabled{background:#f5f4f0;color:#aaa;border-color:#e8e6e0}
         </select>
         <label style="display:flex;align-items:center;gap:6px;font-size:13px;color:#555;cursor:pointer;margin-left:6px">
           <input type="checkbox" id="health-filter-duesoon" onchange="filterAdminHealth()" style="width:16px;height:16px;accent-color:#534AB7;cursor:pointer">
-          次回期限が近い・過ぎている人のみ
+          次回健診予定日が近い・過ぎている人のみ
         </label>
       </div>
       <div class="tbl-scroll">
         <table class="tbl">
-          <thead><tr><th>名前</th><th>社員番号</th><th>受診日</th><th>次回期限</th><th>所見メモ</th><th></th></tr></thead>
+          <thead><tr><th>名前</th><th>社員番号</th><th>状態</th><th>受診日</th><th>次回健診予定日</th><th>結果・所見メモ</th><th></th></tr></thead>
           <tbody id="admin-health-tbody">
-            <tr><td colspan="6" style="text-align:center;color:#888;padding:20px">読み込み中...</td></tr>
+            <tr><td colspan="7" style="text-align:center;color:#888;padding:20px">読み込み中...</td></tr>
           </tbody>
         </table>
       </div>
@@ -1137,9 +1137,16 @@ input:disabled{background:#f5f4f0;color:#aaa;border-color:#e8e6e0}
     <div class="fg"><label class="fl">対象スタッフ <span style="color:#991b1b">*必須</span></label>
       <select id="health-staff-select"><option value="">スタッフを選択してください</option></select>
     </div>
-    <div class="fg"><label class="fl">受診日 <span style="color:#991b1b">*必須</span></label><input type="date" id="health-checkup-date"></div>
-    <div class="fg"><label class="fl">次回期限（任意）</label><input type="date" id="health-next-due-date"></div>
-    <div class="fg"><label class="fl">所見メモ（任意）</label><textarea id="health-result-note" rows="3" placeholder="例：要再検査（血圧）、異常なし　など"></textarea></div>
+    <div class="section-divider" style="margin-top:4px">受診案内</div>
+    <div class="g3">
+      <div class="fg"><label class="fl">初回案内日</label><input type="date" id="health-notice1-date"></div>
+      <div class="fg"><label class="fl">2回目案内日</label><input type="date" id="health-notice2-date"></div>
+      <div class="fg"><label class="fl">3回目案内日</label><input type="date" id="health-notice3-date"></div>
+    </div>
+    <div class="section-divider">受診結果</div>
+    <div class="fg"><label class="fl">受診日</label><input type="date" id="health-checkup-date"></div>
+    <div class="fg"><label class="fl">結果・所見メモ（任意）</label><textarea id="health-result-note" rows="3" placeholder="例：要再検査（血圧）、異常なし　など"></textarea></div>
+    <div class="fg"><label class="fl">次回健診予定日（任意・目安：受診日の約1年後）</label><input type="date" id="health-next-due-date"></div>
     <div id="health-status" style="display:none;font-size:13px;margin-top:8px;padding:10px;border-radius:8px"></div>
     <div class="ma">
       <button class="btn btn-sm" onclick="closeModal('health')">キャンセル</button>
@@ -4155,11 +4162,18 @@ function filterAdminHealth(){
   });
   renderAdminHealth(filtered);
 }
+function healthStatusLabel(r){
+  if(r.checkup_date)return '<span class="bdg bg">受診済</span>';
+  if(r.notice3_date)return '<span class="bdg br">未受診（案内3回目）</span>';
+  if(r.notice2_date)return '<span class="bdg ba">未受診（案内2回目）</span>';
+  if(r.notice1_date)return '<span class="bdg ba">未受診（案内1回目）</span>';
+  return '<span class="bdg bz">案内前</span>';
+}
 function renderAdminHealth(records){
   var tbody=document.getElementById('admin-health-tbody');
   if(!tbody)return;
   if(!records||records.length===0){
-    tbody.innerHTML='<tr><td colspan="6" style="text-align:center;color:#888;padding:40px 20px"><div style="font-size:32px;margin-bottom:8px">🩺</div><div>記録はまだありません</div></td></tr>';
+    tbody.innerHTML='<tr><td colspan="7" style="text-align:center;color:#888;padding:40px 20px"><div style="font-size:32px;margin-bottom:8px">🩺</div><div>記録はまだありません</div></td></tr>';
     return;
   }
   tbody.innerHTML='';
@@ -4174,7 +4188,7 @@ function renderAdminHealth(records){
       dueStr='<span style="color:'+dueColor+';font-weight:'+(daysLeft<=30?'700':'400')+'">'+r.next_due_date.replace(/-/g,'/')+'</span>';
     }
     var tr=document.createElement('tr');
-    tr.innerHTML='<td>'+name+'</td><td>'+empId+'</td><td style="white-space:nowrap">'+checkupStr+'</td><td style="white-space:nowrap">'+dueStr+'</td>'
+    tr.innerHTML='<td>'+name+'</td><td>'+empId+'</td><td style="white-space:nowrap">'+healthStatusLabel(r)+'</td><td style="white-space:nowrap">'+checkupStr+'</td><td style="white-space:nowrap">'+dueStr+'</td>'
       +'<td style="font-size:12px;color:#666">'+(r.result_note||'')+'</td>'
       +'<td style="white-space:nowrap"><button class="btn btn-sm" onclick="editHealth(\''+r.id+'\')">編集</button> <button class="btn btn-sm" style="color:#991b1b;border-color:#fca5a5" onclick="deleteHealth(\''+r.id+'\',\''+name+'\')">削除</button></td>';
     tbody.appendChild(tr);
@@ -4184,6 +4198,9 @@ function openHealthModal(){
   document.getElementById('health-modal-title').textContent='健康診断記録を追加する';
   document.getElementById('health-edit-id').value='';
   document.getElementById('health-staff-select').value='';
+  document.getElementById('health-notice1-date').value='';
+  document.getElementById('health-notice2-date').value='';
+  document.getElementById('health-notice3-date').value='';
   document.getElementById('health-checkup-date').value='';
   document.getElementById('health-next-due-date').value='';
   document.getElementById('health-result-note').value='';
@@ -4197,6 +4214,9 @@ function editHealth(id){
   document.getElementById('health-modal-title').textContent='健康診断記録を編集する';
   document.getElementById('health-edit-id').value=r.id;
   document.getElementById('health-staff-select').value=r.staff_id;
+  document.getElementById('health-notice1-date').value=r.notice1_date||'';
+  document.getElementById('health-notice2-date').value=r.notice2_date||'';
+  document.getElementById('health-notice3-date').value=r.notice3_date||'';
   document.getElementById('health-checkup-date').value=r.checkup_date||'';
   document.getElementById('health-next-due-date').value=r.next_due_date||'';
   document.getElementById('health-result-note').value=r.result_note||'';
@@ -4208,18 +4228,24 @@ async function saveHealth(){
   if(!supabaseClient){alert('接続エラー');return;}
   var id=document.getElementById('health-edit-id').value;
   var staffId=document.getElementById('health-staff-select').value;
+  var notice1Date=document.getElementById('health-notice1-date').value;
+  var notice2Date=document.getElementById('health-notice2-date').value;
+  var notice3Date=document.getElementById('health-notice3-date').value;
   var checkupDate=document.getElementById('health-checkup-date').value;
   var nextDueDate=document.getElementById('health-next-due-date').value;
   var resultNote=document.getElementById('health-result-note').value.trim();
   var statusEl=document.getElementById('health-status');
-  if(!staffId||!checkupDate){
+  if(!staffId){
     statusEl.style.display='block';statusEl.style.background='#fee2e2';statusEl.style.color='#991b1b';
-    statusEl.textContent='対象スタッフと受診日は必須です';
+    statusEl.textContent='対象スタッフは必須です';
     return;
   }
   var payload={
     staff_id:staffId,
-    checkup_date:checkupDate,
+    notice1_date:notice1Date||null,
+    notice2_date:notice2Date||null,
+    notice3_date:notice3Date||null,
+    checkup_date:checkupDate||null,
     next_due_date:nextDueDate||null,
     result_note:resultNote||null
   };
