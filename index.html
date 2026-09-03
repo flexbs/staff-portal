@@ -303,7 +303,7 @@ input:disabled{background:#f5f4f0;color:#aaa;border-color:#e8e6e0}
   <div id="admin-paid" class="sp">
 
     <div class="card">
-      <div class="ch"><span class="ct">有給取得履歴</span></div>
+      <div class="ch"><span class="ct">有給取得履歴</span><button class="btn btn-sm" onclick="printLeaveHistory()">🖨 印刷</button></div>
       <div style="margin-bottom:12px;display:flex;align-items:center;gap:8px;flex-wrap:wrap">
         <label style="font-size:13px;color:#555">スタッフ：</label>
         <select id="leave-history-filter" onchange="filterLeaveHistory()" style="padding:6px 10px;border-radius:8px;border:1px solid #d8d6d0;font-size:13px">
@@ -330,7 +330,6 @@ input:disabled{background:#f5f4f0;color:#aaa;border-color:#e8e6e0}
           <select id="leave-request-staff-filter" onchange="loadAdminLeaveRequests()" style="font-size:12px;padding:4px 8px;border:1px solid #ddd;border-radius:6px;font-family:inherit"><option value="all">全員</option></select>
           <select id="leave-month-select" onchange="loadAdminLeaveRequests()" style="font-size:12px;padding:4px 8px;border:1px solid #ddd;border-radius:6px;font-family:inherit"></select>
           <button class="btn btn-sm" onclick="loadAdminLeaveRequests()" style="font-size:12px">表示</button>
-          <button class="btn btn-sm" onclick="printLeaveRequests()" style="font-size:12px">🖨 印刷</button>
         </div>
       </div>
       <div class="tbl-scroll">
@@ -2846,32 +2845,6 @@ function printAddressDetail(){
   setTimeout(function(){w.print();},500);
 }
 
-function printLeaveRequests(){
-  var sel=document.getElementById('leave-month-select');
-  var label=sel?sel.options[sel.selectedIndex].text:'';
-  var staffFilterSel=document.getElementById('leave-request-staff-filter');
-  if(staffFilterSel&&staffFilterSel.value!=='all'&&staffFilterSel.selectedIndex>=0){
-    label+='　'+staffFilterSel.options[staffFilterSel.selectedIndex].text;
-  }
-  var tbody=document.getElementById('admin-leave-tbody');
-  if(!tbody)return;
-  var allRows=tbody.querySelectorAll('tr');
-  var filteredRows='';
-  allRows.forEach(function(tr){
-    if(!tr.style.background&&tr.style.cssText.indexOf('fee2e2')===-1&&!tr.innerHTML.includes('line-through'))filteredRows+=tr.outerHTML;
-  });
-  var rows=filteredRows;
-  var w=window.open('','_blank');
-  w.document.write('<html><head><meta charset="utf-8"><title>有給申請一覧 '+label+'</title>');
-  w.document.write('<style>body{font-family:sans-serif;font-size:12px;padding:20px}h2{font-size:16px;margin-bottom:12px}table{width:100%;border-collapse:collapse}th,td{border:1px solid #ccc;padding:6px 8px;text-align:left}th{background:#f5f5f5;font-weight:bold}.bdg{display:inline-block;padding:2px 8px;border-radius:10px;font-size:11px}.bg{background:#d1fae5;color:#065f46}.ba{background:#dbeafe;color:#1e40af}.bz{background:#f3f4f6;color:#6b7280}@media print{button{display:none}}</style>');
-  w.document.write('</head><body>');
-  w.document.write('<h2>有給申請一覧　'+label+'</h2>');
-  w.document.write('<table><thead><tr><th>名前</th><th>社員番号</th><th>取得日</th><th>区分</th><th>事由</th><th>状態</th><th>申請日</th></tr></thead><tbody>'+rows+'</tbody></table>');
-  w.document.write('</body></html>');
-  w.document.close();
-  w.focus();
-  setTimeout(function(){w.print();},500);
-}
 var HOURLY_LEAVE_ELIGIBLE_IDS=['6018','1040','7036','5008','7075'];
 var _pendingApproval=null;
 
@@ -4476,6 +4449,27 @@ function renderLeaveHistory(reqs,staffMap){
     tbody.appendChild(tr);
   });
   window._staffMapCache=staffMap;
+}
+function printLeaveHistory(){
+  var tbody=document.getElementById('admin-leave-history-tbody');
+  if(!tbody)return;
+  var monthSel=document.getElementById('leave-history-month-filter');
+  var staffSel=document.getElementById('leave-history-filter');
+  var label=monthSel&&monthSel.value!=='all'?monthSel.options[monthSel.selectedIndex].text:'すべて';
+  if(staffSel&&staffSel.value!=='all'&&staffSel.selectedIndex>=0){
+    label+='　'+staffSel.options[staffSel.selectedIndex].text;
+  }
+  var rows=tbody.innerHTML;
+  var w=window.open('','_blank');
+  w.document.write('<html><head><meta charset="utf-8"><title>有給取得履歴 '+label+'</title>');
+  w.document.write('<style>body{font-family:sans-serif;font-size:12px;padding:20px}h2{font-size:16px;margin-bottom:12px}table{width:100%;border-collapse:collapse}th,td{border:1px solid #ccc;padding:6px 8px;text-align:left}th{background:#f5f5f5;font-weight:bold}.bdg{display:inline-block;padding:2px 8px;border-radius:10px;font-size:11px}.bg{background:#d1fae5;color:#065f46}@media print{button{display:none}}</style>');
+  w.document.write('</head><body>');
+  w.document.write('<h2>有給取得履歴　'+label+'</h2>');
+  w.document.write('<table><thead><tr><th>名前</th><th>社員番号</th><th>取得日</th><th>区分</th><th>状態</th><th>申請日</th></tr></thead><tbody>'+rows+'</tbody></table>');
+  w.document.write('</body></html>');
+  w.document.close();
+  w.focus();
+  setTimeout(function(){w.print();},500);
 }
 
 async function checkUnreadNotices(){
