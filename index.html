@@ -363,7 +363,7 @@ input:disabled{background:#f5f4f0;color:#aaa;border-color:#e8e6e0}
     </div>
     <div id="uploads-recv" class="sp active">
       <div class="card">
-        <div class="ch"><span class="ct">スタッフから受け取った書類</span></div>
+        <div class="ch"><span class="ct">スタッフから受け取った書類</span><button class="btn btn-sm" onclick="printCurrentRecvTab()">🖨 印刷</button></div>
         <div style="display:flex;gap:4px;margin-bottom:12px;border-bottom:2px solid #e8e5e0">
           <button id="recv-tab-delay" onclick="switchRecvTab('delay')" style="padding:6px 16px;font-size:13px;font-weight:700;border:none;background:#5b21b6;color:#fff;border-radius:6px 6px 0 0;cursor:pointer">遅延証明書</button>
           <button id="recv-tab-carinsurance" onclick="switchRecvTab('carinsurance')" style="padding:6px 16px;font-size:13px;font-weight:400;border:none;background:#e8e5e0;color:#555;border-radius:6px 6px 0 0;cursor:pointer">自動車保険証券</button>
@@ -527,7 +527,10 @@ input:disabled{background:#f5f4f0;color:#aaa;border-color:#e8e6e0}
     <div class="card">
       <div class="ch">
         <span class="ct">健康診断 記録一覧</span>
-        <button class="btn btn-sm btn-p" onclick="openHealthModal()">＋ 記録を追加する</button>
+        <div class="btn-row">
+          <button class="btn btn-sm" onclick="printAdminHealth()">🖨 印刷</button>
+          <button class="btn btn-sm btn-p" onclick="openHealthModal()">＋ 記録を追加する</button>
+        </div>
       </div>
       <div style="margin-bottom:12px;display:flex;align-items:center;gap:8px;flex-wrap:wrap">
         <label style="font-size:13px;color:#555">スタッフ：</label>
@@ -4270,6 +4273,60 @@ async function deleteHealth(id,name){
   var {error}=await supabaseClient.from('health_checkups').delete().eq('id',id);
   if(error){alert('削除に失敗しました');return;}
   loadAdminHealth();
+}
+function printAdminHealth(){
+  var tbody=document.getElementById('admin-health-tbody');
+  if(!tbody)return;
+  var rows='';
+  tbody.querySelectorAll('tr').forEach(function(tr){
+    var clone=tr.cloneNode(true);
+    var lastTd=clone.querySelector('td:last-child');
+    if(lastTd)lastTd.remove();
+    rows+=clone.outerHTML;
+  });
+  var staffSel=document.getElementById('health-filter-staff');
+  var label=staffSel&&staffSel.value!=='all'?staffSel.options[staffSel.selectedIndex].text:'全員';
+  var w=window.open('','_blank');
+  w.document.write('<html><head><meta charset="utf-8"><title>健康診断 記録一覧</title>');
+  w.document.write('<style>body{font-family:sans-serif;font-size:12px;padding:20px}h2{font-size:16px;margin-bottom:12px}table{width:100%;border-collapse:collapse}th,td{border:1px solid #ccc;padding:6px 8px;text-align:left}th{background:#f5f5f5;font-weight:bold}.bdg{display:inline-block;padding:2px 8px;border-radius:10px;font-size:11px}.bg{background:#d1fae5;color:#065f46}.ba{background:#fef3cd;color:#8a5a00}.br{background:#fee2e2;color:#991b1b}.bz{background:#f3f4f6;color:#6b7280}@media print{button{display:none}}</style>');
+  w.document.write('</head><body>');
+  w.document.write('<h2>健康診断 記録一覧　（'+label+'）</h2>');
+  w.document.write('<table><thead><tr><th>名前</th><th>社員番号</th><th>状態</th><th>受診日</th><th>次回健診予定日</th><th>結果・所見メモ</th></tr></thead><tbody>'+rows+'</tbody></table>');
+  w.document.write('</body></html>');
+  w.document.close();
+  w.focus();
+  setTimeout(function(){w.print();},500);
+}
+function printCurrentRecvTab(){
+  var tabs={delay:{title:'遅延証明書 提出一覧',tbody:'admin-uploads-tbody-delay',headers:['名前','手続き区分','提出日','状態']},
+    carinsurance:{title:'自動車保険証券 提出一覧',tbody:'admin-uploads-tbody-carinsurance',headers:['名前','手続き区分','提出日','状態','保険期限日']},
+    address:{title:'住所・通勤変更届 一覧',tbody:'admin-address-tbody',headers:['名前','届出日','転居日','新住所','状態']},
+    other:{title:'その他書類 提出一覧',tbody:'admin-uploads-tbody-other',headers:['名前','手続き区分','提出日','状態']}};
+  var activeTab=Object.keys(tabs).find(function(t){
+    var el=document.getElementById('recv-table-'+t);
+    return el&&el.style.display!=='none';
+  })||'delay';
+  var cfg=tabs[activeTab];
+  var tbody=document.getElementById(cfg.tbody);
+  if(!tbody)return;
+  var rows='';
+  tbody.querySelectorAll('tr').forEach(function(tr){
+    var clone=tr.cloneNode(true);
+    var lastTd=clone.querySelector('td:last-child');
+    if(lastTd)lastTd.remove();
+    rows+=clone.outerHTML;
+  });
+  var headerHtml=cfg.headers.map(function(h){return '<th>'+h+'</th>';}).join('');
+  var w=window.open('','_blank');
+  w.document.write('<html><head><meta charset="utf-8"><title>'+cfg.title+'</title>');
+  w.document.write('<style>body{font-family:sans-serif;font-size:12px;padding:20px}h2{font-size:16px;margin-bottom:12px}table{width:100%;border-collapse:collapse}th,td{border:1px solid #ccc;padding:6px 8px;text-align:left}th{background:#f5f5f5;font-weight:bold}.bdg{display:inline-block;padding:2px 8px;border-radius:10px;font-size:11px}.bg{background:#d1fae5;color:#065f46}.ba{background:#fef3cd;color:#8a5a00}.br{background:#fee2e2;color:#991b1b}.bz{background:#f3f4f6;color:#6b7280}@media print{button{display:none}}</style>');
+  w.document.write('</head><body>');
+  w.document.write('<h2>'+cfg.title+'</h2>');
+  w.document.write('<table><thead><tr>'+headerHtml+'</tr></thead><tbody>'+rows+'</tbody></table>');
+  w.document.write('</body></html>');
+  w.document.close();
+  w.focus();
+  setTimeout(function(){w.print();},500);
 }
 
 async function recordTrainingView(videoId,url){
