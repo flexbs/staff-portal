@@ -4,6 +4,7 @@
   <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.0/chart.umd.min.js"></script>
 <title>派遣スタッフポータル</title>
 <style>
 *{box-sizing:border-box;margin:0;padding:0}
@@ -86,8 +87,10 @@ input:disabled{background:#f5f4f0;color:#aaa;border-color:#e8e6e0}
 .ua{border:2px dashed #d8d6d0;border-radius:10px;padding:18px;text-align:center;color:#888;font-size:13px;cursor:pointer;background:#fafaf8}
 .ua:hover{background:#f0efe9;border-color:#aaa}
 .pv{background:#f5f4f0;border-radius:8px;padding:11px 13px;display:flex;align-items:center;gap:10px}
-.sub-tabs{display:flex;gap:3px;margin-bottom:14px;padding-bottom:10px;border-bottom:1px solid #e8e6e0;overflow-x:auto;-webkit-overflow-scrolling:touch;scrollbar-width:none}
-.sub-tabs::-webkit-scrollbar{display:none}
+.sub-tabs{display:flex;gap:3px;margin-bottom:14px;padding-bottom:10px;border-bottom:1px solid #e8e6e0;overflow-x:auto;-webkit-overflow-scrolling:touch;scrollbar-width:thin}
+.sub-tabs::-webkit-scrollbar{height:6px}
+.sub-tabs::-webkit-scrollbar-thumb{background:#c9c6bd;border-radius:3px}
+.sub-tabs::-webkit-scrollbar-track{background:transparent}
 .sub-tab{padding:6px 13px;border-radius:8px;font-size:13px;cursor:pointer;border:none;background:transparent;color:#666;font-family:inherit;white-space:nowrap;flex-shrink:0}
 .sub-tab:hover{background:#f0efe9}
 .sub-tab.active{background:#f0efe9;color:#1a1a1a;font-weight:700}
