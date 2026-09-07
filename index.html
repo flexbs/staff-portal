@@ -1303,6 +1303,10 @@ input:disabled{background:#f5f4f0;color:#aaa;border-color:#e8e6e0}
       <div class="fg"><label class="fl">氏名 <span style="color:#991b1b">*必須</span></label><input type="text" id="add-name" placeholder="例：山田 花子"></div>
       <div class="fg"><label class="fl">フリガナ</label><input type="text" id="add-name-kana" placeholder="例：ヤマダ ハナコ"></div>
     </div>
+    <div class="g2">
+      <div class="fg"><label class="fl">雇用形態</label><select id="add-employment-type"><option value="">選択してください</option><option value="無期雇用">無期雇用</option><option value="長期">長期</option><option value="単発">単発</option><option value="60歳以上">60歳以上</option><option value="請負">請負</option></select></div>
+      <div class="fg"><label class="fl">支払時給（円）</label><input type="number" id="add-hourly-wage" placeholder="例：1230"></div>
+    </div>
     <div class="fg"><label class="fl">派遣先</label><input type="text" id="add-workplace" placeholder="例：FCCテクノ"></div>
     <div class="fg"><label class="fl">派遣先住所</label><input type="text" id="add-workplace-address" placeholder="例：福岡市中央区六本松2-3-6 7F"></div>
     <div class="section-divider">就業期間</div>
@@ -4445,6 +4449,7 @@ function renderLeaveHistory(reqs,staffMap){
   sortedReqs.forEach(function(r){
     var sInfo=staffMap[r.staff_id]||{name:'(不明)',employee_id:''};
     var dayTypeStr=r.day_type==='full'?'全日':(r.day_type==='am'?'AM半休':(r.day_type==='pm'?'PM半休':r.day_type));
+    if(r.approved_as==='hourly'&&r.hourly_hours_deducted){dayTypeStr+='（時間単位・'+r.hourly_hours_deducted+'時間）';}
     var leaveDateStr=r.leave_date?r.leave_date.replace(/-/g,'/'):'-';
     var createdStr=r.created_at?r.created_at.substring(0,10).replace(/-/g,'/'):'-';
     var tr=document.createElement('tr');
@@ -4594,6 +4599,9 @@ async function confirmMyNotice(recipientId){
   var name=document.getElementById('add-name').value.trim();
   var nameKana=document.getElementById('add-name-kana').value.trim();
   var status=document.getElementById('add-status').value;
+  var employmentType=document.getElementById('add-employment-type').value||null;
+  var hourlyWageVal=document.getElementById('add-hourly-wage').value;
+  var hourlyWage=hourlyWageVal!==''?parseInt(hourlyWageVal):null;
   var workplace=document.getElementById('add-workplace').value.trim();
   var workplaceAddress=document.getElementById('add-workplace-address').value.trim()||null;
   var dispatchStart=document.getElementById('add-dispatch-start').value||null;
@@ -4644,6 +4652,8 @@ async function confirmMyNotice(recipientId){
     name:name,
     name_kana:nameKana||null,
     status:status,
+    employment_type:employmentType,
+    hourly_wage:hourlyWage,
     workplace:workplace||null,
     workplace_address:workplaceAddress,
     dispatch_start_date:dispatchStart,
@@ -4707,7 +4717,7 @@ async function confirmMyNotice(recipientId){
   }
   statusEl.style.background='#e6f4d7';statusEl.style.color='#2d6a10';
   statusEl.textContent='追加しました！メール：'+email+'　初期パスワード：'+password+addrWarning;
-  ['add-employee-id','add-name','add-name-kana','add-workplace','add-workplace-address','add-dispatch-start','add-contract-start','add-contract-end','add-restriction','add-pension','add-insurance','add-note',
+  ['add-employee-id','add-name','add-name-kana','add-employment-type','add-hourly-wage','add-workplace','add-workplace-address','add-dispatch-start','add-contract-start','add-contract-end','add-restriction','add-pension','add-insurance','add-note',
    'as-postal','as-address','as-route1-company','as-route1-section','as-route1-fare','as-route1-pass','as-route2-company','as-route2-section','as-route2-fare','as-route2-pass','as-distance','as-allowance-input','as-allowance-basis-input'].forEach(function(id){
     var el=document.getElementById(id);if(el)el.value='';
   });
