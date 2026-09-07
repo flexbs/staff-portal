@@ -319,9 +319,9 @@ input:disabled{background:#f5f4f0;color:#aaa;border-color:#e8e6e0}
       </div>
       <div class="tbl-scroll">
         <table class="tbl">
-          <thead><tr><th>名前</th><th>社員番号</th><th>取得日</th><th>区分</th><th>状態</th><th>申請日</th></tr></thead>
+          <thead><tr><th>名前</th><th>社員番号</th><th>取得日</th><th>区分</th><th>状態</th><th>申請日</th><th>有給残</th></tr></thead>
           <tbody id="admin-leave-history-tbody">
-            <tr><td colspan="6" style="text-align:center;color:#888;padding:20px">読み込み中...</td></tr>
+            <tr><td colspan="7" style="text-align:center;color:#888;padding:20px">読み込み中...</td></tr>
           </tbody>
         </table>
       </div>
@@ -4385,12 +4385,12 @@ async function loadLeaveHistory(){
   if(!supabaseClient)return;
   var tbody=document.getElementById('admin-leave-history-tbody');
   if(!tbody)return;
-  tbody.innerHTML='<tr><td colspan="6" style="text-align:center;color:#888;padding:20px">読み込み中...</td></tr>';
+  tbody.innerHTML='<tr><td colspan="7" style="text-align:center;color:#888;padding:20px">読み込み中...</td></tr>';
   var {data:reqs,error}=await supabaseClient.from('leave_requests').select('*').eq('status','approved').order('leave_date',{ascending:false}).limit(200);
-  if(error){tbody.innerHTML='<tr><td colspan="6" style="text-align:center;color:#991b1b;padding:20px">読み込みに失敗しました</td></tr>';return;}
-  var {data:staffs}=await supabaseClient.from('staffs').select('id,name,employee_id');
+  if(error){tbody.innerHTML='<tr><td colspan="7" style="text-align:center;color:#991b1b;padding:20px">読み込みに失敗しました</td></tr>';return;}
+  var {data:staffs}=await supabaseClient.from('staffs').select('id,name,employee_id,paid_leave_remaining');
   var staffMap={};
-  if(staffs){staffs.forEach(s=>{staffMap[s.id]={name:s.name,employee_id:s.employee_id};});}
+  if(staffs){staffs.forEach(s=>{staffMap[s.id]={name:s.name,employee_id:s.employee_id,paid_leave_remaining:s.paid_leave_remaining};});}
   leaveHistoryAll=reqs||[];
   var sel=document.getElementById('leave-history-filter');
   var uniqueStaffs={};
@@ -4436,7 +4436,7 @@ function renderLeaveHistory(reqs,staffMap){
   var tbody=document.getElementById('admin-leave-history-tbody');
   if(!tbody)return;
   if(!reqs||reqs.length===0){
-    tbody.innerHTML='<tr><td colspan="6" style="text-align:center;color:#888;padding:40px 20px"><div style="font-size:40px;margin-bottom:10px">📋</div><div style="font-size:14px">取得履歴はありません</div></td></tr>';
+    tbody.innerHTML='<tr><td colspan="7" style="text-align:center;color:#888;padding:40px 20px"><div style="font-size:40px;margin-bottom:10px">📋</div><div style="font-size:14px">取得履歴はありません</div></td></tr>';
     return;
   }
   var sortedReqs=reqs.slice().sort(function(a,b){
@@ -4453,7 +4453,8 @@ function renderLeaveHistory(reqs,staffMap){
     var leaveDateStr=r.leave_date?r.leave_date.replace(/-/g,'/'):'-';
     var createdStr=r.created_at?r.created_at.substring(0,10).replace(/-/g,'/'):'-';
     var tr=document.createElement('tr');
-    tr.innerHTML='<td>'+sInfo.name+'</td><td>'+String(sInfo.employee_id).padStart(4,'0')+'</td><td style="white-space:nowrap">'+leaveDateStr+'</td><td>'+dayTypeStr+'</td><td><span class="bdg bg">承認済</span></td><td style="white-space:nowrap;font-size:11px;color:#888">'+createdStr+'</td>';
+    var remStr=(sInfo.paid_leave_remaining!==null&&sInfo.paid_leave_remaining!==undefined)?sInfo.paid_leave_remaining+'日':'-';
+    tr.innerHTML='<td>'+sInfo.name+'</td><td>'+String(sInfo.employee_id).padStart(4,'0')+'</td><td style="white-space:nowrap">'+leaveDateStr+'</td><td>'+dayTypeStr+'</td><td><span class="bdg bg">承認済</span></td><td style="white-space:nowrap;font-size:11px;color:#888">'+createdStr+'</td><td style="white-space:nowrap">'+remStr+'</td>';
     tbody.appendChild(tr);
   });
   window._staffMapCache=staffMap;
@@ -4473,7 +4474,7 @@ function printLeaveHistory(){
   w.document.write('<style>body{font-family:sans-serif;font-size:12px;padding:20px}h2{font-size:16px;margin-bottom:12px}table{width:100%;border-collapse:collapse}th,td{border:1px solid #ccc;padding:6px 8px;text-align:left}th{background:#f5f5f5;font-weight:bold}.bdg{display:inline-block;padding:2px 8px;border-radius:10px;font-size:11px}.bg{background:#d1fae5;color:#065f46}@media print{button{display:none}}</style>');
   w.document.write('</head><body>');
   w.document.write('<h2>有給取得履歴　'+label+'</h2>');
-  w.document.write('<table><thead><tr><th>名前</th><th>社員番号</th><th>取得日</th><th>区分</th><th>状態</th><th>申請日</th></tr></thead><tbody>'+rows+'</tbody></table>');
+  w.document.write('<table><thead><tr><th>名前</th><th>社員番号</th><th>取得日</th><th>区分</th><th>状態</th><th>申請日</th><th>有給残</th></tr></thead><tbody>'+rows+'</tbody></table>');
   w.document.write('</body></html>');
   w.document.close();
   w.focus();
