@@ -365,7 +365,7 @@ input:disabled{background:#f5f4f0;color:#aaa;border-color:#e8e6e0}
     </div>
     <div id="uploads-recv" class="sp active">
       <div class="card">
-        <div class="ch"><span class="ct">スタッフから受け取った書類</span><button class="btn btn-sm" onclick="printCurrentRecvTab()">🖨 印刷</button></div>
+        <div class="ch"><span class="ct">スタッフから受け取った書類</span><button class="btn btn-sm btn-p" id="carins-admin-upload-btn" style="display:none" onclick="openCarInsuranceAdminModal()">＋ 代理でアップロード</button><button class="btn btn-sm" onclick="printCurrentRecvTab()">🖨 印刷</button></div>
         <div style="display:flex;gap:4px;margin-bottom:12px;border-bottom:2px solid #e8e5e0">
           <button id="recv-tab-delay" onclick="switchRecvTab('delay')" style="padding:6px 16px;font-size:13px;font-weight:700;border:none;background:#5b21b6;color:#fff;border-radius:6px 6px 0 0;cursor:pointer">遅延証明書</button>
           <button id="recv-tab-carinsurance" onclick="switchRecvTab('carinsurance')" style="padding:6px 16px;font-size:13px;font-weight:400;border:none;background:#e8e5e0;color:#555;border-radius:6px 6px 0 0;cursor:pointer">自動車保険証券</button>
@@ -1156,6 +1156,25 @@ input:disabled{background:#f5f4f0;color:#aaa;border-color:#e8e6e0}
     <div class="ma">
       <button class="btn btn-sm" onclick="closeModal('health')">キャンセル</button>
       <button class="btn btn-sm btn-p" onclick="saveHealth()">保存する →</button>
+    </div>
+  </div>
+</div>
+
+<div class="mbg" id="modal-carinsurance-admin">
+  <div class="modal">
+    <div class="mt">自動車保険証券を代理でアップロードする</div>
+    <div style="font-size:12px;color:#888;margin-bottom:12px;line-height:1.6">紙で受け取った保険証券を、管理者がスタッフの代わりにアップロードする場合に使用します。</div>
+    <div class="fg"><label class="fl">対象スタッフ <span style="color:#991b1b">*必須</span></label>
+      <select id="carins-admin-staff-select"><option value="">スタッフを選択してください</option></select>
+    </div>
+    <div class="fg"><label class="fl">保険証券ファイル <span style="color:#991b1b">*必須</span></label>
+      <input type="file" id="carins-admin-file" accept="image/*,application/pdf">
+    </div>
+    <div class="fg"><label class="fl">保険期限日（分かれば入力）</label><input type="date" id="carins-admin-expiry"></div>
+    <div id="carins-admin-status" style="display:none;font-size:13px;margin-top:8px;padding:10px;border-radius:8px"></div>
+    <div class="ma">
+      <button class="btn btn-sm" onclick="closeModal('carinsurance-admin')">キャンセル</button>
+      <button class="btn btn-sm btn-p" onclick="saveCarInsuranceAdmin()">アップロードする →</button>
     </div>
   </div>
 </div>
@@ -2168,6 +2187,8 @@ function switchRecvTab(tab){
     if(table)table.style.display=active?'':'none';
     if(btn){btn.style.background=active?'#5b21b6':'#e8e5e0';btn.style.color=active?'#fff':'#555';btn.style.fontWeight=active?'700':'400';}
   });
+  var uploadBtn=document.getElementById('carins-admin-upload-btn');
+  if(uploadBtn)uploadBtn.style.display=(tab==='carinsurance')?'':'none';
 }
 async function saveInsuranceExpiry(docId){
   if(!supabaseClient)return;
@@ -2176,6 +2197,69 @@ async function saveInsuranceExpiry(docId){
   var u=await supabaseClient.from('documents').update({insurance_expiry_date:input.value}).eq('id',docId);
   if(u.error){alert('保存に失敗しました：'+u.error.message);return;}
   alert('保険期限日を保存しました');
+}
+/* ===== 自動車保険証券：管理者による代理アップロード ===== */
+async function populateCarInsuranceAdminStaffOptions(){
+  if(!supabaseClient)return;
+  var {data:staffs}=await supabaseClient.from('staffs').select('id,name,employee_id').order('name_kana');
+  if(!staffs)return;
+  var sel=document.getElementById('carins-admin-staff-select');
+  if(!sel)return;
+  var opts=staffs.map(function(s){return '<option value="'+s.id+'">'+s.name+'（'+String(s.employee_id).padStart(4,'0')+'）</option>';}).join('');
+  sel.innerHTML='<option value="">スタッフを選択してください</option>'+opts;
+}
+async function openCarInsuranceAdminModal(){
+  await populateCarInsuranceAdminStaffOptions();
+  document.getElementById('carins-admin-staff-select').value='';
+  document.getElementById('carins-admin-file').value='';
+  document.getElementById('carins-admin-expiry').value='';
+  var statusEl=document.getElementById('carins-admin-status');
+  if(statusEl)statusEl.style.display='none';
+  openModal('carinsurance-admin');
+}
+async function saveCarInsuranceAdmin(){
+  if(!supabaseClient)return;
+  var staffSel=document.getElementById('carins-admin-staff-select');
+  var fileInput=document.getElementById('carins-admin-file');
+  var expiryInput=document.getElementById('carins-admin-expiry');
+  var statusEl=document.getElementById('carins-admin-status');
+  var staffId=staffSel.value;
+  if(!staffId){alert('スタッフを選択してください');return;}
+  if(!fileInput.files||fileInput.files.length===0){alert('ファイルを選択してください');return;}
+  var file=fileInput.files[0];
+  if(file.size>5*1024*1024){alert('5MB以下のファイルをアップロードしてください');return;}
+  var staffLabel=staffSel.options[staffSel.selectedIndex].textContent;
+  var empIdMatch=staffLabel.match(/（(\d+)）/);
+  var empId=empIdMatch?empIdMatch[1]:'unknown';
+  statusEl.style.display='block';statusEl.style.background='#fef3cd';statusEl.style.color='#8a5a00';
+  statusEl.textContent='アップロード中...';
+  var ext=file.name.split('.').pop();
+  var fileName=empId+'_carinsurance_'+Date.now()+'.'+ext;
+  var {error:upErr}=await supabaseClient.storage.from('staff-uploads').upload(fileName,file,{upsert:false});
+  if(upErr){
+    statusEl.style.background='#fee2e2';statusEl.style.color='#991b1b';
+    statusEl.textContent='アップロードに失敗しました：'+upErr.message;return;
+  }
+  var {data:urlData}=supabaseClient.storage.from('staff-uploads').getPublicUrl(fileName);
+  var nowIso=new Date().toISOString();
+  var payload={
+    staff_id:staffId,
+    type:'upload',
+    title:'自動車保険証券',
+    file_url:urlData.publicUrl,
+    created_at:nowIso,
+    confirmed_at:nowIso,
+    confirmed_by:'管理者代理登録'
+  };
+  if(expiryInput.value)payload.insurance_expiry_date=expiryInput.value;
+  var {error:dbErr}=await supabaseClient.from('documents').insert(payload);
+  if(dbErr){
+    statusEl.style.background='#fee2e2';statusEl.style.color='#991b1b';
+    statusEl.textContent='登録に失敗しました：'+dbErr.message;return;
+  }
+  statusEl.style.background='#e6f4d7';statusEl.style.color='#1a6b1a';
+  statusEl.textContent='アップロードしました！';
+  setTimeout(function(){closeModal('carinsurance-admin');loadAdminUploads();},900);
 }
 function switchUploadsTab(tab){
   var isP=tab==='payslip';
