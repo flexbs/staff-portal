@@ -3057,6 +3057,7 @@ async function approveAsNormalLeave(pending){
   _pendingApproval=null;
   alert('承認しました。');
   loadAdminLeaveRequests();
+  if(typeof loadAdminMetrics==='function')loadAdminMetrics();
 }
 
 async function approveAsHourlyLeave(pending){
@@ -3074,6 +3075,7 @@ async function approveAsHourlyLeave(pending){
   _pendingApproval=null;
   alert('時間休として承認しました。');
   loadAdminLeaveRequests();
+  if(typeof loadAdminMetrics==='function')loadAdminMetrics();
 }
 
 async function cancelLeaveRequest(reqId,currentStatus,leaveDate){
@@ -3161,6 +3163,7 @@ async function cancelLeaveRequest(reqId,currentStatus,leaveDate){
   }
   alert('取消しました。');
   loadAdminLeaveRequests();
+  if(typeof loadAdminMetrics==='function')loadAdminMetrics();
 }
 
 async function sendPayslip(){
