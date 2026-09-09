@@ -364,6 +364,17 @@ input:disabled{background:#f5f4f0;color:#aaa;border-color:#e8e6e0}
       <button class="sub-tab" onclick="showSub2('sent',this)">派遣元からの送付書類</button>
     </div>
     <div id="uploads-recv" class="sp active">
+      <div class="card" id="car-commuters-card" style="display:none">
+        <div class="ch"><span class="ct">🚗 車通勤スタッフ一覧</span><button class="btn btn-sm" onclick="printCarCommuters()">🖨 印刷</button></div>
+        <div class="tbl-scroll">
+          <table class="tbl" id="car-commuters-table">
+            <thead><tr><th>社員番号</th><th>氏名</th><th>通勤距離(km)</th><th>通勤手当</th><th>自動車保険満期日</th></tr></thead>
+            <tbody id="car-commuters-tbody">
+<tr><td colspan="5" style="text-align:center;color:#888;padding:20px">読み込み中...</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
       <div class="card">
         <div class="ch"><span class="ct">スタッフから受け取った書類</span><button class="btn btn-sm btn-p" id="carins-admin-upload-btn" style="display:none" onclick="openCarInsuranceAdminModal()">＋ 代理でアップロード</button><button class="btn btn-sm" onclick="printCurrentRecvTab()">🖨 印刷</button></div>
         <div style="display:flex;gap:4px;margin-bottom:12px;border-bottom:2px solid #e8e5e0">
@@ -2189,6 +2200,72 @@ function switchRecvTab(tab){
   });
   var uploadBtn=document.getElementById('carins-admin-upload-btn');
   if(uploadBtn)uploadBtn.style.display=(tab==='carinsurance')?'':'none';
+  var carCard=document.getElementById('car-commuters-card');
+  if(carCard){
+    carCard.style.display=(tab==='carinsurance')?'':'none';
+    if(tab==='carinsurance')loadCarCommuters();
+  }
+}
+/* ===== 車通勤スタッフ一覧 ===== */
+async function loadCarCommuters(){
+  if(!supabaseClient)return;
+  var tbody=document.getElementById('car-commuters-tbody');
+  if(!tbody)return;
+  tbody.innerHTML='<tr><td colspan="5" style="text-align:center;color:#888;padding:20px">読み込み中...</td></tr>';
+  var {data:addrRows}=await supabaseClient.from('staff_current_address')
+    .select('staff_id,commute_methods,commute_distance_km,commute_allowance,created_at')
+    .ilike('commute_methods','%自家用車%')
+    .order('created_at',{ascending:false});
+  if(!addrRows||addrRows.length===0){
+    tbody.innerHTML='<tr><td colspan="5" style="text-align:center;color:#888;padding:20px">車通勤のスタッフはいません</td></tr>';
+    return;
+  }
+  var seen={};
+  var latestByStaff=[];
+  addrRows.forEach(function(r){
+    if(!seen[r.staff_id]){seen[r.staff_id]=true;latestByStaff.push(r);}
+  });
+  var staffIds=latestByStaff.map(function(r){return r.staff_id;});
+  var {data:staffs}=await supabaseClient.from('staffs').select('id,name,employee_id').in('id',staffIds);
+  var staffMap={};
+  if(staffs)staffs.forEach(function(s){staffMap[s.id]=s;});
+  var {data:docs}=await supabaseClient.from('documents').select('staff_id,insurance_expiry_date,created_at')
+    .eq('title','自動車保険証券').not('insurance_expiry_date','is',null).order('created_at',{ascending:false});
+  var expiryMap={};
+  if(docs)docs.forEach(function(d){if(!expiryMap[d.staff_id])expiryMap[d.staff_id]=d.insurance_expiry_date;});
+  latestByStaff.sort(function(a,b){
+    var na=staffMap[a.staff_id]?String(staffMap[a.staff_id].employee_id):'';
+    var nb=staffMap[b.staff_id]?String(staffMap[b.staff_id].employee_id):'';
+    return na.localeCompare(nb);
+  });
+  tbody.innerHTML='';
+  latestByStaff.forEach(function(r){
+    var s=staffMap[r.staff_id];
+    if(!s)return;
+    var expiry=expiryMap[r.staff_id]?expiryMap[r.staff_id].replace(/-/g,'/'):'<span style="color:#aaa;font-style:italic">未登録</span>';
+    var tr=document.createElement('tr');
+    tr.innerHTML='<td>'+s.employee_id+'</td><td>'+s.name+(r.commute_methods!=='自家用車'?'（'+r.commute_methods+'）':'')+'</td>'
+      +'<td>'+(r.commute_distance_km!==null&&r.commute_distance_km!==undefined?r.commute_distance_km:'-')+'</td>'
+      +'<td>'+(r.commute_allowance!==null&&r.commute_allowance!==undefined?r.commute_allowance.toLocaleString()+'円':'-')+'</td>'
+      +'<td>'+expiry+'</td>';
+    tbody.appendChild(tr);
+  });
+}
+function printCarCommuters(){
+  var tbody=document.getElementById('car-commuters-tbody');
+  if(!tbody)return;
+  var rows='';
+  tbody.querySelectorAll('tr').forEach(function(tr){rows+=tr.outerHTML;});
+  var w=window.open('','_blank');
+  w.document.write('<html><head><meta charset="utf-8"><title>車通勤者一覧</title>');
+  w.document.write('<style>body{font-family:sans-serif;font-size:12px;padding:20px}h2{font-size:16px;margin-bottom:12px}table{width:100%;border-collapse:collapse}th,td{border:1px solid #ccc;padding:6px 8px;text-align:left}th{background:#f5f5f5;font-weight:bold}@media print{button{display:none}}</style>');
+  w.document.write('</head><body>');
+  w.document.write('<h2>車通勤者一覧</h2>');
+  w.document.write('<table><thead><tr><th>社員番号</th><th>氏名</th><th>通勤距離(km)</th><th>通勤手当</th><th>自動車保険満期日</th></tr></thead><tbody>'+rows+'</tbody></table>');
+  w.document.write('</body></html>');
+  w.document.close();
+  w.focus();
+  setTimeout(function(){w.print();},500);
 }
 async function saveInsuranceExpiry(docId){
   if(!supabaseClient)return;
