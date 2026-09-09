@@ -3398,13 +3398,11 @@ async function saveStaffProfile(){
       var initialEntryModeChecked=mChecked('mod-initial-entry-mode');
       var isInitialAddress=!hasConfirmedAddress||initialEntryModeChecked;
       var modConfirmerName=myStaffData?(myStaffData.name||'管理者'):'管理者';
-      var modAddrIns=await supabaseClient.from('address_change_requests').insert({
+      var modAddrIns=await supabaseClient.from('staff_address_admin_log').insert({
         staff_id: window._currentStaffProfileId,
+        edit_type: isInitialAddress?'initial_registration':'admin_edit',
         relocation_date: new Date().toISOString().slice(0,10),
-        change_types: isInitialAddress?'初回登録':'管理者による更新',
         commute_methods: modCommuteMethods.length?modCommuteMethods.join('、'):null,
-        old_postal_code: null,
-        old_address: null,
         new_postal_code: mv('mod-postal'),
         new_address: modAddress,
         route1_company: mv('mod-route1-company'),
@@ -3418,8 +3416,7 @@ async function saveStaffProfile(){
         commute_distance_km: mvFloat('mod-distance'),
         commute_allowance: (modAllowanceInput&&modAllowanceInput.value!=='')?parseInt(modAllowanceInput.value):null,
         commute_allowance_basis: (modBasisInput&&modBasisInput.value.trim()!=='')?modBasisInput.value.trim():null,
-        confirmed_at: isInitialAddress?new Date().toISOString():null,
-        confirmed_by: isInitialAddress?modConfirmerName:null
+        applied_by: modConfirmerName
       });
       if(modAddrIns.error){
         addrWarning='（住所・通勤情報の登録には失敗しました：'+modAddrIns.error.message+'）';
@@ -4771,13 +4768,11 @@ async function confirmMyNotice(recipientId){
     var allowanceInput=document.getElementById('as-allowance-input');
     var basisInput=document.getElementById('as-allowance-basis-input');
     var confirmerName=myStaffData?(myStaffData.name||'管理者'):'管理者';
-    var addrIns=await supabaseClient.from('address_change_requests').insert({
+    var addrIns=await supabaseClient.from('staff_address_admin_log').insert({
       staff_id: ins.data.id,
+      edit_type: 'new_staff_registration',
       relocation_date: new Date().toISOString().slice(0,10),
-      change_types: '新規登録',
       commute_methods: commuteMethods.length?commuteMethods.join('、'):null,
-      old_postal_code: null,
-      old_address: null,
       new_postal_code: av('as-postal'),
       new_address: newStaffAddress,
       route1_company: av('as-route1-company'),
@@ -4789,11 +4784,9 @@ async function confirmMyNotice(recipientId){
       route2_fare: avInt('as-route2-fare'),
       route2_pass_fare: avInt('as-route2-pass'),
       commute_distance_km: avFloat('as-distance'),
-      commute_time_minutes: null,
       commute_allowance: (allowanceInput&&allowanceInput.value!=='')?parseInt(allowanceInput.value):null,
       commute_allowance_basis: (basisInput&&basisInput.value.trim()!=='')?basisInput.value.trim():null,
-      confirmed_at: new Date().toISOString(),
-      confirmed_by: confirmerName
+      applied_by: confirmerName
     });
     if(addrIns.error){
       console.log('住所・通勤情報の登録に失敗:',addrIns.error);
