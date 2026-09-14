@@ -5016,7 +5016,8 @@ var _resignPatterns = {
     docs: [
       {key:'resign_muiki', name:'退職願（無期雇用）', needsSign:true, fileUrl:'resign_muiki.pdf'},
       {key:'pledge', name:'退職時の誓約書', needsSign:true, fileUrl:'pledge.pdf'},
-      {key:'rules', name:'終了に伴う就業規則', needsSign:false, fileUrl:'rules.pdf'}
+      {key:'rules', name:'終了に伴う就業規則', needsSign:false, fileUrl:'rules.pdf'},
+      {key:'resident_tax', name:'退職後の住民税のお手続きについて', needsSign:false, fileUrl:null}
     ]
   },
   chuto: {
@@ -5024,7 +5025,8 @@ var _resignPatterns = {
     docs: [
       {key:'resign_chuto', name:'退職願（契約期間途中退職）', needsSign:true, fileUrl:'resign_chuto.pdf'},
       {key:'pledge', name:'退職時の誓約書', needsSign:true, fileUrl:'pledge.pdf'},
-      {key:'rules', name:'終了に伴う就業規則', needsSign:false, fileUrl:'rules.pdf'}
+      {key:'rules', name:'終了に伴う就業規則', needsSign:false, fileUrl:'rules.pdf'},
+      {key:'resident_tax', name:'退職後の住民税のお手続きについて', needsSign:false, fileUrl:null}
     ]
   },
   manryo_staff: {
@@ -5032,7 +5034,8 @@ var _resignPatterns = {
     docs: [
       {key:'resign_manryo', name:'退職願（契約期間満了退職）', needsSign:true, fileUrl:'resign_manryo.pdf'},
       {key:'pledge', name:'退職時の誓約書', needsSign:true, fileUrl:'pledge.pdf'},
-      {key:'rules', name:'終了に伴う就業規則', needsSign:false, fileUrl:'rules.pdf'}
+      {key:'rules', name:'終了に伴う就業規則', needsSign:false, fileUrl:'rules.pdf'},
+      {key:'resident_tax', name:'退職後の住民税のお手続きについて', needsSign:false, fileUrl:null}
     ]
   },
   manryo_company: {
@@ -5040,7 +5043,8 @@ var _resignPatterns = {
     docs: [
       {key:'notice', name:'雇用契約終了通知書', needsSign:true, fileUrl:'notice.pdf'},
       {key:'pledge', name:'退職時の誓約書', needsSign:true, fileUrl:'pledge.pdf'},
-      {key:'rules', name:'終了に伴う就業規則', needsSign:false, fileUrl:'rules.pdf'}
+      {key:'rules', name:'終了に伴う就業規則', needsSign:false, fileUrl:'rules.pdf'},
+      {key:'resident_tax', name:'退職後の住民税のお手続きについて', needsSign:false, fileUrl:null}
     ]
   }
 };
@@ -5183,7 +5187,8 @@ async function openResignDetail(staffId){
     var needsSign=d.needs_sign;
     var statusBdg=!needsSign?'<span class="bdg bz">署名不要</span>':signed?'<span class="bdg bg">署名済</span>':'<span class="bdg bo">署名待ち</span>';
     var signedInfo=signed?'<div style="font-size:11px;color:#888;margin-top:4px">署名日時：'+new Date(d.signed_at).toLocaleString('ja-JP')+'　氏名：'+d.signed_name+(d.signed_workplace?'　派遣先：'+d.signed_workplace:'')+'</div>':'';
-    var viewBtn=signed?'<div style="margin-top:8px"><button onclick="window.opener.viewFilledResignDoc(\''+d.id+'\')" style="padding:4px 10px;font-size:12px;cursor:pointer;border-radius:6px;border:1px solid #ccc;background:#fff">📄 記入済み書類を見る</button></div>':'';
+    var viewBtn=signed?'<div style="margin-top:8px"><button onclick="window.opener.viewFilledResignDoc(\''+d.id+'\')" style="padding:4px 10px;font-size:12px;cursor:pointer;border-radius:6px;border:1px solid #ccc;background:#fff">📄 記入済み書類を見る</button></div>'
+      :(!needsSign&&d.document_type==='resident_tax'?'<div style="margin-top:8px"><button onclick="window.opener.viewGeneratedResignDoc(\''+d.id+'\',\''+sName.replace(/'/g,"\\'")+'\')" style="padding:4px 10px;font-size:12px;cursor:pointer;border-radius:6px;border:1px solid #ccc;background:#fff">📄 内容を見る</button></div>':'');
     html+='<div style="border:1px solid '+(signed?'#b3d98a':'#f0efe9')+';border-radius:10px;padding:14px;margin-bottom:10px;background:'+(signed?'#f0fae6':'#fff')+'">';
     html+='<div style="display:flex;justify-content:space-between;align-items:center"><span style="font-size:13px;font-weight:700">'+d.title+'</span>'+statusBdg+'</div>';
     html+=signedInfo;
@@ -5227,6 +5232,8 @@ async function loadMyResignDocs(){
     var pdfBtn='';
     if(signed){
       pdfBtn='<button class="btn btn-sm" style="margin-top:8px;margin-right:6px" onclick="viewFilledResignDoc(\''+d.id+'\')">📄 記入済み書類を見る</button>';
+    } else if(!needsSign&&d.document_type==='resident_tax'){
+      pdfBtn='<button class="btn btn-sm" style="margin-top:8px;margin-right:6px" onclick="viewGeneratedResignDoc(\''+d.id+'\')">📄 内容を見る</button>';
     } else if(d.file_url){
       var isFixed=['resign_muiki.pdf','resign_chuto.pdf','resign_manryo.pdf','pledge.pdf','notice.pdf','rules.pdf'].includes(d.file_url);
       pdfBtn='<button class="btn btn-sm" style="margin-top:8px;margin-right:6px" data-url="'+d.file_url+'" data-fixed="'+isFixed+'" onclick="viewResignPdf(this.dataset.url,this.dataset.fixed===\'true\')">📄 ひな形PDFを表示</button>';
@@ -5319,6 +5326,16 @@ function buildFilledResignDocHtml(docType, ctx){
       +items
       +'<div class="right">'+signDateStr+'</div>'
       +'<div class="sign-block">派遣労働者氏名　<span class="blank" style="min-width:200px">'+name+'</span>　印<br><br>派遣先会社名　　<span class="blank" style="min-width:200px">'+workplace+'</span></div>';
+  } else if(docType==='resident_tax'){
+    html+='<div style="text-decoration:underline;font-weight:700;margin-bottom:20px">'+name+'　様</div>'
+      +'<div class="doc-title" style="font-size:18px;letter-spacing:1px;text-align:left">退職後の住民税のお手続きについて</div>'
+      +'<div class="right" style="text-align:left">フレックスビジネスサービス株式会社　給与担当</div>'
+      +'<p style="margin-top:20px">お仕事、お疲れ様でした。</p>'
+      +'<p style="margin-top:16px">このたびのご退職にあたり、住民税のお手続きについてご案内させていただきます。</p>'
+      +'<p style="margin-top:16px">在職中は、住民税を毎月のお給料から天引き（特別徴収）させていただき、会社から納付しておりました。</p>'
+      +'<p style="margin-top:16px">退職後にお支払いいただく住民税の残額につきましては、恐れ入りますが、ご自身で納付していただく形に変わります。</p>'
+      +'<p style="margin-top:16px">後日、お住まいの市区町村から納付書などが届くかと思いますので、届きましたら内容をご確認のうえ、お手続きをお願いいたします。</p>'
+      +'<p style="margin-top:16px">ご不明な点がございましたら、いつでもお気軽にお問い合わせください。<br>今まで本当にありがとうございました。</p>';
   } else {
     return null; // 対応する定型フォームがない（resign_muiki等）
   }
@@ -5329,6 +5346,19 @@ function openFilledDocInNewTab(html, title){
   var w=window.open('','_blank');
   w.document.write('<html><head><meta charset="utf-8"><title>'+title+'</title></head><body>'+html+'</body></html>');
   w.document.close();
+}
+function viewGeneratedResignDoc(docId, staffNameOverride){
+  var doc=window._resignDocsMap&&window._resignDocsMap[docId];
+  if(!doc){alert('書類情報が見つかりません');return;}
+  var staffName=staffNameOverride||(myStaffData&&myStaffData.name)||'';
+  var html=buildFilledResignDocHtml(doc.document_type,{
+    resignationDate:doc.resignation_date,
+    staffName:staffName,
+    adminNote:doc.admin_note,
+    noticeDate:doc.created_at
+  });
+  if(!html){viewResignPdf(doc.file_url,true);return;}
+  openFilledDocInNewTab(html,doc.title);
 }
 function viewFilledResignDoc(docId){
   var doc=window._resignDocsMap&&window._resignDocsMap[docId];
