@@ -5043,23 +5043,17 @@ function updateResignDocList(){
   var pattern=document.getElementById('resign-pattern').value;
   var listArea=document.getElementById('resign-doc-list');
   var fileArea=document.getElementById('resign-file-area');
-  var fileInputs=document.getElementById('resign-file-inputs');
   if(!pattern){listArea.style.display='none';fileArea.style.display='none';return;}
   var p=_resignPatterns[pattern];
   if(!p)return;
   var namesHtml='';
-  var fileHtml='';
   p.docs.forEach(function(d){
-    var signStr=d.needsSign?'（署名あり）':'（読むだけ）';
+    var signStr=d.needsSign?'（スタッフがポータル上で署名）':'（読むだけ）';
     namesHtml+='📄 '+d.name+' '+signStr+'<br>';
-    if(d.needsSign&&(d.key==='pledge'||d.key==='notice')){
-      fileHtml+='<div class="fg"><label class="fl">'+d.name+'（日付・名前を記入済みのPDF） <span style="color:#991b1b">*必須</span></label><input type="file" id="resign-file-'+d.key+'" accept=".pdf"></div>';
-    }
   });
   document.getElementById('resign-doc-names').innerHTML=namesHtml;
-  fileInputs.innerHTML=fileHtml||'<div style="font-size:13px;color:#888;padding:8px 0">退職願はスタッフがポータル上で署名します</div>';
   listArea.style.display='block';
-  fileArea.style.display='block';
+  fileArea.style.display='none';
 }
 
 async function sendResignDocs(){
@@ -5072,15 +5066,6 @@ async function sendResignDocs(){
   if(!resignDate){statusEl.style.display='block';statusEl.style.background='#fee2e2';statusEl.style.color='#991b1b';statusEl.textContent='退職日を入力してください';return;}
   if(!pattern){statusEl.style.display='block';statusEl.style.background='#fee2e2';statusEl.style.color='#991b1b';statusEl.textContent='退職パターンを選択してください';return;}
   var p=_resignPatterns[pattern];
-  // 必須アップロードファイルのチェック
-  var uploadDocs=p.docs.filter(function(d){return d.needsSign&&(d.key==='pledge'||d.key==='notice');});
-  for(var i=0;i<uploadDocs.length;i++){
-    var fi=document.getElementById('resign-file-'+uploadDocs[i].key);
-    if(!fi||!fi.files||!fi.files[0]){
-      statusEl.style.display='block';statusEl.style.background='#fee2e2';statusEl.style.color='#991b1b';
-      statusEl.textContent=uploadDocs[i].name+'のPDFをアップロードしてください';return;
-    }
-  }
   var targetOpt=document.getElementById('resign-target').options[document.getElementById('resign-target').selectedIndex];
   var targetName=targetOpt.text.split('（')[0];
   if(!confirm(targetName+'さんに退職書類を送付します。よろしいですか？'))return;
@@ -5093,23 +5078,9 @@ async function sendResignDocs(){
   var errors=[];
   for(var j=0;j<p.docs.length;j++){
     var doc=p.docs[j];
-    var fileUrl=null;
-    var needsUpload=doc.needsSign&&(doc.key==='pledge'||doc.key==='notice');
-    if(needsUpload){
-      // 管理者がアップロードしたPDF
-      var fi2=document.getElementById('resign-file-'+doc.key);
-      var file=fi2.files[0];
-      var filePath=String(target)+'/'+doc.key+'_'+Date.now()+'.pdf';
-      var up=await supabaseClient.storage.from('resignation-docs').upload(filePath,file);
-      if(up.error){errors.push(doc.name+':'+up.error.message);continue;}
-      fileUrl=filePath;
-    } else if(doc.needsSign){
-      // 共通PDF（resign_muiki等）はストレージの固定ファイルを参照
-      fileUrl=doc.fileUrl;
-    } else {
-      // 就業規則は固定ファイル参照
-      fileUrl=doc.fileUrl;
-    }
+    // すべて共通のひな形PDF（resign_muiki.pdf・pledge.pdf・notice.pdf・rules.pdf等）をストレージから参照する。
+    // 署名が必要な書類は、スタッフがポータル上でお名前・派遣先を入力して署名する。
+    var fileUrl=doc.fileUrl;
     var ins=await supabaseClient.from('resignation_documents').insert({
       staff_id:staffUuid,
       pattern:pattern,
