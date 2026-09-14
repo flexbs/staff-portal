@@ -1553,10 +1553,11 @@ window.addEventListener('load',async function(){
     // 派遣先が承認した旨を管理者（若松久美さん＝0003）へ通知
     try{
       var noticeBody=staffName+'さんの'+data.work_date+'の勤怠が、派遣先担当者により承認されました。\n始業:'+data.start_time+' 終業:'+data.end_time+' 実労働:'+workStr;
-      var {data:notice}=await supabaseClient.from('notices').insert({title:'派遣先が勤怠を承認しました',body:noticeBody}).select('id').single();
-      if(notice){
-        await supabaseClient.from('notice_recipients').insert({notice_id:notice.id,staff_id:'595fede5-118f-4214-87b5-534e5fee361c'});
-      }
+      await fetch('https://wafarcqisrwzlkectrdo.supabase.co/functions/v1/create-notice',{
+        method:'POST',
+        headers:{'Content-Type':'application/json'},
+        body:JSON.stringify({staff_id:'595fede5-118f-4214-87b5-534e5fee361c',title:'派遣先が勤怠を承認しました',body:noticeBody})
+      });
       await fetch('https://wafarcqisrwzlkectrdo.supabase.co/functions/v1/line-notify',{
         method:'POST',
         headers:{'Content-Type':'application/json'},
