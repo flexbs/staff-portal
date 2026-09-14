@@ -5353,7 +5353,9 @@ function buildFilledResignDocHtml(docType, ctx){
 }
 function openFilledDocInNewTab(html, title){
   var w=window.open('','_blank');
-  w.document.write('<html><head><meta charset="utf-8"><title>'+title+'</title></head><body>'+html+'</body></html>');
+  var printBtnHtml='<div class="no-print" style="position:sticky;top:0;background:#fff;padding:10px 20px;border-bottom:1px solid #eee;text-align:right;z-index:10"><button onclick="window.print()" style="padding:8px 16px;font-size:14px;cursor:pointer;border-radius:8px;border:none;background:#5b21b6;color:#fff;font-weight:700">🖨 印刷する</button></div>';
+  var printCss='<style>@media print{.no-print{display:none !important}}</style>';
+  w.document.write('<html><head><meta charset="utf-8"><title>'+title+'</title>'+printCss+'</head><body>'+printBtnHtml+html+'</body></html>');
   w.document.close();
 }
 function viewGeneratedResignDoc(docId, staffNameOverride){
