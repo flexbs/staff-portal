@@ -5401,6 +5401,7 @@ function previewResignFilledDoc(){
   }
   openFilledDocInNewTab(html,'プレビュー：'+_currentResignDoc.title);
 }
+async function viewResignPdf(fileUrl, isFixed){
   if(!supabaseClient){alert('接続エラー');return;}
   var newTab=window.open('','_blank');
   var r=await supabaseClient.storage.from('resignation-docs').createSignedUrl(fileUrl,3600);
