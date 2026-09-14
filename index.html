@@ -1478,15 +1478,23 @@ input:disabled{background:#f5f4f0;color:#aaa;border-color:#e8e6e0}
   <div class="modal" style="max-width:480px">
     <div class="mt" id="resign-sign-title">書類に署名する</div>
     <div style="background:#fef3cd;border-radius:8px;padding:10px 12px;font-size:12px;color:#8a5a00;margin-bottom:14px;line-height:1.7">
-      PDFをよくお読みいただき、内容に同意の上、お名前を入力して署名してください。
+      PDFをよくお読みいただき、内容に同意の上、必要事項を入力して署名してください。
     </div>
     <div id="resign-sign-pdf-btn" style="margin-bottom:14px"></div>
+    <div class="fg">
+      <label class="fl">派遣先（勤務先） <span style="color:#991b1b">*必須</span></label>
+      <input type="text" id="resign-sign-workplace" placeholder="例：株式会社〇〇">
+    </div>
     <div class="fg">
       <label class="fl">お名前を入力してください <span style="color:#991b1b">*必須</span></label>
       <input type="text" id="resign-sign-name" placeholder="例：山田 花子">
     </div>
+    <div class="fg">
+      <label class="fl">署名日</label>
+      <div id="resign-sign-date-display" style="font-size:13px;color:#666;padding:8px 0"></div>
+    </div>
     <div style="background:#f5f4f0;border-radius:8px;padding:10px 12px;font-size:12px;color:#666;margin-bottom:14px;line-height:1.7">
-      上記のお名前の入力をもって、本書類の内容に同意したものとみなします。
+      上記のお名前の入力をもって、本書類の内容に同意したものとみなします。署名日は自動的に本日の日付が記録されます。
     </div>
     <div id="resign-sign-status" style="display:none;font-size:13px;margin-top:8px;padding:10px;border-radius:8px"></div>
     <div class="ma">
@@ -5180,7 +5188,7 @@ async function openResignDetail(staffId){
     var signed=d.signed_at;
     var needsSign=d.needs_sign;
     var statusBdg=!needsSign?'<span class="bdg bz">署名不要</span>':signed?'<span class="bdg bg">署名済</span>':'<span class="bdg bo">署名待ち</span>';
-    var signedInfo=signed?'<div style="font-size:11px;color:#888;margin-top:4px">署名日時：'+new Date(d.signed_at).toLocaleString('ja-JP')+'　氏名：'+d.signed_name+'</div>':'';
+    var signedInfo=signed?'<div style="font-size:11px;color:#888;margin-top:4px">署名日時：'+new Date(d.signed_at).toLocaleString('ja-JP')+'　氏名：'+d.signed_name+(d.signed_workplace?'　派遣先：'+d.signed_workplace:'')+'</div>':'';
     html+='<div style="border:1px solid '+(signed?'#b3d98a':'#f0efe9')+';border-radius:10px;padding:14px;margin-bottom:10px;background:'+(signed?'#f0fae6':'#fff')+'">';
     html+='<div style="display:flex;justify-content:space-between;align-items:center"><span style="font-size:13px;font-weight:700">'+d.title+'</span>'+statusBdg+'</div>';
     html+=signedInfo;
@@ -5215,7 +5223,7 @@ async function loadMyResignDocs(){
     var signed=d.signed_at;
     var needsSign=d.needs_sign;
     var statusBdg=!needsSign?'<span class="bdg bz">読むだけ</span>':signed?'<span class="bdg bg">署名済</span>':'<span class="bdg bo">署名待ち</span>';
-    var signedInfo=signed?'<div style="font-size:11px;color:#888;margin-top:4px">署名日時：'+new Date(d.signed_at).toLocaleString('ja-JP')+'　氏名：'+d.signed_name+'</div>':'';
+    var signedInfo=signed?'<div style="font-size:11px;color:#888;margin-top:4px">署名日時：'+new Date(d.signed_at).toLocaleString('ja-JP')+'　氏名：'+d.signed_name+(d.signed_workplace?'　派遣先：'+d.signed_workplace:'')+'</div>':'';
     var pdfBtn='';
     if(d.file_url){
       var isFixed=['resign_muiki.pdf','resign_chuto.pdf','resign_manryo.pdf','pledge.pdf','notice.pdf','rules.pdf'].includes(d.file_url);
@@ -5253,6 +5261,23 @@ function openResignSign(docId, title, fileUrl, isFixed){
   }
   var nameEl=document.getElementById('resign-sign-name');
   if(nameEl)nameEl.value='';
+  var workplaceEl=document.getElementById('resign-sign-workplace');
+  if(workplaceEl){
+    workplaceEl.value='';
+    // 分かる範囲で派遣先名を自動入力（スタッフ側で確認・修正可能）
+    if(supabaseClient&&myStaffData&&myStaffData.client_id){
+      supabaseClient.from('clients').select('client_name,branch_name').eq('id',myStaffData.client_id).single().then(function(res){
+        if(res.data&&workplaceEl.value===''){
+          workplaceEl.value=res.data.client_name+(res.data.branch_name?'（'+res.data.branch_name+'）':'');
+        }
+      });
+    }
+  }
+  var dateDisplay=document.getElementById('resign-sign-date-display');
+  if(dateDisplay){
+    var today=new Date();
+    dateDisplay.textContent=today.getFullYear()+'年'+(today.getMonth()+1)+'月'+today.getDate()+'日';
+  }
   var statusEl=document.getElementById('resign-sign-status');
   if(statusEl)statusEl.style.display='none';
   openModal('resign-sign');
@@ -5262,12 +5287,14 @@ async function submitResignSign(){
   if(!supabaseClient||!myStaffData){alert('接続エラー');return;}
   if(!_currentResignDocId){alert('エラーが発生しました');return;}
   var name=document.getElementById('resign-sign-name').value.trim();
+  var workplace=document.getElementById('resign-sign-workplace').value.trim();
   var statusEl=document.getElementById('resign-sign-status');
+  if(!workplace){statusEl.style.display='block';statusEl.style.background='#fee2e2';statusEl.style.color='#991b1b';statusEl.textContent='派遣先（勤務先）を入力してください';return;}
   if(!name){statusEl.style.display='block';statusEl.style.background='#fee2e2';statusEl.style.color='#991b1b';statusEl.textContent='お名前を入力してください';return;}
-  if(!confirm('「'+name+'」の名前で署名します。よろしいですか？'))return;
+  if(!confirm('派遣先「'+workplace+'」、お名前「'+name+'」で署名します。よろしいですか？'))return;
   statusEl.style.display='block';statusEl.style.background='#f5f4f0';statusEl.style.color='#666';statusEl.textContent='署名中...';
   var now=new Date().toISOString();
-  var r=await supabaseClient.from('resignation_documents').update({signed_at:now,signed_name:name}).eq('id',_currentResignDocId);
+  var r=await supabaseClient.from('resignation_documents').update({signed_at:now,signed_name:name,signed_workplace:workplace}).eq('id',_currentResignDocId);
   if(r.error){statusEl.style.background='#fee2e2';statusEl.style.color='#991b1b';statusEl.textContent='署名に失敗しました：'+r.error.message;return;}
   statusEl.style.background='#e6f4d7';statusEl.style.color='#2d6a10';statusEl.textContent='署名しました！';
   setTimeout(function(){closeModal('resign-sign');loadMyResignDocs();},1000);
