@@ -1454,12 +1454,17 @@ input:disabled{background:#f5f4f0;color:#aaa;border-color:#e8e6e0}
         <option value="">選択してください</option>
         <option value="muiki">無期雇用</option>
         <option value="chuto">派遣契約（途中退職）</option>
-        <option value="manryo">派遣契約（契約満了）</option>
+        <option value="manryo_staff">派遣契約（契約満了・本人からの申し出）</option>
+        <option value="manryo_company">派遣契約（契約満了・会社からの通知）</option>
       </select>
     </div>
     <div id="resign-doc-list" style="display:none;background:#f5f4f0;border-radius:10px;padding:12px 14px;margin-bottom:12px;font-size:13px">
       <div style="font-weight:700;color:#1a1a1a;margin-bottom:8px">送付する書類（3点）</div>
       <div id="resign-doc-names" style="color:#555;line-height:2"></div>
+    </div>
+    <div class="fg" id="resign-admin-note-area" style="display:none">
+      <label class="fl">通知書に記載する理由（任意・空欄可）</label>
+      <input type="text" id="resign-admin-note" placeholder="例：契約期間満了のため">
     </div>
     <div id="resign-file-area" style="display:none">
       <div class="section-divider">PDFファイルをアップロード</div>
@@ -1485,6 +1490,10 @@ input:disabled{background:#f5f4f0;color:#aaa;border-color:#e8e6e0}
       <label class="fl">派遣先（勤務先） <span style="color:#991b1b">*必須</span></label>
       <input type="text" id="resign-sign-workplace" placeholder="例：株式会社〇〇">
     </div>
+    <div class="fg" id="resign-sign-reason-area" style="display:none">
+      <label class="fl">退職理由 <span style="color:#991b1b">*必須</span></label>
+      <input type="text" id="resign-sign-reason" placeholder="例：一身上の都合">
+    </div>
     <div class="fg">
       <label class="fl">お名前を入力してください <span style="color:#991b1b">*必須</span></label>
       <input type="text" id="resign-sign-name" placeholder="例：山田 花子">
@@ -1498,6 +1507,7 @@ input:disabled{background:#f5f4f0;color:#aaa;border-color:#e8e6e0}
     </div>
     <div id="resign-sign-status" style="display:none;font-size:13px;margin-top:8px;padding:10px;border-radius:8px"></div>
     <div class="ma">
+      <button class="btn btn-sm" onclick="previewResignFilledDoc()">📄 記入内容をプレビュー</button>
       <button class="btn btn-sm" onclick="closeModal('resign-sign')">キャンセル</button>
       <button class="btn btn-sm btn-p" onclick="submitResignSign()">署名する →</button>
     </div>
@@ -4998,6 +5008,7 @@ async function cancelDocFromDetail(docId,fileUrl,bucket,staffId,staffName){
 
 // ========== 退職手続き機能 ==========
 var _currentResignDocId = null;
+var _currentResignDoc = null;
 
 var _resignPatterns = {
   muiki: {
@@ -5016,8 +5027,16 @@ var _resignPatterns = {
       {key:'rules', name:'終了に伴う就業規則', needsSign:false, fileUrl:'rules.pdf'}
     ]
   },
-  manryo: {
-    label: '派遣契約（契約満了）',
+  manryo_staff: {
+    label: '派遣契約（契約満了・本人からの申し出）',
+    docs: [
+      {key:'resign_manryo', name:'退職願（契約期間満了退職）', needsSign:true, fileUrl:'resign_manryo.pdf'},
+      {key:'pledge', name:'退職時の誓約書', needsSign:true, fileUrl:'pledge.pdf'},
+      {key:'rules', name:'終了に伴う就業規則', needsSign:false, fileUrl:'rules.pdf'}
+    ]
+  },
+  manryo_company: {
+    label: '派遣契約（契約満了・会社からの通知）',
     docs: [
       {key:'notice', name:'雇用契約終了通知書', needsSign:true, fileUrl:'notice.pdf'},
       {key:'pledge', name:'退職時の誓約書', needsSign:true, fileUrl:'pledge.pdf'},
@@ -5043,7 +5062,8 @@ function updateResignDocList(){
   var pattern=document.getElementById('resign-pattern').value;
   var listArea=document.getElementById('resign-doc-list');
   var fileArea=document.getElementById('resign-file-area');
-  if(!pattern){listArea.style.display='none';fileArea.style.display='none';return;}
+  var noteArea=document.getElementById('resign-admin-note-area');
+  if(!pattern){listArea.style.display='none';fileArea.style.display='none';if(noteArea)noteArea.style.display='none';return;}
   var p=_resignPatterns[pattern];
   if(!p)return;
   var namesHtml='';
@@ -5054,6 +5074,7 @@ function updateResignDocList(){
   document.getElementById('resign-doc-names').innerHTML=namesHtml;
   listArea.style.display='block';
   fileArea.style.display='none';
+  if(noteArea)noteArea.style.display=(pattern==='manryo_company')?'block':'none';
 }
 
 async function sendResignDocs(){
@@ -5061,6 +5082,7 @@ async function sendResignDocs(){
   var target=document.getElementById('resign-target').value;
   var resignDate=document.getElementById('resign-date').value;
   var pattern=document.getElementById('resign-pattern').value;
+  var adminNote=document.getElementById('resign-admin-note')?document.getElementById('resign-admin-note').value.trim():'';
   var statusEl=document.getElementById('resign-status');
   if(!target){statusEl.style.display='block';statusEl.style.background='#fee2e2';statusEl.style.color='#991b1b';statusEl.textContent='対象スタッフを選択してください';return;}
   if(!resignDate){statusEl.style.display='block';statusEl.style.background='#fee2e2';statusEl.style.color='#991b1b';statusEl.textContent='退職日を入力してください';return;}
@@ -5088,7 +5110,8 @@ async function sendResignDocs(){
       document_type:doc.key,
       title:doc.name,
       file_url:fileUrl,
-      needs_sign:doc.needsSign
+      needs_sign:doc.needsSign,
+      admin_note:(doc.key==='notice'&&adminNote)?adminNote:null
     });
     if(ins.error){errors.push(doc.name+':'+ins.error.message);}
   }
@@ -5160,11 +5183,15 @@ async function openResignDetail(staffId){
     var needsSign=d.needs_sign;
     var statusBdg=!needsSign?'<span class="bdg bz">署名不要</span>':signed?'<span class="bdg bg">署名済</span>':'<span class="bdg bo">署名待ち</span>';
     var signedInfo=signed?'<div style="font-size:11px;color:#888;margin-top:4px">署名日時：'+new Date(d.signed_at).toLocaleString('ja-JP')+'　氏名：'+d.signed_name+(d.signed_workplace?'　派遣先：'+d.signed_workplace:'')+'</div>':'';
+    var viewBtn=signed?'<div style="margin-top:8px"><button onclick="window.opener.viewFilledResignDoc(\''+d.id+'\')" style="padding:4px 10px;font-size:12px;cursor:pointer;border-radius:6px;border:1px solid #ccc;background:#fff">📄 記入済み書類を見る</button></div>':'';
     html+='<div style="border:1px solid '+(signed?'#b3d98a':'#f0efe9')+';border-radius:10px;padding:14px;margin-bottom:10px;background:'+(signed?'#f0fae6':'#fff')+'">';
     html+='<div style="display:flex;justify-content:space-between;align-items:center"><span style="font-size:13px;font-weight:700">'+d.title+'</span>'+statusBdg+'</div>';
     html+=signedInfo;
+    html+=viewBtn;
     html+='</div>';
   }
+  window._resignDocsMap=window._resignDocsMap||{};
+  docs.forEach(function(d){window._resignDocsMap[d.id]=d;});
   // アラートで表示（簡易版）
   var w=window.open('','_blank','width=500,height=600');
   w.document.write('<html><head><meta charset="utf-8"><title>退職書類詳細</title><style>body{font-family:sans-serif;padding:20px;font-size:14px}.bdg{display:inline-block;padding:3px 9px;border-radius:20px;font-size:11px;font-weight:700}.bg{background:#e6f4d7;color:#2d6a10}.bo{background:#fde6d3;color:#9a4a00}.bz{background:#f0efe9;color:#666}</style></head><body>'+html+'<button onclick="window.close()" style="margin-top:20px;padding:8px 16px;cursor:pointer">閉じる</button></body></html>');
@@ -5183,6 +5210,8 @@ async function loadMyResignDocs(){
   }
   var signDocs=docs.filter(function(d){return d.needs_sign;});
   var signedCount=signDocs.filter(function(d){return d.signed_at;}).length;
+  window._resignDocsMap={};
+  docs.forEach(function(d){window._resignDocsMap[d.id]=d;});
   var html='';
   if(signedCount===signDocs.length&&signDocs.length>0){
     html+='<div style="background:#e6f4d7;border-radius:8px;padding:10px 12px;font-size:13px;color:#2d6a10;font-weight:700;margin-bottom:14px;text-align:center">✅ 全ての書類への署名が完了しました</div>';
@@ -5196,14 +5225,15 @@ async function loadMyResignDocs(){
     var statusBdg=!needsSign?'<span class="bdg bz">読むだけ</span>':signed?'<span class="bdg bg">署名済</span>':'<span class="bdg bo">署名待ち</span>';
     var signedInfo=signed?'<div style="font-size:11px;color:#888;margin-top:4px">署名日時：'+new Date(d.signed_at).toLocaleString('ja-JP')+'　氏名：'+d.signed_name+(d.signed_workplace?'　派遣先：'+d.signed_workplace:'')+'</div>':'';
     var pdfBtn='';
-    if(d.file_url){
+    if(signed){
+      pdfBtn='<button class="btn btn-sm" style="margin-top:8px;margin-right:6px" onclick="viewFilledResignDoc(\''+d.id+'\')">📄 記入済み書類を見る</button>';
+    } else if(d.file_url){
       var isFixed=['resign_muiki.pdf','resign_chuto.pdf','resign_manryo.pdf','pledge.pdf','notice.pdf','rules.pdf'].includes(d.file_url);
-      var bucket='resignation-docs';
-      pdfBtn='<button class="btn btn-sm" style="margin-top:8px;margin-right:6px" data-url="'+d.file_url+'" data-fixed="'+isFixed+'" onclick="viewResignPdf(this.dataset.url,this.dataset.fixed===\'true\')">📄 PDFを表示</button>';
+      pdfBtn='<button class="btn btn-sm" style="margin-top:8px;margin-right:6px" data-url="'+d.file_url+'" data-fixed="'+isFixed+'" onclick="viewResignPdf(this.dataset.url,this.dataset.fixed===\'true\')">📄 ひな形PDFを表示</button>';
     }
     var signBtn='';
     if(needsSign&&!signed){
-      signBtn='<button class="btn btn-sm btn-p" style="margin-top:8px" data-doc-id="'+d.id+'" data-doc-title="'+d.title+'" data-doc-url="'+(d.file_url||'')+'" data-fixed="'+(['resign_muiki.pdf','resign_chuto.pdf','resign_manryo.pdf','pledge.pdf','notice.pdf','rules.pdf'].includes(d.file_url))+'" onclick="openResignSign(this.dataset.docId,this.dataset.docTitle,this.dataset.docUrl,this.dataset.fixed===\'true\')">署名する →</button>';
+      signBtn='<button class="btn btn-sm btn-p" style="margin-top:8px" onclick="openResignSign(\''+d.id+'\',\''+d.title.replace(/'/g,"\\'")+'\',\''+(d.file_url||'')+'\',true)">署名する →</button>';
     }
     html+='<div style="border:1px solid '+(signed?'#b3d98a':'#f0efe9')+';border-radius:10px;padding:14px;margin-bottom:10px;background:'+(signed?'#f0fae6':'#fff')+'">';
     html+='<div style="display:flex;justify-content:space-between;align-items:center"><span style="font-size:14px;font-weight:700">'+d.title+'</span>'+statusBdg+'</div>';
@@ -5214,7 +5244,133 @@ async function loadMyResignDocs(){
   area.innerHTML=html;
 }
 
-async function viewResignPdf(fileUrl, isFixed){
+function fmtDateJp(d){
+  if(!d)return '　　年　　月　　日';
+  var dt;
+  if(d instanceof Date){dt=d;}
+  else if(typeof d==='string'&&d.indexOf('T')>=0){dt=new Date(d);}
+  else{dt=new Date(d+'T00:00:00');}
+  return dt.getFullYear()+'年'+(dt.getMonth()+1)+'月'+dt.getDate()+'日';
+}
+var PLEDGE_BODY_ITEMS=[
+  '私は退職後も、法令及び貴社の諸規程を遵守し、業務上知り得た下記に定める内容の情報（以下「機密情報」という。）について目的・方法のいかんを問わず、自分の為に使用したり、第三者に開示、漏洩致しません。<br><br>１　貴社及び派遣先の営業上及び技術上の情報<br>２　貴社及び派遣先の財務及び人事等に関する情報<br>３　貴社及び派遣先での業務活動における制作物の内容、商品名、価格、発売日、技術資料、製造原価等の情報<br>４　貴社及び派遣先における他社との業務提携及び顧客に関する情報<br>５　その他、貴社及び派遣先が機密情報として指定した情報',
+  '私は退職後も、法令及び貴社の諸規定を遵守し、業務上知り得た個人情報（以下「個人情報」という。）について目的・方法のいかんを問わず、自分の為に使用したり、第三者に開示、漏洩致しません。',
+  '私は退職時に、本誓約書に定められた全ての機密情報・個人情報（以下「情報」という。）及び記録媒体（複製物を含む）を直ちに返却、もしくは消去、廃棄し、退職後は、私の手元に全ての情報は一切残存しません。また、業務上発生した制作物（試作品・失敗作を含む）及び名刺等についても同様とします。',
+  '私は情報について、私がその形成及び創出に関わった場合であっても、貴社もしくは派遣先の業務上作成したものであることを確認し、当該情報（著作権等を含む。以下同じ。）の帰属が貴社もしくは派遣先にあることを確認いたします。また当該情報に関する所有権、並びに創作上の権利ないし利益について私に帰属する旨の主張を致しません。',
+  '私は退職後も、貴社及び派遣先従業員に対して会社を退職することを勧めるなどの勧誘行為、もしくは、貴社及び派遣先を誹謗中傷し、その名誉、信用を傷つける行為を一切致しません。',
+  '私は、貴社及び派遣先から貸与されている名札、制服、鍵、ＩＤカード、マニュアル、文具、タイムシート、返信用封筒その他会社の物品について、退職時までに返却致します。なお制服については、自己負担により速やかにクリーニングを行ったうえで返却致します。',
+  '私は、退職後に、私が在職中に行った処理について不明点があり説明を求められた場合は、誠実に説明責任を果たします。',
+  '私は、退職後に発覚した事実により、自己の責めに帰すべき行為（不良品等の発生原因を含む）によって貴社もしくは派遣先に損害を与えたときは損害賠償の責任を負い、また同時に、法規制に違反する場合は捜査機関に刑事告訴等されても一切異議を申し立てません。',
+  'その他、上記以外に必要な場合、貴社及び派遣先に対して信義誠実に協議するものとします。'
+];
+function buildFilledResignDocHtml(docType, ctx){
+  // ctx: {resignationDate, signDate(Dateまたはnull), staffName, workplace, reason, adminNote}
+  var css='<style>body{font-family:"Hiragino Sans","Meiryo",sans-serif;padding:30px 40px;color:#1a1a1a;line-height:1.9;max-width:700px;margin:0 auto}.doc-title{text-align:center;font-size:20px;font-weight:900;letter-spacing:6px;margin-bottom:30px}.to{text-decoration:underline;margin-bottom:24px}.blank{display:inline-block;border-bottom:1px solid #333;min-width:120px;text-align:center;padding:0 4px}.right{text-align:right;margin:24px 0 6px}.sign-block{margin-top:30px;text-align:right}.watermark{color:#c0392b;font-size:12px;text-align:center;margin-top:40px;border-top:1px dashed #ccc;padding-top:10px}</style>';
+  var signDateStr=fmtDateJp(ctx.signDate||new Date());
+  var resignDateStr=fmtDateJp(ctx.resignationDate);
+  var name=ctx.staffName||'（未入力）';
+  var workplace=ctx.workplace||'（未入力）';
+  var reason=ctx.reason||'（未入力）';
+  var html=css;
+  if(docType==='resign_chuto'){
+    html+='<div class="doc-title">退　職　願</div>'
+      +'<div class="to">フレックスビジネスサービス株式会社　御中</div>'
+      +'<p>私は、下記の通り退職いたしたく、ここにお願い申し上げます。</p>'
+      +'<p style="margin-top:20px">記</p>'
+      +'<p>■　契約期間途中での退職</p>'
+      +'<p style="margin-left:20px">退職理由　　<span class="blank">'+reason+'</span>　のため</p>'
+      +'<p style="margin-left:20px">退職希望日　　<span class="blank">'+resignDateStr+'</span></p>'
+      +'<p style="margin-top:20px">以上</p>'
+      +'<div class="right">'+signDateStr+'</div>'
+      +'<div class="sign-block">氏　名　<span class="blank" style="min-width:200px">'+name+'</span>　印</div>';
+  } else if(docType==='resign_manryo'){
+    html+='<div class="doc-title">退　職　願</div>'
+      +'<div class="to">フレックスビジネスサービス株式会社　御中</div>'
+      +'<p>私は、下記の通り退職いたしたく、ここにお願い申し上げます。</p>'
+      +'<p style="margin-top:20px">記</p>'
+      +'<p>■　現在の契約期間の終了をもっての退職（契約更新を望まない場合）</p>'
+      +'<p style="margin-left:20px">契約終了日　　<span class="blank">'+resignDateStr+'</span></p>'
+      +'<p style="margin-top:20px">以上</p>'
+      +'<div class="right">'+signDateStr+'</div>'
+      +'<div class="sign-block">氏　名　<span class="blank" style="min-width:200px">'+name+'</span>　印</div>';
+  } else if(docType==='notice'){
+    var noticeDate=fmtDateJp(ctx.noticeDate||new Date());
+    html+='<div style="text-decoration:underline;font-weight:700;font-size:16px;margin-bottom:20px">雇用契約終了通知書</div>'
+      +'<p style="text-decoration:underline">　'+name+'　様</p>'
+      +'<p style="margin:16px 0">'+noticeDate+'</p>'
+      +'<p>フレックスビジネスサービス株式会社</p>'
+      +'<p style="margin-top:16px">当社は、下記の理由により、現在の雇用契約終了日である　<span class="blank">'+resignDateStr+'</span>　をもって雇用契約を更新しないことを通知致します。</p>'
+      +'<p style="margin-top:20px">記</p>'
+      +'<p>理由<br>'+(ctx.adminNote?ctx.adminNote:'（特記事項なし）')+'</p>'
+      +'<p style="margin-top:20px">以上</p>'
+      +'<hr style="margin:36px 0;border:none;border-top:1px solid #ccc">'
+      +'<div style="text-decoration:underline;font-weight:700;margin-bottom:16px">雇用契約終了通知受領書（兼）雇用契約終了確認書</div>'
+      +'<div class="to">フレックスビジネスサービス株式会社　御中</div>'
+      +'<p>私は、貴社から雇用契約を更新しないとの通知を受けました。</p>'
+      +'<div class="right">'+signDateStr+'</div>'
+      +'<div class="sign-block"><span class="blank" style="min-width:200px">'+name+'</span>　印</div>';
+  } else if(docType==='pledge'){
+    var items='';
+    var circled=['①','②','③','④','⑤','⑥','⑦','⑧','⑨'];
+    PLEDGE_BODY_ITEMS.forEach(function(t,i){items+='<p style="margin-top:14px">'+circled[i]+'　'+t+'</p>';});
+    html+='<div class="doc-title" style="font-size:18px;letter-spacing:2px">退職時の誓約書</div>'
+      +'<div class="to">フレックスビジネスサービス株式会社　御中</div>'
+      +'<p>私は、<span class="blank">'+resignDateStr+'</span>をもって退職するにあたり、下記事項を理解し遵守することとし、本誓約書を提出いたします。</p>'
+      +items
+      +'<div class="right">'+signDateStr+'</div>'
+      +'<div class="sign-block">派遣労働者氏名　<span class="blank" style="min-width:200px">'+name+'</span>　印<br><br>派遣先会社名　　<span class="blank" style="min-width:200px">'+workplace+'</span></div>';
+  } else {
+    return null; // 対応する定型フォームがない（resign_muiki等）
+  }
+  html+='<div class="watermark">※この書類はスタッフポータルシステムにより自動生成されたものです</div>';
+  return html;
+}
+function openFilledDocInNewTab(html, title){
+  var w=window.open('','_blank');
+  w.document.write('<html><head><meta charset="utf-8"><title>'+title+'</title></head><body>'+html+'</body></html>');
+  w.document.close();
+}
+function viewFilledResignDoc(docId){
+  var doc=window._resignDocsMap&&window._resignDocsMap[docId];
+  if(!doc){alert('書類情報が見つかりません');return;}
+  var html=buildFilledResignDocHtml(doc.document_type,{
+    resignationDate:doc.resignation_date,
+    signDate:doc.signed_at,
+    staffName:doc.signed_name,
+    workplace:doc.signed_workplace,
+    reason:doc.signed_reason,
+    adminNote:doc.admin_note,
+    noticeDate:doc.created_at
+  });
+  if(!html){
+    viewResignPdf(doc.file_url,true);
+    return;
+  }
+  openFilledDocInNewTab(html,doc.title);
+}
+function previewResignFilledDoc(){
+  if(!_currentResignDoc){alert('書類情報が取得できていません');return;}
+  var docType=_currentResignDoc.document_type;
+  var name=document.getElementById('resign-sign-name').value.trim();
+  var workplace=document.getElementById('resign-sign-workplace').value.trim();
+  var reasonEl=document.getElementById('resign-sign-reason');
+  var reason=reasonEl?reasonEl.value.trim():'';
+  var html=buildFilledResignDocHtml(docType,{
+    resignationDate:_currentResignDoc.resignation_date,
+    signDate:new Date(),
+    staffName:name,
+    workplace:workplace,
+    reason:reason,
+    adminNote:_currentResignDoc.admin_note,
+    noticeDate:_currentResignDoc.created_at
+  });
+  if(!html){
+    // 定型フォームが用意されていない書類は、従来通り保管庫のPDFを表示する
+    viewResignPdf(_currentResignDoc.file_url,true);
+    return;
+  }
+  openFilledDocInNewTab(html,'プレビュー：'+_currentResignDoc.title);
+}
   if(!supabaseClient){alert('接続エラー');return;}
   var newTab=window.open('','_blank');
   var r=await supabaseClient.storage.from('resignation-docs').createSignedUrl(fileUrl,3600);
@@ -5223,12 +5379,20 @@ async function viewResignPdf(fileUrl, isFixed){
 }
 
 function openResignSign(docId, title, fileUrl, isFixed){
+  var doc=(window._resignDocsMap&&window._resignDocsMap[docId])||{id:docId,title:title,file_url:fileUrl,document_type:null,resignation_date:null,admin_note:null,created_at:null};
   _currentResignDocId=docId;
+  _currentResignDoc=doc;
   var titleEl=document.getElementById('resign-sign-title');
   if(titleEl)titleEl.textContent=title;
   var pdfBtn=document.getElementById('resign-sign-pdf-btn');
   if(pdfBtn&&fileUrl){
-    pdfBtn.innerHTML='<button class="btn btn-sm" data-url="'+fileUrl+'" data-fixed="'+isFixed+'" onclick="viewResignPdf(this.dataset.url,this.dataset.fixed===\'true\')">📄 先にPDFを確認してください</button>';
+    pdfBtn.innerHTML='<button class="btn btn-sm" data-url="'+fileUrl+'" data-fixed="'+isFixed+'" onclick="viewResignPdf(this.dataset.url,this.dataset.fixed===\'true\')">📄 ひな形PDFを確認する</button>';
+  }
+  var reasonArea=document.getElementById('resign-sign-reason-area');
+  if(reasonArea){
+    reasonArea.style.display=(doc.document_type==='resign_chuto')?'block':'none';
+    var reasonEl=document.getElementById('resign-sign-reason');
+    if(reasonEl)reasonEl.value='';
   }
   var nameEl=document.getElementById('resign-sign-name');
   if(nameEl)nameEl.value='';
@@ -5259,13 +5423,19 @@ async function submitResignSign(){
   if(!_currentResignDocId){alert('エラーが発生しました');return;}
   var name=document.getElementById('resign-sign-name').value.trim();
   var workplace=document.getElementById('resign-sign-workplace').value.trim();
+  var reasonEl=document.getElementById('resign-sign-reason');
+  var reasonRequired=reasonEl&&document.getElementById('resign-sign-reason-area').style.display!=='none';
+  var reason=reasonEl?reasonEl.value.trim():'';
   var statusEl=document.getElementById('resign-sign-status');
   if(!workplace){statusEl.style.display='block';statusEl.style.background='#fee2e2';statusEl.style.color='#991b1b';statusEl.textContent='派遣先（勤務先）を入力してください';return;}
+  if(reasonRequired&&!reason){statusEl.style.display='block';statusEl.style.background='#fee2e2';statusEl.style.color='#991b1b';statusEl.textContent='退職理由を入力してください';return;}
   if(!name){statusEl.style.display='block';statusEl.style.background='#fee2e2';statusEl.style.color='#991b1b';statusEl.textContent='お名前を入力してください';return;}
   if(!confirm('派遣先「'+workplace+'」、お名前「'+name+'」で署名します。よろしいですか？'))return;
   statusEl.style.display='block';statusEl.style.background='#f5f4f0';statusEl.style.color='#666';statusEl.textContent='署名中...';
   var now=new Date().toISOString();
-  var r=await supabaseClient.from('resignation_documents').update({signed_at:now,signed_name:name,signed_workplace:workplace}).eq('id',_currentResignDocId);
+  var updatePayload={signed_at:now,signed_name:name,signed_workplace:workplace};
+  if(reasonRequired)updatePayload.signed_reason=reason;
+  var r=await supabaseClient.from('resignation_documents').update(updatePayload).eq('id',_currentResignDocId);
   if(r.error){statusEl.style.background='#fee2e2';statusEl.style.color='#991b1b';statusEl.textContent='署名に失敗しました：'+r.error.message;return;}
   statusEl.style.background='#e6f4d7';statusEl.style.color='#2d6a10';statusEl.textContent='署名しました！';
   setTimeout(function(){closeModal('resign-sign');loadMyResignDocs();},1000);
