@@ -1190,6 +1190,19 @@ input:disabled{background:#f5f4f0;color:#aaa;border-color:#e8e6e0}
   </div>
 </div>
 
+<div class="mbg" id="modal-mail-status">
+  <div class="modal" style="max-width:640px">
+    <div class="mt">📬 メール送信状況（勤怠・タイムシート）</div>
+    <div style="font-size:12px;color:#888;margin-bottom:12px">直近の送信履歴を、メール配信サービス側の実際の配達結果とあわせて表示します。</div>
+    <div id="mail-status-body" style="max-height:60vh;overflow-y:auto">
+      <div style="text-align:center;color:#888;padding:30px">読み込み中...</div>
+    </div>
+    <div class="ma">
+      <button class="btn btn-sm" onclick="closeModal('mail-status')">閉じる</button>
+    </div>
+  </div>
+</div>
+
 <div class="mbg" id="modal-notice-detail">
   <div class="modal" style="max-width:560px">
     <div class="mt">お知らせ詳細</div>
@@ -5484,7 +5497,7 @@ function renderTimesheet(recMap,ym,lastDay,staffName,ymLabel,areaId,isAdmin){
   var totalStr=totalH+'時間'+(totalM>0?totalM+'分':'');
   var printId='ts-print-'+areaId;
   var html='<div id="'+printId+'">';
-  html+='<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;flex-wrap:wrap;gap:8px"><div><div style="font-size:15px;font-weight:800;color:#1a1a1a">'+ymLabel+'　勤怠タイムシート</div><div style="font-size:12px;color:#888;margin-top:2px">'+staffName+'</div></div><button class="btn btn-sm" onclick="printTimesheet()">🖨 PDF出力</button><button class="btn btn-sm btn-p" style="margin-left:6px" onclick="sendTimesheetEmail()">📧 派遣先に送信</button></div>';
+  html+='<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;flex-wrap:wrap;gap:8px"><div><div style="font-size:15px;font-weight:800;color:#1a1a1a">'+ymLabel+'　勤怠タイムシート</div><div style="font-size:12px;color:#888;margin-top:2px">'+staffName+'</div></div><button class="btn btn-sm" onclick="printTimesheet()">🖨 PDF出力</button><button class="btn btn-sm btn-p" style="margin-left:6px" onclick="sendTimesheetEmail()">📧 派遣先に送信</button><button class="btn btn-sm" style="margin-left:6px" onclick="openMailStatusModal()">📬 送信状況を確認</button></div>';
   html+='<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:12px"><div style="background:#f5f4f0;border-radius:8px;padding:10px 14px"><div style="font-size:11px;color:#888">勤務日数</div><div style="font-size:18px;font-weight:800">'+workDays+'日</div></div><div style="background:#f5f4f0;border-radius:8px;padding:10px 14px"><div style="font-size:11px;color:#888">合計実労働時間</div><div style="font-size:18px;font-weight:800">'+totalStr+'</div></div></div>';
   html+='<div style="overflow-x:auto"><table style="width:100%;border-collapse:collapse;font-size:13px"><thead><tr style="background:#4a5568;color:#fff"><th style="padding:9px 8px;text-align:center;width:52px">日付</th><th style="padding:9px 8px;text-align:center">始業</th><th style="padding:9px 8px;text-align:center">終業</th><th style="padding:9px 8px;text-align:center">休憩</th><th style="padding:9px 8px;text-align:center">実労働</th><th style="padding:9px 8px;text-align:left;padding-left:12px">備考</th><th style="padding:9px 8px;text-align:center">状況</th></tr></thead><tbody>'+rows+'</tbody></table></div>';
   html+='<div style="margin-top:10px;padding:8px 14px;background:#f5f4f0;border-radius:8px;font-size:12px;color:#666;text-align:right" id="'+printId+'-summary">合計：'+workDays+'日勤務　実労働時間合計 '+totalStr+'</div></div>';
@@ -5499,6 +5512,39 @@ async function approveKintaiFromTs(id){
   if(r.error){alert('承認に失敗しました:'+r.error.message);return;}
   alert('承認しました！');
   loadTimesheetAdmin();
+}
+/* ===== メール送信状況の確認 ===== */
+async function openMailStatusModal(){
+  openModal('mail-status');
+  var body=document.getElementById('mail-status-body');
+  body.innerHTML='<div style="text-align:center;color:#888;padding:30px">読み込み中...</div>';
+  try{
+    var res=await fetch('https://wafarcqisrwzlkectrdo.supabase.co/functions/v1/portal-mail-status',{
+      headers:{'x-portal-key':'iZCoETQRv3yJzdBKOsqZnYT8W0pJLVgj'}
+    });
+    var data=await res.json();
+    var emails=data.emails||[];
+    if(emails.length===0){
+      body.innerHTML='<div style="text-align:center;color:#888;padding:30px">送信履歴が見つかりませんでした</div>';
+      return;
+    }
+    var statusLabels={delivered:['配達済み','#1a6b1a','#e6f4d7'],bounced:['届きませんでした（バウンス）','#991b1b','#fee2e2'],complained:['迷惑メール報告あり','#991b1b','#fee2e2'],delivery_delayed:['配達遅延中','#8a5a00','#fef3cd'],sent:['送信済み（配達待ち）','#8a5a00','#fef3cd']};
+    var rows='';
+    emails.forEach(function(e){
+      var st=statusLabels[e.last_event]||[e.last_event,'#555','#eee'];
+      var d=new Date(e.created_at);
+      var dateStr=(d.getMonth()+1)+'/'+d.getDate()+' '+String(d.getHours()).padStart(2,'0')+':'+String(d.getMinutes()).padStart(2,'0');
+      rows+='<tr>'
+        +'<td style="padding:8px;border-bottom:1px solid #eee;font-size:12px;color:#888;white-space:nowrap">'+dateStr+'</td>'
+        +'<td style="padding:8px;border-bottom:1px solid #eee;font-size:13px">'+e.subject+'</td>'
+        +'<td style="padding:8px;border-bottom:1px solid #eee;font-size:12px;color:#666">'+(e.to&&e.to[0]?e.to[0]:'-')+'</td>'
+        +'<td style="padding:8px;border-bottom:1px solid #eee;text-align:center"><span style="display:inline-block;padding:3px 10px;border-radius:10px;font-size:11px;font-weight:700;color:'+st[1]+';background:'+st[2]+'">'+st[0]+'</span></td>'
+        +'</tr>';
+    });
+    body.innerHTML='<table style="width:100%;border-collapse:collapse"><thead><tr style="background:#f7f7f5"><th style="padding:8px;text-align:left;font-size:12px">送信日時</th><th style="padding:8px;text-align:left;font-size:12px">件名</th><th style="padding:8px;text-align:left;font-size:12px">宛先</th><th style="padding:8px;text-align:center;font-size:12px">状態</th></tr></thead><tbody>'+rows+'</tbody></table>';
+  }catch(e){
+    body.innerHTML='<div style="text-align:center;color:#991b1b;padding:30px">取得に失敗しました：'+e.message+'</div>';
+  }
 }
 function printTimesheet(){
   var d=window._tsData;
