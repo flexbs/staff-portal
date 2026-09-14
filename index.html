@@ -503,7 +503,7 @@ input:disabled{background:#f5f4f0;color:#aaa;border-color:#e8e6e0}
 
   <div id="admin-settings" class="sp">
     <div class="card">
-      <div class="ch"><span class="ct">スタッフ追加</span><button class="btn btn-sm btn-g" onclick="openModal('add-staff')">＋ スタッフを追加する</button></div>
+      <div class="ch"><span class="ct">スタッフ追加</span><button class="btn btn-sm btn-g" onclick="populateClientDropdowns();openModal('add-staff')">＋ スタッフを追加する</button></div>
       <div style="font-size:13px;color:#888;padding:4px 0">新しいスタッフのアカウントとプロフィールを作成します。</div>
     </div>
     <div class="card">
@@ -956,7 +956,7 @@ input:disabled{background:#f5f4f0;color:#aaa;border-color:#e8e6e0}
     </div>
     <div class="profile-row"><span class="profile-label">ステータス</span><select id="modal-status" style="width:auto;font-size:12px;padding:4px 8px"><option value="稼働中">稼働中</option><option value="短期・単発">短期・単発</option><option value="請負">請負</option><option value="育休中">育休中</option><option value="休業中">休業中</option><option value="契約終了">契約終了</option></select></div>
     <div class="profile-row"><span class="profile-label">終了日</span><input type="date" id="modal-resignation-date" style="width:auto;font-size:12px;padding:4px 8px"></div>
-    <div class="profile-row"><span class="profile-label">派遣先</span><input type="text" id="modal-workplace" style="width:auto;font-size:12px;padding:4px 8px;text-align:right;flex:1"></div>
+    <div class="profile-row"><span class="profile-label">派遣先</span><select id="modal-workplace-client" style="width:auto;font-size:12px;padding:4px 8px;flex:1"><option value="">選択してください</option></select></div>
     <div class="profile-row"><span class="profile-label">派遣先住所</span><input type="text" id="modal-workplace-address" placeholder="例：福岡市中央区六本松2-3-6 7F" style="width:auto;font-size:12px;padding:4px 8px;text-align:right;flex:1"></div>
     <div class="profile-row"><span class="profile-label">通勤費<br><span style="font-size:10px;color:#aaa;font-weight:400">（住所・通勤変更届で確認済みの最新額）</span></span><span class="profile-val" id="modal-commute-allowance" style="color:#534AB7;font-weight:600">-</span></div>
     <div class="section-divider">住所・通勤情報<span style="font-size:11px;color:#aaa;font-weight:400">（変更すると住所・通勤変更届の履歴として登録されます）</span></div>
@@ -1360,7 +1360,7 @@ input:disabled{background:#f5f4f0;color:#aaa;border-color:#e8e6e0}
       <div class="fg"><label class="fl">雇用形態</label><select id="add-employment-type"><option value="">選択してください</option><option value="無期雇用">無期雇用</option><option value="長期">長期</option><option value="単発">単発</option><option value="60歳以上">60歳以上</option><option value="請負">請負</option></select></div>
       <div class="fg"><label class="fl">支払時給（円）</label><input type="number" id="add-hourly-wage" placeholder="例：1230"></div>
     </div>
-    <div class="fg"><label class="fl">派遣先</label><input type="text" id="add-workplace" placeholder="例：FCCテクノ"></div>
+    <div class="fg"><label class="fl">派遣先</label><select id="add-workplace-client"><option value="">選択してください</option></select></div>
     <div class="fg"><label class="fl">派遣先住所</label><input type="text" id="add-workplace-address" placeholder="例：福岡市中央区六本松2-3-6 7F"></div>
     <div class="section-divider">就業期間</div>
     <div class="g2">
@@ -3478,6 +3478,18 @@ async function sendContract(){
     tbody.appendChild(tr);
   });
 }
+async function populateClientDropdowns(){
+  if(!supabaseClient)return;
+  var {data:cls}=await supabaseClient.from('clients').select('id,client_name,branch_name').order('client_name');
+  if(!cls)return;
+  var opts='<option value="">選択してください</option>'+cls.map(function(c){
+    return '<option value="'+c.id+'">'+c.client_name+(c.branch_name?'（'+c.branch_name+'）':'')+'</option>';
+  }).join('');
+  ['add-workplace-client','modal-workplace-client'].forEach(function(id){
+    var el=document.getElementById(id);
+    if(el)el.innerHTML=opts;
+  });
+}
 async function saveStaffProfile(){
   try{
     const empId=document.getElementById('modal-empid').textContent.replace('社員番号：','').replace('社員番号:','').trim();
@@ -3495,7 +3507,9 @@ async function saveStaffProfile(){
     const workMins=document.getElementById('modal-work-mins').value!==''?parseInt(document.getElementById('modal-work-mins').value):0;
     const workMinutesPerDay=(workHours!==null)?(workHours*60+workMins):null;
     const staffStatus=document.getElementById('modal-status').value;
-    const workplace=document.getElementById('modal-workplace').value||null;
+    const workplaceClientSel=document.getElementById('modal-workplace-client');
+    const workplaceClientId=workplaceClientSel&&workplaceClientSel.value?workplaceClientSel.value:null;
+    const workplace=workplaceClientSel&&workplaceClientSel.selectedIndex>0?workplaceClientSel.options[workplaceClientSel.selectedIndex].text:null;
     const workplaceAddress=document.getElementById('modal-workplace-address')?(document.getElementById('modal-workplace-address').value||null):null;
     const dispatchStart=document.getElementById('modal-dispatch-start').value||null;
     const pensionNumber=document.getElementById('modal-pension').value||null;
@@ -3504,7 +3518,7 @@ async function saveStaffProfile(){
     const hourlyLeaveNote=document.getElementById('modal-hourly-leave-note')?(document.getElementById('modal-hourly-leave-note').value||null):null;
     const paidLeaveNote=document.getElementById('modal-paid-leave-note')?(document.getElementById('modal-paid-leave-note').value||null):null;
     if(!window._currentStaffProfileId){alert('保存失敗：対象スタッフの特定に失敗しました。一度モーダルを閉じて、プロフィールを開き直してください。');return;}
-    const{error}=await supabaseClient.from('staffs').update({status:staffStatus,workplace:workplace,workplace_address:workplaceAddress,dispatch_start_date:dispatchStart,restriction_date:restrictionDate,resignation_date:resignationDate,contract_end_date:contractEnd,paid_leave_grant_date:paidLeaveDate,paid_leave_grant_days:paidLeaveDays,paid_leave_exempt:paidLeaveExempt,paid_leave_remaining:paidLeaveRemaining,paid_leave_note:paidLeaveNote,work_minutes_per_day:workMinutesPerDay,pension_number:pensionNumber,insurance_number:insuranceNumber,note:staffNote,hourly_leave_note:hourlyLeaveNote,...(isHourlyEligible?{hourly_leave_remaining:hourlyLeaveRemaining}:{})}).eq('id',window._currentStaffProfileId);
+    const{error}=await supabaseClient.from('staffs').update({status:staffStatus,workplace:workplace,client_id:workplaceClientId,workplace_address:workplaceAddress,dispatch_start_date:dispatchStart,restriction_date:restrictionDate,resignation_date:resignationDate,contract_end_date:contractEnd,paid_leave_grant_date:paidLeaveDate,paid_leave_grant_days:paidLeaveDays,paid_leave_exempt:paidLeaveExempt,paid_leave_remaining:paidLeaveRemaining,paid_leave_note:paidLeaveNote,work_minutes_per_day:workMinutesPerDay,pension_number:pensionNumber,insurance_number:insuranceNumber,note:staffNote,hourly_leave_note:hourlyLeaveNote,...(isHourlyEligible?{hourly_leave_remaining:hourlyLeaveRemaining}:{})}).eq('id',window._currentStaffProfileId);
     if(error){alert('保存失敗：'+error.message);return;}
     var modAddress=document.getElementById('mod-address')?document.getElementById('mod-address').value.trim():'';
     var addrWarning='';
@@ -3772,7 +3786,8 @@ async function openStaffDetail(empId){
     document.getElementById('modal-name').textContent=data.name||'';
     document.getElementById('modal-empid').textContent='社員番号:'+(data.employee_id||'');
     document.getElementById('modal-avatar').textContent=data.name?data.name.replace(' ','').slice(0,2):'';
-    document.getElementById('modal-workplace').value=data.workplace||'';
+    await populateClientDropdowns();
+    var wpClientEl=document.getElementById('modal-workplace-client');if(wpClientEl)wpClientEl.value=data.client_id||'';
     var wpAddrEl=document.getElementById('modal-workplace-address');if(wpAddrEl)wpAddrEl.value=data.workplace_address||'';
     var stSel=document.getElementById('modal-status');
     if(stSel)stSel.value=data.status||'稼働中';
@@ -4830,7 +4845,9 @@ async function confirmMyNotice(recipientId){
   var employmentType=document.getElementById('add-employment-type').value||null;
   var hourlyWageVal=document.getElementById('add-hourly-wage').value;
   var hourlyWage=hourlyWageVal!==''?parseInt(hourlyWageVal):null;
-  var workplace=document.getElementById('add-workplace').value.trim();
+  var workplaceClientSel=document.getElementById('add-workplace-client');
+  var workplaceClientId=workplaceClientSel&&workplaceClientSel.value?workplaceClientSel.value:null;
+  var workplace=workplaceClientSel&&workplaceClientSel.selectedIndex>0?workplaceClientSel.options[workplaceClientSel.selectedIndex].text:null;
   var workplaceAddress=document.getElementById('add-workplace-address').value.trim()||null;
   var dispatchStart=document.getElementById('add-dispatch-start').value||null;
   var contractStart=document.getElementById('add-contract-start').value||null;
@@ -4883,6 +4900,7 @@ async function confirmMyNotice(recipientId){
     employment_type:employmentType,
     hourly_wage:hourlyWage,
     workplace:workplace||null,
+    client_id:workplaceClientId,
     workplace_address:workplaceAddress,
     dispatch_start_date:dispatchStart,
     contract_start_date:contractStart,
@@ -4941,7 +4959,7 @@ async function confirmMyNotice(recipientId){
   }
   statusEl.style.background='#e6f4d7';statusEl.style.color='#2d6a10';
   statusEl.textContent='追加しました！メール：'+email+'　初期パスワード：'+password+addrWarning;
-  ['add-employee-id','add-name','add-name-kana','add-employment-type','add-hourly-wage','add-workplace','add-workplace-address','add-dispatch-start','add-contract-start','add-contract-end','add-restriction','add-pension','add-insurance','add-note',
+  ['add-employee-id','add-name','add-name-kana','add-employment-type','add-hourly-wage','add-workplace-client','add-workplace-address','add-dispatch-start','add-contract-start','add-contract-end','add-restriction','add-pension','add-insurance','add-note',
    'as-postal','as-address','as-route1-company','as-route1-section','as-route1-fare','as-route1-pass','as-route2-company','as-route2-section','as-route2-fare','as-route2-pass','as-distance','as-allowance-input','as-allowance-basis-input'].forEach(function(id){
     var el=document.getElementById(id);if(el)el.value='';
   });
