@@ -1739,10 +1739,21 @@ async function submitKintai(){
   statusEl.style.background='#e6f4d7';statusEl.style.color='#2d6a10';statusEl.textContent='申請しました！担当者が確認します。';
   // 派遣先へメール通知
   try{
+    // 派遣先情報をクライアントマスターから取得（宛先・会社名などをハードコードしない）
+    var clientContactEmail=null;var clientContactName='ご担当者';
+    if(myStaffData.client_id){
+      var {data:c}=await supabaseClient.from('clients').select('contact_name,contact_email').eq('id',myStaffData.client_id).single();
+      if(c){clientContactEmail=c.contact_email||null;clientContactName=c.contact_name||'ご担当者';}
+    }
+    if(!clientContactEmail){
+      console.log('派遣先の担当者メールアドレスが未登録のため、勤怠確認メールの送信をスキップしました。');
+      return;
+    }
     var workH2=Math.floor(workMin/60);var workM2=workMin%60;
     var workStr2=workH2+'時間'+(workM2>0?workM2+'分':'');
     var approvalUrl='https://staff-portal-taupe.vercel.app/?approve='+approvalToken;
     var emailBody='<div style="font-family:sans-serif;max-width:600px;margin:0 auto;padding:20px">';
+    emailBody+='<p>'+clientContactName+'様</p>';
     emailBody+='<h2 style="color:#5b21b6">勤怠申請のご確認</h2>';
     emailBody+='<p>お世話になっております。フレックスビジネスサービス株式会社です。</p>';
     emailBody+='<p>以下のスタッフより勤怠申請がありましたので、ご確認をお願いいたします。</p>';
@@ -1763,7 +1774,7 @@ emailBody+='</table>';
     emailBody+='</div>';
     var session=supabaseClient.auth.session?supabaseClient.auth.session():null;
     var accessToken=session&&session.access_token?session.access_token:SUPABASE_KEY;
-    var mailPayload=JSON.stringify({to:'ibp-support-west@i-bp.co.jp',subject:'【勤怠確認】'+myStaffData.name+'さんの勤怠申請（'+date+'）',html:emailBody});
+    var mailPayload=JSON.stringify({to:clientContactEmail,subject:'【勤怠確認】'+myStaffData.name+'さんの勤怠申請（'+date+'）',html:emailBody});
     await fetch('https://wafarcqisrwzlkectrdo.supabase.co/functions/v1/send-kintai-mail',{
       method:'POST',
       headers:{'Authorization':'Bearer '+accessToken,'Content-Type':'application/json','apikey':SUPABASE_KEY},
@@ -5462,7 +5473,19 @@ async function loadTimesheetAdmin(){
   if(records){records.forEach(function(r){recMap[r.work_date]=r;});}
   var staffName=staffSel.options[staffSel.selectedIndex].text.split('（')[0];
   var ymLabel=ym.replace('-','年')+'月';
-  renderTimesheet(recMap,ym,lastDay,staffName,ymLabel,'admin-timesheet-area',true);
+  // 派遣先情報をクライアントマスターから取得（宛先・会社名などをハードコードしない）
+  var clientMeta={clientDisplayName:'（派遣先未登録）',contactName:'ご担当者',contactEmail:null,workplaceAddr:''};
+  var {data:staffRow}=await supabaseClient.from('staffs').select('client_id,workplace_address').eq('id',staffId).single();
+  if(staffRow&&staffRow.client_id){
+    var {data:c}=await supabaseClient.from('clients').select('client_name,branch_name,contact_name,contact_email,address').eq('id',staffRow.client_id).single();
+    if(c){
+      clientMeta.clientDisplayName=c.client_name+(c.branch_name?'（'+c.branch_name+'）':'');
+      clientMeta.contactName=c.contact_name||'ご担当者';
+      clientMeta.contactEmail=c.contact_email||null;
+      clientMeta.workplaceAddr=staffRow.workplace_address||c.address||'';
+    }
+  }
+  renderTimesheet(recMap,ym,lastDay,staffName,ymLabel,'admin-timesheet-area',true,staffId,clientMeta);
 }
 async function loadTimesheetStaff(){
   if(!supabaseClient||!myStaffData)return;
@@ -5481,7 +5504,7 @@ async function loadTimesheetStaff(){
   var ymLabel=ym.replace('-','年')+'月';
   renderTimesheet(recMap,ym,lastDay,myStaffData.name,ymLabel,'staff-timesheet-area',false);
 }
-function renderTimesheet(recMap,ym,lastDay,staffName,ymLabel,areaId,isAdmin){
+function renderTimesheet(recMap,ym,lastDay,staffName,ymLabel,areaId,isAdmin,staffId,clientMeta){
   var area=document.getElementById(areaId);
   if(!area)return;
   var weekDays=['日','月','火','水','木','金','土'];
@@ -5516,7 +5539,7 @@ function renderTimesheet(recMap,ym,lastDay,staffName,ymLabel,areaId,isAdmin){
   html+='<div style="overflow-x:auto"><table style="width:100%;border-collapse:collapse;font-size:13px"><thead><tr style="background:#4a5568;color:#fff"><th style="padding:9px 8px;text-align:center;width:52px">日付</th><th style="padding:9px 8px;text-align:center">始業</th><th style="padding:9px 8px;text-align:center">終業</th><th style="padding:9px 8px;text-align:center">休憩</th><th style="padding:9px 8px;text-align:center">実労働</th><th style="padding:9px 8px;text-align:left;padding-left:12px">備考</th><th style="padding:9px 8px;text-align:center">状況</th></tr></thead><tbody>'+rows+'</tbody></table></div>';
   html+='<div style="margin-top:10px;padding:8px 14px;background:#f5f4f0;border-radius:8px;font-size:12px;color:#666;text-align:right" id="'+printId+'-summary">合計：'+workDays+'日勤務　実労働時間合計 '+totalStr+'</div></div>';
   area.innerHTML=html;
-  window._tsData={recMap:recMap,ym:ym,lastDay:lastDay,staffName:staffName,ymLabel:ymLabel};
+  window._tsData={recMap:recMap,ym:ym,lastDay:lastDay,staffName:staffName,ymLabel:ymLabel,staffId:staffId,clientMeta:clientMeta};
 }
 async function approveKintaiFromTs(id){
   if(!supabaseClient)return;
@@ -5564,6 +5587,7 @@ function printTimesheet(){
   var d=window._tsData;
   if(!d){alert('先にタイムシートを表示してください');return;}
   var recMap=d.recMap;var ym=d.ym;var lastDay=d.lastDay;var staffName=d.staffName;var ymLabel=d.ymLabel;
+  var cm=d.clientMeta||{clientDisplayName:'（派遣先未登録）',contactName:'ご担当者',workplaceAddr:''};
   var weekDays=['日','月','火','水','木','金','土'];
   var totalMinutes=0;var workDays=0;var rowsHtml='';
   for(var day=1;day<=lastDay;day++){
@@ -5632,9 +5656,9 @@ function printTimesheet(){
     +'<div class="info-block">'
     +'<div class="info-row"><span class="info-label">派遣元</span><span>フレックスビジネスサービス株式会社</span></div>'
     +'<div class="info-row"><span class="info-label">スタッフ名</span><span>'+staffName+'</span></div>'
-    +'<div class="info-row"><span class="info-label">派遣先</span><span>株式会社FCCテクノ</span></div>'
-    +'<div class="info-row"><span class="info-label">勤務地</span><span>福岡市中央区六本松2-3-6 7F</span></div>'
-    +'<div class="info-row"><span class="info-label">指揮命令者</span><span>金子 順一</span></div>'
+    +'<div class="info-row"><span class="info-label">派遣先</span><span>'+cm.clientDisplayName+'</span></div>'
+    +'<div class="info-row"><span class="info-label">勤務地</span><span>'+cm.workplaceAddr+'</span></div>'
+    +'<div class="info-row"><span class="info-label">指揮命令者</span><span>'+cm.contactName+'</span></div>'
     +'</div>'
     +'<div class="ins-block">'
     +'<div style="font-weight:700;margin-bottom:2px">【保険加入】</div>'
@@ -5674,7 +5698,12 @@ function printTimesheet(){
   var d=window._tsData;
   if(!d){alert('先にタイムシートを表示してください');return;}
   var staffName=d.staffName;var ymLabel=d.ymLabel;var recMap=d.recMap;var ym=d.ym;var lastDay=d.lastDay;
-  if(!confirm(staffName+'さんの'+ymLabel+'のタイムシートをPDF添付で派遣先に送信しますか？'))return;
+  var cm=d.clientMeta||{clientDisplayName:'（派遣先未登録）',contactName:'ご担当者',contactEmail:null,workplaceAddr:''};
+  if(!cm.contactEmail){
+    alert('この方の派遣先の担当者メールアドレスが、①クライアントマスターに登録されていません。\n先にクライアントマスターへ登録してから送信してください。');
+    return;
+  }
+  if(!confirm(staffName+'さんの'+ymLabel+'のタイムシートを、'+cm.clientDisplayName+'（'+cm.contactEmail+'）宛にPDF添付で送信しますか？'))return;
   var weekDays=['日','月','火','水','木','金','土'];
   var totalMinutes=0;var workDays=0;var rowsHtml='';
   for(var day=1;day<=lastDay;day++){
@@ -5729,9 +5758,9 @@ function printTimesheet(){
     +'<div class="info-block">'
     +'<div class="info-row"><span class="info-label">派遣元</span><span>フレックスビジネスサービス株式会社</span></div>'
     +'<div class="info-row"><span class="info-label">スタッフ名</span><span>'+staffName+'</span></div>'
-    +'<div class="info-row"><span class="info-label">派遣先</span><span>株式会社FCCテクノ</span></div>'
-    +'<div class="info-row"><span class="info-label">勤務地</span><span>福岡市中央区六本松2-3-6 7F</span></div>'
-    +'<div class="info-row"><span class="info-label">指揮命令者</span><span>金子 順一</span></div>'
+    +'<div class="info-row"><span class="info-label">派遣先</span><span>'+cm.clientDisplayName+'</span></div>'
+    +'<div class="info-row"><span class="info-label">勤務地</span><span>'+cm.workplaceAddr+'</span></div>'
+    +'<div class="info-row"><span class="info-label">指揮命令者</span><span>'+cm.contactName+'</span></div>'
     +'</div>'
     +'<div class="ins-block">'
     +'<div style="font-weight:700;margin-bottom:2px">【保険加入】</div>'
@@ -5761,7 +5790,7 @@ function printTimesheet(){
   var binary='';uint8.forEach(function(b){binary+=String.fromCharCode(b);});
   var pdfBase64=btoa(binary);
   var emailBody='<div style="font-family:sans-serif;max-width:600px;margin:0 auto;padding:20px">'
-    +'<p>金子様</p>'
+    +'<p>'+cm.contactName+'様</p>'
     +'<p>お世話になっております。フレックスビジネスサービス株式会社です。</p>'
     +'<p>'+ymLabel+'の'+staffName+'さんの勤怠タイムシートを添付にてお送りします。<br>ご確認をお願いいたします。</p>'
     +'<p style="margin-top:16px;color:#888;font-size:12px">このメールはシステムから自動送信されています。</p>'
@@ -5774,7 +5803,7 @@ function printTimesheet(){
       method:'POST',
       headers:{'Authorization':'Bearer '+accessToken,'Content-Type':'application/json','apikey':SUPABASE_KEY},
       body:JSON.stringify({
-        to:'ibp-support-west@i-bp.co.jp',
+        to:cm.contactEmail,
         subject:'【タイムシート】'+staffName+'さん　'+ymLabel,
         html:emailBody,
         pdfBase64:pdfBase64,
