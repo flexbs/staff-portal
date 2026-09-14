@@ -5289,7 +5289,7 @@ function buildFilledResignDocHtml(docType, ctx){
       +'<p style="margin-left:20px">退職希望日　　<span class="blank">'+resignDateStr+'</span></p>'
       +'<p style="margin-top:20px">以上</p>'
       +'<div class="right">'+signDateStr+'</div>'
-      +'<div class="sign-block">氏　名　<span class="blank" style="min-width:200px">'+name+'</span>　印</div>';
+      +'<div class="sign-block">氏　名　<span class="blank" style="min-width:200px">'+name+'</span></div>';
   } else if(docType==='resign_manryo'){
     html+='<div class="doc-title">退　職　願</div>'
       +'<div class="to">フレックスビジネスサービス株式会社　御中</div>'
@@ -5299,7 +5299,7 @@ function buildFilledResignDocHtml(docType, ctx){
       +'<p style="margin-left:20px">契約終了日　　<span class="blank">'+resignDateStr+'</span></p>'
       +'<p style="margin-top:20px">以上</p>'
       +'<div class="right">'+signDateStr+'</div>'
-      +'<div class="sign-block">氏　名　<span class="blank" style="min-width:200px">'+name+'</span>　印</div>';
+      +'<div class="sign-block">氏　名　<span class="blank" style="min-width:200px">'+name+'</span></div>';
   } else if(docType==='notice'){
     var noticeDate=fmtDateJp(ctx.noticeDate||new Date());
     html+='<div style="text-decoration:underline;font-weight:700;font-size:16px;margin-bottom:20px">雇用契約終了通知書</div>'
@@ -5315,7 +5315,7 @@ function buildFilledResignDocHtml(docType, ctx){
       +'<div class="to">フレックスビジネスサービス株式会社　御中</div>'
       +'<p>私は、貴社から雇用契約を更新しないとの通知を受けました。</p>'
       +'<div class="right">'+signDateStr+'</div>'
-      +'<div class="sign-block"><span class="blank" style="min-width:200px">'+name+'</span>　印</div>';
+      +'<div class="sign-block"><span class="blank" style="min-width:200px">'+name+'</span></div>';
   } else if(docType==='pledge'){
     var items='';
     var circled=['①','②','③','④','⑤','⑥','⑦','⑧','⑨'];
@@ -5325,7 +5325,7 @@ function buildFilledResignDocHtml(docType, ctx){
       +'<p>私は、<span class="blank">'+resignDateStr+'</span>をもって退職するにあたり、下記事項を理解し遵守することとし、本誓約書を提出いたします。</p>'
       +items
       +'<div class="right">'+signDateStr+'</div>'
-      +'<div class="sign-block">派遣労働者氏名　<span class="blank" style="min-width:200px">'+name+'</span>　印<br><br>派遣先会社名　　<span class="blank" style="min-width:200px">'+workplace+'</span></div>';
+      +'<div class="sign-block">派遣労働者氏名　<span class="blank" style="min-width:200px">'+name+'</span><br><br>派遣先会社名　　<span class="blank" style="min-width:200px">'+workplace+'</span></div>';
   } else if(docType==='resident_tax'){
     html+='<div style="text-decoration:underline;font-weight:700;margin-bottom:20px">'+name+'　様</div>'
       +'<div class="doc-title" style="font-size:18px;letter-spacing:1px;text-align:left">退職後の住民税のお手続きについて</div>'
