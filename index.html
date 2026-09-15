@@ -1465,16 +1465,11 @@ input:disabled{background:#f5f4f0;color:#aaa;border-color:#e8e6e0}
         <option value="muiki">無期雇用</option>
         <option value="chuto">派遣契約（途中退職）</option>
         <option value="manryo_staff">派遣契約（契約満了・本人からの申し出）</option>
-        <option value="manryo_company">派遣契約（契約満了・会社からの通知）</option>
       </select>
     </div>
     <div id="resign-doc-list" style="display:none;background:#f5f4f0;border-radius:10px;padding:12px 14px;margin-bottom:12px;font-size:13px">
       <div style="font-weight:700;color:#1a1a1a;margin-bottom:8px">送付する書類（3点）</div>
       <div id="resign-doc-names" style="color:#555;line-height:2"></div>
-    </div>
-    <div class="fg" id="resign-admin-note-area" style="display:none">
-      <label class="fl">通知書に記載する理由（任意・空欄可）</label>
-      <input type="text" id="resign-admin-note" placeholder="例：契約期間満了のため">
     </div>
     <div id="resign-file-area" style="display:none">
       <div class="section-divider">PDFファイルをアップロード</div>
@@ -5045,15 +5040,6 @@ var _resignPatterns = {
       {key:'rules', name:'終了に伴う就業規則', needsSign:false, fileUrl:'rules.pdf'},
       {key:'resident_tax', name:'退職後の住民税のお手続きについて', needsSign:false, fileUrl:null}
     ]
-  },
-  manryo_company: {
-    label: '派遣契約（契約満了・会社からの通知）',
-    docs: [
-      {key:'notice', name:'雇用契約終了通知書', needsSign:true, fileUrl:'notice.pdf'},
-      {key:'pledge', name:'退職時の誓約書', needsSign:true, fileUrl:'pledge.pdf'},
-      {key:'rules', name:'終了に伴う就業規則', needsSign:false, fileUrl:'rules.pdf'},
-      {key:'resident_tax', name:'退職後の住民税のお手続きについて', needsSign:false, fileUrl:null}
-    ]
   }
 };
 
@@ -5074,8 +5060,7 @@ function updateResignDocList(){
   var pattern=document.getElementById('resign-pattern').value;
   var listArea=document.getElementById('resign-doc-list');
   var fileArea=document.getElementById('resign-file-area');
-  var noteArea=document.getElementById('resign-admin-note-area');
-  if(!pattern){listArea.style.display='none';fileArea.style.display='none';if(noteArea)noteArea.style.display='none';return;}
+  if(!pattern){listArea.style.display='none';fileArea.style.display='none';return;}
   var p=_resignPatterns[pattern];
   if(!p)return;
   var namesHtml='';
@@ -5086,7 +5071,6 @@ function updateResignDocList(){
   document.getElementById('resign-doc-names').innerHTML=namesHtml;
   listArea.style.display='block';
   fileArea.style.display='none';
-  if(noteArea)noteArea.style.display=(pattern==='manryo_company')?'block':'none';
 }
 
 async function sendResignDocs(){
@@ -5094,7 +5078,6 @@ async function sendResignDocs(){
   var target=document.getElementById('resign-target').value;
   var resignDate=document.getElementById('resign-date').value;
   var pattern=document.getElementById('resign-pattern').value;
-  var adminNote=document.getElementById('resign-admin-note')?document.getElementById('resign-admin-note').value.trim():'';
   var statusEl=document.getElementById('resign-status');
   if(!target){statusEl.style.display='block';statusEl.style.background='#fee2e2';statusEl.style.color='#991b1b';statusEl.textContent='対象スタッフを選択してください';return;}
   if(!resignDate){statusEl.style.display='block';statusEl.style.background='#fee2e2';statusEl.style.color='#991b1b';statusEl.textContent='退職日を入力してください';return;}
@@ -5122,8 +5105,7 @@ async function sendResignDocs(){
       document_type:doc.key,
       title:doc.name,
       file_url:fileUrl,
-      needs_sign:doc.needsSign,
-      admin_note:(doc.key==='notice'&&adminNote)?adminNote:null
+      needs_sign:doc.needsSign
     });
     if(ins.error){errors.push(doc.name+':'+ins.error.message);}
   }
@@ -5346,7 +5328,6 @@ function buildFilledResignDocHtml(docType, ctx){
   } else {
     return null; // 対応する定型フォームがない（resign_muiki等）
   }
-  html+='<div class="watermark">※この書類はスタッフポータルシステムにより自動生成されたものです</div>';
   return html;
 }
 function openFilledDocInNewTab(html, title){
