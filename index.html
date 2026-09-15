@@ -1557,42 +1557,22 @@ window.addEventListener('load',async function(){
   // 承認リンクの処理
   var params=new URLSearchParams(window.location.search);
   var token=params.get('approve');
-  if(token&&supabaseClient){
+  if(token){
     document.body.innerHTML='<div style="font-family:sans-serif;max-width:500px;margin:80px auto;text-align:center;padding:40px;border-radius:16px;box-shadow:0 4px 24px rgba(0,0,0,0.1)"><div style="font-size:48px;margin-bottom:16px">⏳</div><div style="font-size:18px;color:#666">承認処理中...</div></div>';
-    var {data,error}=await supabaseClient.from('kintai_records').select('*').eq('approval_token',token).single();
-    if(error||!data){
-      document.body.innerHTML='<div style="font-family:sans-serif;max-width:500px;margin:80px auto;text-align:center;padding:40px;border-radius:16px;box-shadow:0 4px 24px rgba(0,0,0,0.1)"><div style="font-size:48px;margin-bottom:16px">❌</div><div style="font-size:18px;color:#991b1b">無効なリンクです</div></div>';
-      return;
-    }
-    if(data.approved_at){
-      document.body.innerHTML='<div style="font-family:sans-serif;max-width:500px;margin:80px auto;text-align:center;padding:40px;border-radius:16px;box-shadow:0 4px 24px rgba(0,0,0,0.1)"><div style="font-size:48px;margin-bottom:16px">✅</div><div style="font-size:22px;font-weight:bold;color:#2d6a10;margin-bottom:8px">承認済みです</div><div style="color:#666">この勤怠申請はすでに承認されています。</div></div>';
-      return;
-    }
-    var now=new Date().toISOString();
-    var upd=await supabaseClient.from('kintai_records').update({status:'approved',approved_at:now,approved_by:'派遣先担当者'}).eq('approval_token',token);
-    if(upd.error){
-      document.body.innerHTML='<div style="font-family:sans-serif;max-width:500px;margin:80px auto;text-align:center;padding:40px;border-radius:16px;box-shadow:0 4px 24px rgba(0,0,0,0.1)"><div style="font-size:48px;margin-bottom:16px">❌</div><div style="font-size:18px;color:#991b1b">承認に失敗しました</div></div>';
-      return;
-    }
-    var {data:staffData}=await supabaseClient.from('staffs').select('name').eq('id',data.staff_id).single();
-    var staffName=staffData?staffData.name:'スタッフ';
-    var workH=Math.floor(data.work_minutes/60);var workM=data.work_minutes%60;
-    var workStr=workH+'時間'+(workM>0?workM+'分':'');
-    // 派遣先が承認した旨を管理者（若松久美さん＝0003）へ通知
+    var result;
     try{
-      var noticeBody=staffName+'さんの'+data.work_date+'の勤怠が、派遣先担当者により承認されました。\n始業:'+data.start_time+' 終業:'+data.end_time+' 実労働:'+workStr;
-      await fetch('https://wafarcqisrwzlkectrdo.supabase.co/functions/v1/create-notice',{
-        method:'POST',
-        headers:{'Content-Type':'application/json'},
-        body:JSON.stringify({staff_id:'595fede5-118f-4214-87b5-534e5fee361c',title:'派遣先が勤怠を承認しました',body:noticeBody})
-      });
-      await fetch('https://wafarcqisrwzlkectrdo.supabase.co/functions/v1/line-notify',{
-        method:'POST',
-        headers:{'Content-Type':'application/json'},
-        body:JSON.stringify({staff_id:'595fede5-118f-4214-87b5-534e5fee361c',type:'notice',custom_message:staffName+'さんの'+data.work_date+'の勤怠が、派遣先担当者により承認されました。'})
-      });
-    }catch(notifyErr){console.log('管理者通知エラー:',notifyErr);}
-    document.body.innerHTML='<div style="font-family:sans-serif;max-width:500px;margin:80px auto;text-align:center;padding:40px;border-radius:16px;box-shadow:0 4px 24px rgba(0,0,0,0.1)"><div style="font-size:48px;margin-bottom:16px">✅</div><div style="font-size:22px;font-weight:bold;color:#2d6a10;margin-bottom:16px">承認しました</div><table style="border-collapse:collapse;width:100%;text-align:left;margin-bottom:16px"><tr><td style="padding:8px;border:1px solid #ddd;background:#f9f9f9;width:120px">氏名</td><td style="padding:8px;border:1px solid #ddd">'+staffName+'</td></tr><tr><td style="padding:8px;border:1px solid #ddd;background:#f9f9f9">勤務日</td><td style="padding:8px;border:1px solid #ddd">'+data.work_date+'</td></tr><tr><td style="padding:8px;border:1px solid #ddd;background:#f9f9f9">始業</td><td style="padding:8px;border:1px solid #ddd">'+data.start_time+'</td></tr><tr><td style="padding:8px;border:1px solid #ddd;background:#f9f9f9">終業</td><td style="padding:8px;border:1px solid #ddd">'+data.end_time+'</td></tr><tr><td style="padding:8px;border:1px solid #ddd;background:#f9f9f9">実労働</td><td style="padding:8px;border:1px solid #ddd">'+workStr+'</td></tr></table><div style="color:#888;font-size:13px">このページは閉じていただいて構いません。</div></div>';
+      var res=await fetch('https://wafarcqisrwzlkectrdo.supabase.co/functions/v1/kintai-approve',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({token:token})});
+      result=await res.json();
+    }catch(e){
+      result={error:String(e)};
+    }
+    if(result.error){
+      document.body.innerHTML='<div style="font-family:sans-serif;max-width:500px;margin:80px auto;text-align:center;padding:40px;border-radius:16px;box-shadow:0 4px 24px rgba(0,0,0,0.1)"><div style="font-size:48px;margin-bottom:16px">❌</div><div style="font-size:18px;color:#991b1b">無効なリンクです</div></div>';
+    } else if(result.already_approved){
+      document.body.innerHTML='<div style="font-family:sans-serif;max-width:500px;margin:80px auto;text-align:center;padding:40px;border-radius:16px;box-shadow:0 4px 24px rgba(0,0,0,0.1)"><div style="font-size:48px;margin-bottom:16px">✅</div><div style="font-size:22px;font-weight:bold;color:#2d6a10;margin-bottom:8px">承認済みです</div><div style="color:#666">この勤怠申請はすでに承認されています。</div></div>';
+    } else {
+      document.body.innerHTML='<div style="font-family:sans-serif;max-width:500px;margin:80px auto;text-align:center;padding:40px;border-radius:16px;box-shadow:0 4px 24px rgba(0,0,0,0.1)"><div style="font-size:48px;margin-bottom:16px">✅</div><div style="font-size:22px;font-weight:bold;color:#2d6a10;margin-bottom:16px">承認しました</div><table style="border-collapse:collapse;width:100%;text-align:left;margin-bottom:16px"><tr><td style="padding:8px;border:1px solid #ddd;background:#f9f9f9;width:120px">氏名</td><td style="padding:8px;border:1px solid #ddd">'+result.staff_name+'</td></tr><tr><td style="padding:8px;border:1px solid #ddd;background:#f9f9f9">勤務日</td><td style="padding:8px;border:1px solid #ddd">'+result.work_date+'</td></tr><tr><td style="padding:8px;border:1px solid #ddd;background:#f9f9f9">始業</td><td style="padding:8px;border:1px solid #ddd">'+result.start_time+'</td></tr><tr><td style="padding:8px;border:1px solid #ddd;background:#f9f9f9">終業</td><td style="padding:8px;border:1px solid #ddd">'+result.end_time+'</td></tr><tr><td style="padding:8px;border:1px solid #ddd;background:#f9f9f9">実労働</td><td style="padding:8px;border:1px solid #ddd">'+result.work_str+'</td></tr></table><div style="color:#888;font-size:13px">このページは閉じていただいて構いません。</div></div>';
+    }
   }
 });
 
