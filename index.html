@@ -1468,7 +1468,7 @@ input:disabled{background:#f5f4f0;color:#aaa;border-color:#e8e6e0}
       </select>
     </div>
     <div id="resign-doc-list" style="display:none;background:#f5f4f0;border-radius:10px;padding:12px 14px;margin-bottom:12px;font-size:13px">
-      <div style="font-weight:700;color:#1a1a1a;margin-bottom:8px">送付する書類（3点）</div>
+      <div style="font-weight:700;color:#1a1a1a;margin-bottom:8px" id="resign-doc-count-label">送付する書類</div>
       <div id="resign-doc-names" style="color:#555;line-height:2"></div>
     </div>
     <div id="resign-file-area" style="display:none">
@@ -5020,7 +5020,7 @@ var _resignPatterns = {
       {key:'resign_muiki', name:'退職願（無期雇用）', needsSign:true, fileUrl:'resign_muiki.pdf'},
       {key:'pledge', name:'退職時の誓約書', needsSign:true, fileUrl:'pledge.pdf'},
       {key:'rules', name:'終了に伴う就業規則', needsSign:false, fileUrl:'rules.pdf'},
-      {key:'resident_tax', name:'退職後の住民税のお手続きについて', needsSign:false, fileUrl:null}
+      {key:'resident_tax', name:'退職後の住民税のお手続きについて', needsSign:false, fileUrl:null, optional:true}
     ]
   },
   chuto: {
@@ -5029,7 +5029,7 @@ var _resignPatterns = {
       {key:'resign_chuto', name:'退職願（契約期間途中退職）', needsSign:true, fileUrl:'resign_chuto.pdf'},
       {key:'pledge', name:'退職時の誓約書', needsSign:true, fileUrl:'pledge.pdf'},
       {key:'rules', name:'終了に伴う就業規則', needsSign:false, fileUrl:'rules.pdf'},
-      {key:'resident_tax', name:'退職後の住民税のお手続きについて', needsSign:false, fileUrl:null}
+      {key:'resident_tax', name:'退職後の住民税のお手続きについて', needsSign:false, fileUrl:null, optional:true}
     ]
   },
   manryo_staff: {
@@ -5038,7 +5038,7 @@ var _resignPatterns = {
       {key:'resign_manryo', name:'退職願（契約期間満了退職）', needsSign:true, fileUrl:'resign_manryo.pdf'},
       {key:'pledge', name:'退職時の誓約書', needsSign:true, fileUrl:'pledge.pdf'},
       {key:'rules', name:'終了に伴う就業規則', needsSign:false, fileUrl:'rules.pdf'},
-      {key:'resident_tax', name:'退職後の住民税のお手続きについて', needsSign:false, fileUrl:null}
+      {key:'resident_tax', name:'退職後の住民税のお手続きについて', needsSign:false, fileUrl:null, optional:true}
     ]
   }
 };
@@ -5066,11 +5066,26 @@ function updateResignDocList(){
   var namesHtml='';
   p.docs.forEach(function(d){
     var signStr=d.needsSign?'（スタッフがポータル上で署名）':'（読むだけ）';
-    namesHtml+='📄 '+d.name+' '+signStr+'<br>';
+    if(d.optional){
+      namesHtml+='<label style="display:block;cursor:pointer"><input type="checkbox" class="resign-doc-check" value="'+d.key+'" checked onchange="updateResignDocCount()"> 📄 '+d.name+' '+signStr+'（送らない場合はチェックを外してください）</label>';
+    } else {
+      namesHtml+='<div>📄 '+d.name+' '+signStr+'</div>';
+    }
   });
   document.getElementById('resign-doc-names').innerHTML=namesHtml;
   listArea.style.display='block';
   fileArea.style.display='none';
+  updateResignDocCount();
+}
+
+function updateResignDocCount(){
+  var pattern=document.getElementById('resign-pattern').value;
+  var p=_resignPatterns[pattern];
+  var label=document.getElementById('resign-doc-count-label');
+  if(!p||!label)return;
+  var requiredCount=p.docs.filter(function(d){return !d.optional;}).length;
+  var checkedOptional=document.querySelectorAll('.resign-doc-check:checked').length;
+  label.textContent='送付する書類（'+(requiredCount+checkedOptional)+'点）';
 }
 
 async function sendResignDocs(){
@@ -5093,8 +5108,10 @@ async function sendResignDocs(){
   // ステータスを退職手続き中に更新
   await supabaseClient.from('staffs').update({status:'退職手続き中',resignation_date:resignDate}).eq('id',staffUuid);
   var errors=[];
+  var checkedKeys=Array.prototype.map.call(document.querySelectorAll('.resign-doc-check:checked'),function(el){return el.value;});
   for(var j=0;j<p.docs.length;j++){
     var doc=p.docs[j];
+    if(doc.optional && checkedKeys.indexOf(doc.key)===-1) continue; // チェックが外された任意書類は送らない
     // すべて共通のひな形PDF（resign_muiki.pdf・pledge.pdf・notice.pdf・rules.pdf等）をストレージから参照する。
     // 署名が必要な書類は、スタッフがポータル上でお名前・派遣先を入力して署名する。
     var fileUrl=doc.fileUrl;
