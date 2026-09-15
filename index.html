@@ -1208,6 +1208,7 @@ input:disabled{background:#f5f4f0;color:#aaa;border-color:#e8e6e0}
     <div class="mt" id="resign-detail-title">退職書類詳細</div>
     <div id="resign-detail-body" style="max-height:60vh;overflow-y:auto"></div>
     <div class="ma">
+      <button class="btn btn-sm" data-sid="" id="resign-detail-cancel-btn" onclick="cancelResignBatch()" style="border-color:#991b1b;color:#991b1b">この一式を取消す</button>
       <button class="btn btn-sm" onclick="closeModal('resign-detail')">閉じる</button>
     </div>
   </div>
@@ -5206,7 +5207,29 @@ async function openResignDetail(staffId){
   docs.forEach(function(d){window._resignDocsMap[d.id]=d;});
   document.getElementById('resign-detail-title').textContent=sName+'さんの退職書類';
   document.getElementById('resign-detail-body').innerHTML=html;
+  var cancelBtn=document.getElementById('resign-detail-cancel-btn');
+  if(cancelBtn){cancelBtn.dataset.sid=staffId;cancelBtn.dataset.sname=sName;}
   openModal('resign-detail');
+}
+
+async function cancelResignBatch(){
+  if(!supabaseClient)return;
+  var btn=document.getElementById('resign-detail-cancel-btn');
+  var staffId=btn?btn.dataset.sid:null;
+  var sName=btn?btn.dataset.sname:'';
+  if(!staffId){alert('対象が見つかりません');return;}
+  var {data:docs}=await supabaseClient.from('resignation_documents').select('id,signed_at').eq('staff_id',staffId).is('cancelled_at',null);
+  var signedCount=(docs||[]).filter(function(d){return d.signed_at;}).length;
+  var warnMsg=sName+'さんの退職書類一式（送付済みの全'+((docs||[]).length)+'点）を取消します。よろしいですか？';
+  if(signedCount>0){warnMsg+='\n\n※すでに署名済みの書類が'+signedCount+'件含まれています。取消すとその内容も無効になります。';}
+  if(!confirm(warnMsg))return;
+  var now=new Date().toISOString();
+  var u=await supabaseClient.from('resignation_documents').update({cancelled_at:now}).eq('staff_id',staffId).is('cancelled_at',null);
+  if(u.error){alert('取消に失敗しました：'+u.error.message);return;}
+  await supabaseClient.from('staffs').update({status:'稼働中',resignation_date:null}).eq('id',staffId);
+  alert('取消しました。日付を修正して、退職書類を送付し直してください。\n（ステータスは「稼働中」に戻しています。異なる場合はスタッフ編集画面で修正してください）');
+  closeModal('resign-detail');
+  loadAdminTaisha();
 }
 
 async function loadMyResignDocs(){
