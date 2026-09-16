@@ -195,6 +195,7 @@ input:disabled{background:#f5f4f0;color:#aaa;border-color:#e8e6e0}
     <button class="sub-tab" onclick="showSub('admin','taisha',this);loadAdminTaisha()">退職手続き</button>
     <button id="nav-tab-paid" class="sub-tab" onclick="showSub('admin','paid',this);loadAdminLeaveRequests();loadAdminPaidLeaveList();loadLeaveHistory()">有給管理</button>
     <button id="nav-tab-uploads" class="sub-tab" onclick="showSub('admin','uploads',this);loadAdminUploads()">書類授受</button>
+    <button id="nav-tab-carins" class="sub-tab" onclick="showSub('admin','carins',this);loadAdminCarInsurance()">車通勤</button>
     <button class="sub-tab" onclick="showSub('admin','mynumber',this)">マイナンバー</button>
     <button class="sub-tab" onclick="showSub('admin','notice',this);loadAdminNotices()">お知らせ</button>
     <button class="sub-tab" onclick="showSub('admin','training',this);loadAdminTraining()">研修</button>
@@ -364,22 +365,10 @@ input:disabled{background:#f5f4f0;color:#aaa;border-color:#e8e6e0}
       <button class="sub-tab" onclick="showSub2('sent',this)">派遣元からの送付書類</button>
     </div>
     <div id="uploads-recv" class="sp active">
-      <div class="card" id="car-commuters-card" style="display:none">
-        <div class="ch"><span class="ct">🚗 車通勤スタッフ一覧</span><button class="btn btn-sm" onclick="printCarCommuters()">🖨 印刷</button></div>
-        <div class="tbl-scroll">
-          <table class="tbl" id="car-commuters-table">
-            <thead><tr><th>社員番号</th><th>氏名</th><th>通勤距離(km)</th><th>通勤手当</th><th>自動車保険満期日</th></tr></thead>
-            <tbody id="car-commuters-tbody">
-<tr><td colspan="5" style="text-align:center;color:#888;padding:20px">読み込み中...</td></tr>
-            </tbody>
-          </table>
-        </div>
-      </div>
       <div class="card">
-        <div class="ch"><span class="ct">スタッフから受け取った書類</span><button class="btn btn-sm btn-p" id="carins-admin-upload-btn" style="display:none" onclick="openCarInsuranceAdminModal()">＋ 代理でアップロード</button><button class="btn btn-sm" onclick="printCurrentRecvTab()">🖨 印刷</button></div>
+        <div class="ch"><span class="ct">スタッフから受け取った書類</span><button class="btn btn-sm" onclick="printCurrentRecvTab()">🖨 印刷</button></div>
         <div style="display:flex;gap:4px;margin-bottom:12px;border-bottom:2px solid #e8e5e0">
           <button id="recv-tab-delay" onclick="switchRecvTab('delay')" style="padding:6px 16px;font-size:13px;font-weight:700;border:none;background:#5b21b6;color:#fff;border-radius:6px 6px 0 0;cursor:pointer">遅延証明書</button>
-          <button id="recv-tab-carinsurance" onclick="switchRecvTab('carinsurance')" style="padding:6px 16px;font-size:13px;font-weight:400;border:none;background:#e8e5e0;color:#555;border-radius:6px 6px 0 0;cursor:pointer">自動車保険証券</button>
           <button id="recv-tab-address" onclick="switchRecvTab('address')" style="padding:6px 16px;font-size:13px;font-weight:400;border:none;background:#e8e5e0;color:#555;border-radius:6px 6px 0 0;cursor:pointer">住所・通勤変更届</button>
           <button id="recv-tab-other" onclick="switchRecvTab('other')" style="padding:6px 16px;font-size:13px;font-weight:400;border:none;background:#e8e5e0;color:#555;border-radius:6px 6px 0 0;cursor:pointer">その他書類</button>
         </div>
@@ -388,12 +377,6 @@ input:disabled{background:#f5f4f0;color:#aaa;border-color:#e8e6e0}
             <thead><tr><th>名前</th><th>手続き区分</th><th>提出日</th><th>状態</th><th></th></tr></thead>
             <tbody id="admin-uploads-tbody-delay">
 <tr><td colspan="5" style="text-align:center;color:#888;padding:20px">読み込み中...</td></tr>
-            </tbody>
-          </table>
-          <table class="tbl" id="recv-table-carinsurance" style="display:none">
-            <thead><tr><th>名前</th><th>手続き区分</th><th>提出日</th><th>状態</th><th>保険期限日</th><th></th></tr></thead>
-            <tbody id="admin-uploads-tbody-carinsurance">
-<tr><td colspan="6" style="text-align:center;color:#888;padding:20px">読み込み中...</td></tr>
             </tbody>
           </table>
           <table class="tbl" id="recv-table-address" style="display:none">
@@ -428,6 +411,43 @@ input:disabled{background:#f5f4f0;color:#aaa;border-color:#e8e6e0}
             <tbody id="admin-sent-contract-tbody"><tr><td colspan="6" style="text-align:center;color:#888;padding:20px">読み込み中...</td></tr></tbody>
           </table>
         </div>
+      </div>
+    </div>
+  </div>
+
+  <div id="admin-carins" class="sp">
+    <div class="card" id="car-commuters-card" style="display:none">
+      <div class="ch"><span class="ct">🚗 車通勤スタッフ一覧</span><button class="btn btn-sm" onclick="printCarCommuters()">🖨 印刷</button></div>
+      <div class="tbl-scroll">
+        <table class="tbl" id="car-commuters-table">
+          <thead><tr><th>社員番号</th><th>氏名</th><th>通勤距離(km)</th><th>通勤手当</th><th>自動車保険満期日</th></tr></thead>
+          <tbody id="car-commuters-tbody">
+<tr><td colspan="5" style="text-align:center;color:#888;padding:20px">読み込み中...</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+    <div class="card">
+      <div class="ch"><span class="ct">スタッフから受け取った自動車保険証券</span><button class="btn btn-sm btn-p" onclick="openCarInsuranceAdminModal()">＋ 代理でアップロード</button></div>
+      <div class="tbl-scroll">
+        <table class="tbl">
+          <thead><tr><th>名前</th><th>手続き区分</th><th>提出日</th><th>状態</th><th>保険期限日</th><th></th></tr></thead>
+          <tbody id="admin-uploads-tbody-carinsurance">
+<tr><td colspan="6" style="text-align:center;color:#888;padding:20px">読み込み中...</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+    <div class="card">
+      <div class="ch"><span class="ct">送付済みのお知らせ・使用承諾書</span><button class="btn btn-sm" onclick="checkAndSendCarInsuranceReminders().then(loadAdminCarInsurance)">🔄 更新お知らせを再チェック</button></div>
+      <div style="font-size:12px;color:#666;margin-bottom:10px;line-height:1.6">保険期限の14日前になると「更新のお知らせ」を自動送付します。保険証券アップロード後、保険期限日を保存すると「使用承諾書」も自動で送付されます。</div>
+      <div class="tbl-scroll">
+        <table class="tbl">
+          <thead><tr><th>名前</th><th>書類名</th><th>送付日</th><th></th></tr></thead>
+          <tbody id="admin-carins-letters-tbody">
+<tr><td colspan="4" style="text-align:center;color:#888;padding:20px">読み込み中...</td></tr>
+          </tbody>
+        </table>
       </div>
     </div>
   </div>
@@ -587,6 +607,7 @@ input:disabled{background:#f5f4f0;color:#aaa;border-color:#e8e6e0}
     <button class="sub-tab" onclick="showSub('staff','straining',this);loadStaffTraining()">研修</button>
     <button class="sub-tab" id="staff-tab-resign" onclick="showSub('staff','sresign',this);loadMyResignDocs()" style="display:none">退職書類</button>
     <button class="sub-tab" onclick="showSub('staff','supload',this);loadUploadHistory()">アップロード</button>
+    <button class="sub-tab" onclick="showSub('staff','scar',this);loadMyCarInsurance()">車通勤</button>
     <button class="sub-tab" onclick="showSub('staff','sprofile',this)">プロフィール</button>
     <button class="sub-tab" onclick="showSub('staff','sqa',this)">Q&A</button>
   </div>
@@ -719,19 +740,13 @@ input:disabled{background:#f5f4f0;color:#aaa;border-color:#e8e6e0}
 <div id="staff-supload" class="sp">
     <div class="card">
       <div class="ch"><span class="ct">書類アップロード</span></div>
-      <div style="font-size:13px;color:#666;line-height:1.7;margin-bottom:16px">遅延証明書・自動車保険証券・その他書類をアップロードしてください。<br>担当者が確認いたします。</div>
+      <div style="font-size:13px;color:#666;line-height:1.7;margin-bottom:16px">遅延証明書・その他書類をアップロードしてください。<br>担当者が確認いたします。</div>
       <div style="background:#f7f6f2;border-radius:8px;padding:10px 12px;font-size:12px;color:#666;margin-bottom:16px">📮 アップロードした時点で会社に届いています。給与計算とあわせて確認するため、内容の反映まで少しお時間をいただく場合があります。</div>
       <div class="upload-item">
         <div class="upload-item-head"><span class="upload-item-title">📄 遅延証明書</span><span class="upload-item-opt">任意</span></div>
         <div class="upload-item-desc">電車・バスの遅延証明書をアップロードしてください。</div>
         <input type="file" id="upload-delay" accept="image/*,application/pdf" style="font-size:12px;margin-bottom:8px">
         <button class="btn btn-sm btn-p" onclick="uploadStaffDoc('delay','遅延証明書')">アップロード</button>
-      </div>
-      <div class="upload-item">
-        <div class="upload-item-head"><span class="upload-item-title">🚗 自動車保険証券</span><span class="upload-item-opt">任意</span></div>
-        <div class="upload-item-desc">自動車通勤・運転をされる方は、任意保険証券をアップロードしてください。</div>
-        <input type="file" id="upload-carinsurance" accept="image/*,application/pdf" style="font-size:12px;margin-bottom:8px">
-        <button class="btn btn-sm btn-p" onclick="uploadStaffDoc('carinsurance','自動車保険証券')">アップロード</button>
       </div>
       <div class="upload-item">
         <div class="upload-item-head"><span class="upload-item-title">📄 その他書類</span><span class="upload-item-opt">任意</span></div>
@@ -747,8 +762,27 @@ input:disabled{background:#f5f4f0;color:#aaa;border-color:#e8e6e0}
     </div>
   </div>
 
+  <div id="staff-scar" class="sp">
+    <div class="card">
+      <div class="ch"><span class="ct">🚗 車通勤・自動車保険</span></div>
+      <div id="car-insurance-status" style="font-size:13px;color:#666;line-height:1.7;margin-bottom:16px">読み込み中...</div>
+      <div class="upload-item">
+        <div class="upload-item-head"><span class="upload-item-title">🚗 自動車保険証券</span><span class="upload-item-opt">任意</span></div>
+        <div class="upload-item-desc">自動車通勤・運転をされる方は、任意保険証券をアップロードしてください。保険を切り替えたときは、その都度ご提出をお願いします。</div>
+        <input type="file" id="upload-carinsurance" accept="image/*,application/pdf" style="font-size:12px;margin-bottom:8px">
+        <button class="btn btn-sm btn-p" onclick="uploadStaffDoc('carinsurance','自動車保険証券')">アップロード</button>
+      </div>
+      <div id="car-upload-status" style="display:none;margin-top:12px;padding:10px 14px;border-radius:8px;font-size:13px"></div>
+    </div>
+    <div class="card" style="margin-top:12px">
+      <div class="ch"><span class="ct">会社からのお知らせ・承諾書</span></div>
+      <div id="car-insurance-letters-list"><div style="text-align:center;color:#aaa;padding:20px;font-size:13px">読み込み中...</div></div>
+    </div>
+  </div>
+
   <div id="staff-sprofile" class="sp">
     <div class="card">
+
       <div class="ch"><span class="ct">住所・通勤経路の変更届</span></div>
       <div style="font-size:12px;color:#666;line-height:1.7;margin-bottom:12px">引っ越しをされた場合や、通勤経路が変わった場合は、こちらから届け出てください。</div>
       <button class="btn btn-p" onclick="openAddressChangeModal()" style="width:100%">📮 住所・通勤経路の変更を届け出る</button>
@@ -2240,24 +2274,19 @@ function goToInbox(){
   if(tab)tab.click();
 }
 function switchRecvTab(tab){
-  ['delay','carinsurance','address','other'].forEach(function(t){
+  ['delay','address','other'].forEach(function(t){
     var table=document.getElementById('recv-table-'+t);
     var btn=document.getElementById('recv-tab-'+t);
     var active=t===tab;
     if(table)table.style.display=active?'':'none';
     if(btn){btn.style.background=active?'#5b21b6':'#e8e5e0';btn.style.color=active?'#fff':'#555';btn.style.fontWeight=active?'700':'400';}
   });
-  var uploadBtn=document.getElementById('carins-admin-upload-btn');
-  if(uploadBtn)uploadBtn.style.display=(tab==='carinsurance')?'':'none';
-  var carCard=document.getElementById('car-commuters-card');
-  if(carCard){
-    carCard.style.display=(tab==='carinsurance')?'':'none';
-    if(tab==='carinsurance')loadCarCommuters();
-  }
 }
 /* ===== 車通勤スタッフ一覧 ===== */
 async function loadCarCommuters(){
   if(!supabaseClient)return;
+  var card=document.getElementById('car-commuters-card');
+  if(card)card.style.display='';
   var tbody=document.getElementById('car-commuters-tbody');
   if(!tbody)return;
   tbody.innerHTML='<tr><td colspan="5" style="text-align:center;color:#888;padding:20px">読み込み中...</td></tr>';
@@ -2320,9 +2349,59 @@ async function saveInsuranceExpiry(docId){
   if(!supabaseClient)return;
   var input=document.getElementById('expiry-'+docId);
   if(!input||!input.value){alert('保険期限日を入力してください');return;}
-  var u=await supabaseClient.from('documents').update({insurance_expiry_date:input.value}).eq('id',docId);
+  var u=await supabaseClient.from('documents').update({insurance_expiry_date:input.value,reminder_sent_at:null}).eq('id',docId).select('staff_id').single();
   if(u.error){alert('保存に失敗しました：'+u.error.message);return;}
-  alert('保険期限日を保存しました');
+  // 使用承諾書を自動生成して送付
+  var {data:staffRow}=await supabaseClient.from('staffs').select('id,name').eq('id',u.data.staff_id).maybeSingle();
+  if(staffRow){
+    var nowIso=new Date().toISOString();
+    var consentHtml=buildCarInsuranceLetterHtml('consent',{staffName:staffRow.name,sentDate:new Date()});
+    await supabaseClient.from('documents').insert({
+      staff_id:staffRow.id,type:'notice',title:'使用承諾書',
+      message:consentHtml,created_at:nowIso,confirmed_at:nowIso,confirmed_by:'システム自動送付'
+    });
+  }
+  alert('保険期限日を保存しました。使用承諾書もあわせて送付しました。');
+  if(typeof loadAdminCarInsurance==='function')loadAdminCarInsurance();
+}
+async function checkAndSendCarInsuranceReminders(){
+  if(!supabaseClient)return;
+  var {data:docs}=await supabaseClient.from('documents').select('id,staff_id,insurance_expiry_date,reminder_sent_at,created_at')
+    .eq('title','自動車保険証券').eq('type','upload').is('cancelled_at',null).not('insurance_expiry_date','is',null).is('reminder_sent_at',null)
+    .order('created_at',{ascending:false});
+  if(!docs||docs.length===0)return;
+  // スタッフごとに最新の1件だけを対象にする
+  var latestByStaff={};
+  docs.forEach(function(d){
+    if(!latestByStaff[d.staff_id]||new Date(d.created_at)>new Date(latestByStaff[d.staff_id].created_at)){
+      latestByStaff[d.staff_id]=d;
+    }
+  });
+  var todayMs=new Date(new Date().toDateString()).getTime();
+  var targets=Object.values(latestByStaff).filter(function(d){
+    var expiryMs=new Date(d.insurance_expiry_date+'T00:00:00').getTime();
+    var daysLeft=Math.round((expiryMs-todayMs)/86400000);
+    return daysLeft<=14;
+  });
+  if(targets.length===0)return;
+  var {data:staffs}=await supabaseClient.from('staffs').select('id,name');
+  var staffMap={};if(staffs)staffs.forEach(function(s){staffMap[s.id]=s.name;});
+  for(var i=0;i<targets.length;i++){
+    var d=targets[i];
+    var name=staffMap[d.staff_id];
+    if(!name)continue;
+    var expiry=new Date(d.insurance_expiry_date+'T00:00:00');
+    var threshold=new Date(expiry.getTime()+86400000); // 期限の翌日から
+    var nowIso=new Date().toISOString();
+    var noticeHtml=buildCarInsuranceLetterHtml('renewal_notice',{staffName:name,sentDate:new Date(),thresholdDate:threshold});
+    var ins=await supabaseClient.from('documents').insert({
+      staff_id:d.staff_id,type:'notice',title:'自動車保険更新のお知らせ',
+      message:noticeHtml,created_at:nowIso,confirmed_at:nowIso,confirmed_by:'システム自動送付'
+    });
+    if(!ins.error){
+      await supabaseClient.from('documents').update({reminder_sent_at:nowIso}).eq('id',d.id);
+    }
+  }
 }
 /* ===== 自動車保険証券：管理者による代理アップロード ===== */
 async function populateCarInsuranceAdminStaffOptions(){
@@ -2462,6 +2541,38 @@ async function loadAdminUploads(){
   buildRecvRows(delayDocs,'admin-uploads-tbody-delay',false);
   buildRecvRows(carDocs,'admin-uploads-tbody-carinsurance',true);
   buildRecvRows(otherDocs,'admin-uploads-tbody-other',false);
+}
+async function loadAdminCarInsuranceLetters(){
+  if(!supabaseClient)return;
+  var tbody=document.getElementById('admin-carins-letters-tbody');
+  if(!tbody)return;
+  var {data:docs}=await supabaseClient.from('documents').select('id,staff_id,title,created_at,message')
+    .eq('type','notice').in('title',['使用承諾書','自動車保険更新のお知らせ']).is('cancelled_at',null)
+    .order('created_at',{ascending:false});
+  if(!docs||docs.length===0){
+    tbody.innerHTML='<tr><td colspan="4" style="text-align:center;color:#888;padding:20px">送付済みの書類はまだありません</td></tr>';
+    return;
+  }
+  var {data:staffs}=await supabaseClient.from('staffs').select('id,name');
+  var staffMap={};if(staffs)staffs.forEach(function(s){staffMap[s.id]=s.name;});
+  tbody.innerHTML='';
+  docs.forEach(function(d){
+    var name=staffMap[d.staff_id]||'(不明)';
+    var dateStr=d.created_at?d.created_at.substring(0,10).replace(/-/g,'/'):'';
+    var tr=document.createElement('tr');
+    tr.innerHTML='<td>'+name+'</td><td>'+d.title+'</td><td>'+dateStr+'</td>'
+      +'<td><button class="btn btn-sm" onclick="openFilledDocInNewTab(window._carinsLetterMap[\''+d.id+'\'],\''+d.title+'\')">表示</button></td>';
+    tbody.appendChild(tr);
+  });
+  window._carinsLetterMap={};
+  docs.forEach(function(d){window._carinsLetterMap[d.id]=d.message;});
+}
+async function loadAdminCarInsurance(){
+  if(!supabaseClient)return;
+  await checkAndSendCarInsuranceReminders();
+  await loadCarCommuters();
+  await loadAdminUploads();
+  await loadAdminCarInsuranceLetters();
 }
 async function cancelUploadDoc(docId,staffName){
   if(!supabaseClient)return;
@@ -5452,6 +5563,60 @@ function openFilledDocInNewTab(html, title){
   w.document.write('<html><head><meta charset="utf-8"><title>'+title+'</title>'+printCss+'</head><body>'+printBtnHtml+html+'</body></html>');
   w.document.close();
 }
+var CAR_INSURANCE_CONSENT_ITEMS=[
+  '会社は事故処理について一切の支援ができないことを認識すること',
+  '道路交通法規を遵守し常に安全運転を行うこと（違法路上駐車含む）',
+  '乗り物の整備点検を常に行うこと',
+  '自賠責・任意保険の加入期間が切れていないこと',
+  '保険証券は更新時に必ずその写しを毎年会社に提出のこと',
+  '飲酒・酒気帯び運転を絶対にしないこと',
+  '雪、雨その他天候状態、道路状態によっては運転しないこと（派遣元或いは派遣先が道路状態を不安に思った場合、指示に従い運転しないこと）',
+  '事故の際、相手方に無関係である派遣先企業名を言わないこと',
+  '派遣元を伝える場合においても会社の許可を得ること',
+  'その他、会社が取り決める事項について遵守すること',
+  '会社はいつでも許可を取り消すことができること',
+  '会社が必要とする書類を速やかに提出すること',
+  '派遣先・派遣元２社の承諾がなければ許可はできません'
+];
+function buildCarInsuranceLetterHtml(letterType, ctx){
+  // letterType: 'consent'（使用承諾書） または 'renewal_notice'（更新のお知らせ）
+  // ctx: {staffName, sentDate, thresholdDate}
+  var css='<style>@page{size:A4;margin:20mm 25mm}html,body{font-size:14.5px}body{font-family:"Hiragino Sans","Meiryo",sans-serif;padding:20px 10px 0;color:#1a1a1a;line-height:1.8;max-width:650px;margin:0 auto}.doc-title{text-align:center;font-size:18px;font-weight:900;letter-spacing:3px;margin-bottom:16px}.to{text-decoration:underline;margin-bottom:16px;font-size:15px}</style>';
+  var name=ctx.staffName||'（未入力）';
+  var sentDateStr=fmtDateJp(ctx.sentDate||new Date());
+  var html=css;
+  if(letterType==='consent'){
+    var circled=['①','②','③','④','⑤','⑥','⑦','⑧','⑨','⑩','⑪','⑫','⑬'];
+    var itemsHtml='';
+    CAR_INSURANCE_CONSENT_ITEMS.forEach(function(t,i){itemsHtml+='<p style="margin-top:8px">'+circled[i]+'　'+t+'</p>';});
+    html+='<div style="font-size:11px;color:#888;margin-bottom:10px">対象：車使用を許可した方に送付、写しを会社で保管します</div>'
+      +'<div class="doc-title">（普通自動車）使用承諾書</div>'
+      +'<div class="to">'+name+'　様</div>'
+      +'<p>勤務にあたり審査の結果、上記の方の自家用車使用を許可いたします。</p>'
+      +'<p style="margin-top:8px">下記の内容を守っていただき、就業規則違反（懲戒解雇）とならないようご注意ください。</p>'
+      +'<p style="margin-top:16px">（記）</p>'
+      +itemsHtml
+      +'<p style="margin-top:20px;font-size:13px">注意１）あなたが使用を許可されたからといって、他の方も同じように許可されるとは限りません。周囲の方に車通勤を安易にすすめないようお願いします。</p>'
+      +'<p style="margin-top:8px;font-size:13px">注意２）自賠責保険・任意保険が切れていたり、補償金額が会社規定より低い場合、事故の際にご自身が大変な状況になることがあります。特に保険切れの場合、ご自身で相手方と交渉しなければならないなど、後になって大変さを実感することになります。保険は常にご確認ください。</p>'
+      +'<p style="margin-top:8px;font-size:13px">注意３）事故が発生した際、警察に勤務先を伝える場合は、派遣元である当社をお伝えください。相手方にお伝えする場合も、まずはご自身の連絡先をお伝えください。</p>'
+      +'<p style="margin-top:20px;font-size:13px">平成21年7月1日改訂<br>'+sentDateStr+'送付</p>'
+      +'<p style="margin-top:12px;text-align:right">フレックスビジネスサービス株式会社</p>';
+  } else if(letterType==='renewal_notice'){
+    var thresholdStr=fmtDateJp(ctx.thresholdDate);
+    html+='<div class="to">'+name+'　様</div>'
+      +'<p style="margin-top:16px">いつもお仕事お疲れさまです。</p>'
+      +'<p style="margin-top:12px">車通勤の申請をいただいている件について、任意保険の切り替えの都度、保険証券の写しを会社にご提出いただくことになっております。</p>'
+      +'<p style="margin-top:12px"><strong>'+thresholdStr+'以降</strong>の新しい保険証券がお手元に届きましたら、お手数ですがポータルサイトからアップロードをお願いいたします。</p>'
+      +'<p style="margin-top:12px">引き続きよろしくお願いいたします。</p>'
+      +'<p style="margin-top:28px;text-align:center;font-weight:700">（許可条件）</p>'
+      +'<p style="margin-top:12px;background:#fef3cd;padding:10px 12px;border-radius:6px;font-size:13px">自賠責保険はもちろん加入いただいたうえで、以下の任意保険への加入もお願いしています。<br>※　相手への補償のため必須　　△　ご自身を守るためのもの（どちらか一方でOKです）</p>'
+      +'<table style="width:100%;margin-top:14px;font-size:14px"><tr><td style="padding:4px 0">※　対人補償</td><td>無制限</td></tr><tr><td style="padding:4px 0">※　対物補償</td><td>無制限</td></tr><tr><td style="padding:4px 0">△　人身傷害</td><td>3000万円以上</td></tr><tr><td style="padding:4px 0">△　搭乗者傷害</td><td>1000万円以上</td></tr></table>'
+      +'<p style="margin-top:32px;text-align:right">'+sentDateStr+'<br>フレックスビジネスサービス株式会社<br>担当：田中<br>TEL 092-451-8341</p>';
+  } else {
+    return null;
+  }
+  return html;
+}
 function viewGeneratedResignDoc(docId, staffNameOverride){
   var doc=window._resignDocsMap&&window._resignDocsMap[docId];
   if(!doc){alert('書類情報が見つかりません');return;}
@@ -5581,7 +5746,7 @@ async function submitResignSign(){
 async function uploadStaffDoc(type, label){
   if(!supabaseClient||!myStaffData)return;
   var inputEl=document.getElementById('upload-'+type);
-  var statusEl=document.getElementById('upload-status');
+  var statusEl=document.getElementById(type==='carinsurance'?'car-upload-status':'upload-status');
   if(!inputEl||!inputEl.files||inputEl.files.length===0){
     alert('ファイルを選択してください');return;
   }
@@ -5620,6 +5785,7 @@ async function uploadStaffDoc(type, label){
   );
   inputEl.value='';
   loadUploadHistory();
+  if(type==='carinsurance'&&typeof loadMyCarInsurance==='function')loadMyCarInsurance();
 }
 
 async function loadUploadHistory(){
@@ -5643,6 +5809,47 @@ async function loadUploadHistory(){
       +'</div>';
   });
   listEl.innerHTML=html;
+}
+async function loadMyCarInsurance(){
+  if(!supabaseClient||!myStaffData)return;
+  var statusEl=document.getElementById('car-insurance-status');
+  if(statusEl){
+    var {data:latest}=await supabaseClient.from('documents').select('insurance_expiry_date,created_at')
+      .eq('staff_id',myStaffData.id).eq('title','自動車保険証券').is('cancelled_at',null)
+      .order('created_at',{ascending:false}).limit(1).maybeSingle();
+    if(latest&&latest.insurance_expiry_date){
+      var expiryStr=latest.insurance_expiry_date.replace(/-/g,'/');
+      var daysLeft=Math.round((new Date(latest.insurance_expiry_date+'T00:00:00').getTime()-new Date(new Date().toDateString()).getTime())/86400000);
+      var warn=daysLeft<=14?'　<span style="color:#c0392b;font-weight:700">（あと'+daysLeft+'日）保険の切り替え時期が近づいています</span>':'';
+      statusEl.innerHTML='現在登録されている保険の期限日：<strong>'+expiryStr+'</strong>'+warn;
+    } else if(latest){
+      statusEl.textContent='保険証券は提出済みです（担当者が期限日を確認中です）。';
+    } else {
+      statusEl.textContent='まだ自動車保険証券が登録されていません。自動車通勤・運転をされる方は下記からアップロードしてください。';
+    }
+  }
+  var listEl=document.getElementById('car-insurance-letters-list');
+  if(listEl){
+    var {data:docs}=await supabaseClient.from('documents').select('id,title,created_at,message')
+      .eq('staff_id',myStaffData.id).eq('type','notice').in('title',['使用承諾書','自動車保険更新のお知らせ'])
+      .is('cancelled_at',null).order('created_at',{ascending:false});
+    if(!docs||docs.length===0){
+      listEl.innerHTML='<div style="text-align:center;color:#aaa;padding:20px;font-size:13px">まだ届いている書類はありません</div>';
+    } else {
+      var html='';
+      window._myCarLetterMap={};
+      docs.forEach(function(d){
+        window._myCarLetterMap[d.id]=d.message;
+        var dt=new Date(d.created_at);
+        var dtStr=dt.getFullYear()+'/'+(dt.getMonth()+1)+'/'+dt.getDate();
+        html+='<div style="display:flex;align-items:center;justify-content:space-between;padding:10px 0;border-bottom:1px solid #f0efe9;gap:8px">'
+          +'<div><div style="font-size:13px;font-weight:600">'+d.title+'</div><div style="font-size:11px;color:#888;margin-top:2px">'+dtStr+'</div></div>'
+          +'<button class="btn btn-sm" onclick="openFilledDocInNewTab(window._myCarLetterMap[\''+d.id+'\'],\''+d.title+'\')">表示</button>'
+          +'</div>';
+      });
+      listEl.innerHTML=html;
+    }
+  }
 }
 
 async function changeMyPassword(){
