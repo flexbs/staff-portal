@@ -2364,6 +2364,23 @@ async function saveInsuranceExpiry(docId){
   alert('保険期限日を保存しました。使用承諾書もあわせて送付しました。');
   if(typeof loadAdminCarInsurance==='function')loadAdminCarInsurance();
 }
+async function resendCarInsuranceNotice(docId,staffName){
+  if(!supabaseClient)return;
+  var {data:doc}=await supabaseClient.from('documents').select('staff_id,insurance_expiry_date').eq('id',docId).maybeSingle();
+  if(!doc||!doc.insurance_expiry_date){alert('保険期限日が入力されていません。先に保険期限日を保存してください。');return;}
+  if(!confirm(staffName+'さんに「自動車保険更新のお知らせ」を再送します。よろしいですか？'))return;
+  var expiry=new Date(doc.insurance_expiry_date+'T00:00:00');
+  var threshold=new Date(expiry.getTime()+86400000);
+  var nowIso=new Date().toISOString();
+  var noticeHtml=buildCarInsuranceLetterHtml('renewal_notice',{staffName:staffName,sentDate:new Date(),thresholdDate:threshold});
+  var ins=await supabaseClient.from('documents').insert({
+    staff_id:doc.staff_id,type:'notice',title:'自動車保険更新のお知らせ',
+    message:noticeHtml,created_at:nowIso,confirmed_at:nowIso,confirmed_by:'管理者による再送'
+  });
+  if(ins.error){alert('再送に失敗しました：'+ins.error.message);return;}
+  alert('再送しました。');
+  if(typeof loadAdminCarInsuranceLetters==='function')loadAdminCarInsuranceLetters();
+}
 async function checkAndSendCarInsuranceReminders(){
   if(!supabaseClient)return;
   var {data:docs}=await supabaseClient.from('documents').select('id,staff_id,insurance_expiry_date,reminder_sent_at,created_at')
@@ -2528,13 +2545,17 @@ async function loadAdminUploads(){
       var statusBdg=d.confirmed_at?'<span class="bdg bg">確認済</span>':'<span class="bdg ba">未確認</span>';
       var confirmBtn=d.confirmed_at?'':' <button class="btn btn-sm btn-p" onclick="confirmUploadDoc(\''+d.id+'\')">確認済みにする</button>';
       var expiryTd='';
+      var resendBtn='';
       if(isCar){
         expiryTd=d.confirmed_at
           ?'<td><input type="date" id="expiry-'+d.id+'" value="'+(d.insurance_expiry_date||'')+'" style="font-size:12px;padding:2px 4px;width:130px"> <button class="btn btn-sm btn-p" onclick="saveInsuranceExpiry(\''+d.id+'\')">保存</button></td>'
           :'<td style="color:#888;font-size:12px">確認後に入力</td>';
+        if(d.insurance_expiry_date){
+          resendBtn=' <button class="btn btn-sm" onclick="resendCarInsuranceNotice(\''+d.id+'\',\''+name.replace(/'/g,"\\'")+'\')">📨 お知らせ再送</button>';
+        }
       }
       var tr=document.createElement('tr');
-      tr.innerHTML='<td>'+name+'</td><td>-</td><td style="white-space:nowrap">'+dateStr+'</td><td>'+statusBdg+'</td>'+expiryTd+'<td><a class="btn btn-sm" href="'+d.file_url+'" target="_blank" rel="noopener" style="text-decoration:none;display:inline-block">表示</a>'+confirmBtn+' <button class="btn btn-sm" style="border-color:#991b1b;color:#991b1b" onclick="cancelUploadDoc(\''+d.id+'\',\''+name.replace(/'/g,"\\'")+'\')">取消</button></td>';
+      tr.innerHTML='<td>'+name+'</td><td>-</td><td style="white-space:nowrap">'+dateStr+'</td><td>'+statusBdg+'</td>'+expiryTd+'<td><a class="btn btn-sm" href="'+d.file_url+'" target="_blank" rel="noopener" style="text-decoration:none;display:inline-block">表示</a>'+confirmBtn+resendBtn+' <button class="btn btn-sm" style="border-color:#991b1b;color:#991b1b" onclick="cancelUploadDoc(\''+d.id+'\',\''+name.replace(/'/g,"\\'")+'\')">取消</button></td>';
       tbody.appendChild(tr);
     });
   }
