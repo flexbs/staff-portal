@@ -1221,6 +1221,22 @@ input:disabled{background:#f5f4f0;color:#aaa;border-color:#e8e6e0}
   </div>
 </div>
 
+<div class="mbg" id="modal-health-notice">
+  <div class="modal">
+    <div class="mt">健康診断のご案内を送信する</div>
+    <div style="font-size:12px;color:#888;margin-bottom:12px;line-height:1.6" id="health-notice-desc"></div>
+    <div class="fg"><label class="fl">添付する書類（あれば）</label>
+      <input type="file" id="health-notice-file" accept="application/pdf,image/*">
+      <div style="font-size:11px;color:#888;margin-top:4px">※問診票はクリニックの手書きのため、まだ郵送でのやり取りです。添付は任意です。</div>
+    </div>
+    <div id="health-notice-status" style="display:none;font-size:13px;margin-top:8px;padding:10px;border-radius:8px"></div>
+    <div class="ma">
+      <button class="btn btn-sm" onclick="closeModal('health-notice')">キャンセル</button>
+      <button class="btn btn-sm btn-p" onclick="sendHealthNoticeConfirmed()">送信する →</button>
+    </div>
+  </div>
+</div>
+
 <div class="mbg" id="modal-carinsurance-admin">
   <div class="modal">
     <div class="mt">自動車保険証券を代理でアップロードする</div>
@@ -4593,6 +4609,65 @@ function filterAdminHealth(){
   });
   renderAdminHealth(filtered);
 }
+var _healthNoticeTargetId=null;
+function sendHealthNotice(recordId){
+  var r=_healthRecordsCache.find(function(x){return x.id===recordId;});
+  if(!r){alert('記録が見つかりません');return;}
+  _healthNoticeTargetId=recordId;
+  var name=r.staffs?r.staffs.name:'(不明)';
+  var noticeNo=(r.notice1_date?1:0)+(r.notice2_date?1:0)+(r.notice3_date?1:0)+1;
+  var noticeNoCapped=Math.min(noticeNo,3);
+  document.getElementById('health-notice-desc').textContent=name+'さんに「健康診断受診の確認'+noticeNoCapped+'回目」を送信します。問診票など、一緒に送る書類を選んでください。';
+  document.getElementById('health-notice-file').value='';
+  var statusEl=document.getElementById('health-notice-status');
+  if(statusEl)statusEl.style.display='none';
+  openModal('health-notice');
+}
+async function sendHealthNoticeConfirmed(){
+  if(!supabaseClient)return;
+  var r=_healthRecordsCache.find(function(x){return x.id===_healthNoticeTargetId;});
+  if(!r){alert('記録が見つかりません');return;}
+  var fileInput=document.getElementById('health-notice-file');
+  var statusEl=document.getElementById('health-notice-status');
+  var name=r.staffs?r.staffs.name:'(不明)';
+  var noticeNo=(r.notice1_date?1:0)+(r.notice2_date?1:0)+(r.notice3_date?1:0)+1;
+  var noticeNoCapped=Math.min(noticeNo,3);
+  statusEl.style.display='block';statusEl.style.background='#f5f4f0';statusEl.style.color='#666';
+  statusEl.textContent='送信中...';
+  var filePath=null;
+  if(fileInput.files&&fileInput.files.length>0){
+    var file=fileInput.files[0];
+    filePath='notice_'+Date.now()+'.pdf';
+    var up=await supabaseClient.storage.from('notices').upload(filePath,file);
+    if(up.error){statusEl.style.background='#fee2e2';statusEl.style.color='#991b1b';statusEl.textContent='ファイルのアップロードに失敗しました：'+up.error.message;return;}
+  }
+  var title='健康診断受診の確認'+noticeNoCapped+'回目（'+name+'様）';
+  var body=name+'　様\n\nいつもお仕事お疲れさまです。\n\n健康診断がまだ受診済みとなっていないようです。お忙しいところ恐れ入りますが、お早めのご受診をお願いできますでしょうか。\n\n受診後は、結果のご提出もあわせてよろしくお願いいたします。\n\nご都合が悪い、分からないことがある、などございましたら、いつでもお気軽に担当までご連絡ください。\n\nフレックスビジネスサービス株式会社\n田中';
+  var session=await supabaseClient.auth.getSession();
+  var adminStaffId=null;
+  if(session.data.session){
+    var email=session.data.session.user.email;
+    var empId=email.replace('@flexbs.com','');
+    var sRow=await supabaseClient.from('staffs').select('id').eq('employee_id',empId).single();
+    if(sRow.data)adminStaffId=sRow.data.id;
+  }
+  var noticeIns=await supabaseClient.from('notices').insert({title:title,body:body,file_url:filePath,created_by:adminStaffId}).select().single();
+  if(noticeIns.error){statusEl.style.background='#fee2e2';statusEl.style.color='#991b1b';statusEl.textContent='送信に失敗しました：'+noticeIns.error.message;return;}
+  var recIns=await supabaseClient.from('notice_recipients').insert({notice_id:noticeIns.data.id,staff_id:r.staff_id});
+  if(recIns.error){statusEl.style.background='#fee2e2';statusEl.style.color='#991b1b';statusEl.textContent='送信に失敗しました：'+recIns.error.message;return;}
+  sendLineNotify({staff_id:r.staff_id,type:'notice'});
+  var updatePayload={};
+  var todayStr=new Date().toISOString().slice(0,10);
+  if(noticeNo===1)updatePayload.notice1_date=todayStr;
+  else if(noticeNo===2)updatePayload.notice2_date=todayStr;
+  else if(noticeNo===3)updatePayload.notice3_date=todayStr;
+  if(Object.keys(updatePayload).length>0){
+    await supabaseClient.from('health_checkups').update(updatePayload).eq('id',_healthNoticeTargetId);
+  }
+  statusEl.style.background='#e6f4d7';statusEl.style.color='#2d6a10';
+  statusEl.textContent='送信しました！';
+  setTimeout(function(){closeModal('health-notice');loadAdminHealth();},900);
+}
 function healthStatusLabel(r){
   if(r.checkup_date)return '<span class="bdg bg">受診済</span>';
   if(r.notice3_date)return '<span class="bdg br">未受診（案内3回目）</span>';
@@ -4618,10 +4693,12 @@ function renderAdminHealth(records){
       var dueColor=daysLeft<0?'#991b1b':(daysLeft<=30?'#8a5a00':'#1a1a1a');
       dueStr='<span style="color:'+dueColor+';font-weight:'+(daysLeft<=30?'700':'400')+'">'+r.next_due_date.replace(/-/g,'/')+'</span>';
     }
+    var noticeCount=(r.notice1_date?1:0)+(r.notice2_date?1:0)+(r.notice3_date?1:0);
+    var sendLabel=noticeCount>=3?'📨 追加で案内':'📨 案内を送る（'+(noticeCount+1)+'回目）';
     var tr=document.createElement('tr');
     tr.innerHTML='<td>'+name+'</td><td>'+empId+'</td><td style="white-space:nowrap">'+healthStatusLabel(r)+'</td><td style="white-space:nowrap">'+checkupStr+'</td><td style="white-space:nowrap">'+dueStr+'</td>'
       +'<td style="font-size:12px;color:#666">'+(r.result_note||'')+'</td>'
-      +'<td style="white-space:nowrap"><button class="btn btn-sm" onclick="editHealth(\''+r.id+'\')">編集</button> <button class="btn btn-sm" style="color:#991b1b;border-color:#fca5a5" onclick="deleteHealth(\''+r.id+'\',\''+name+'\')">削除</button></td>';
+      +'<td style="white-space:nowrap">'+(r.checkup_date?'':'<button class="btn btn-sm" onclick="sendHealthNotice(\''+r.id+'\')">'+sendLabel+'</button> ')+'<button class="btn btn-sm" onclick="editHealth(\''+r.id+'\')">編集</button> <button class="btn btn-sm" style="color:#991b1b;border-color:#fca5a5" onclick="deleteHealth(\''+r.id+'\',\''+name+'\')">削除</button></td>';
     tbody.appendChild(tr);
   });
 }
