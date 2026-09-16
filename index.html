@@ -439,13 +439,25 @@ input:disabled{background:#f5f4f0;color:#aaa;border-color:#e8e6e0}
       </div>
     </div>
     <div class="card">
-      <div class="ch"><span class="ct">送付済みのお知らせ・使用承諾書</span><button class="btn btn-sm" onclick="checkAndSendCarInsuranceReminders().then(loadAdminCarInsurance)">🔄 更新お知らせを再チェック</button></div>
-      <div style="font-size:12px;color:#666;margin-bottom:10px;line-height:1.6">保険期限の14日前になると「更新のお知らせ」を自動送付します。保険証券アップロード後、保険期限日を保存すると「使用承諾書」も自動で送付されます。</div>
+      <div class="ch"><span class="ct">自動車保険更新のお知らせ</span><button class="btn btn-sm" onclick="checkAndSendCarInsuranceReminders().then(loadAdminCarInsurance)">🔄 更新お知らせを再チェック</button></div>
+      <div style="font-size:12px;color:#666;margin-bottom:10px;line-height:1.6">保険期限の14日前になると自動送付します。届いていないスタッフには「再送」で個別にもう一度送れます。</div>
       <div class="tbl-scroll">
         <table class="tbl">
-          <thead><tr><th>名前</th><th>書類名</th><th>送付日</th><th></th></tr></thead>
-          <tbody id="admin-carins-letters-tbody">
-<tr><td colspan="4" style="text-align:center;color:#888;padding:20px">読み込み中...</td></tr>
+          <thead><tr><th>名前</th><th>送付日</th><th></th></tr></thead>
+          <tbody id="admin-carins-notices-tbody">
+<tr><td colspan="3" style="text-align:center;color:#888;padding:20px">読み込み中...</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+    <div class="card">
+      <div class="ch"><span class="ct">使用承諾書</span></div>
+      <div style="font-size:12px;color:#666;margin-bottom:10px;line-height:1.6">保険証券アップロード後、保険期限日を保存すると自動で送付されます。</div>
+      <div class="tbl-scroll">
+        <table class="tbl">
+          <thead><tr><th>名前</th><th>送付日</th><th></th></tr></thead>
+          <tbody id="admin-carins-consent-tbody">
+<tr><td colspan="3" style="text-align:center;color:#888;padding:20px">読み込み中...</td></tr>
           </tbody>
         </table>
       </div>
@@ -2364,17 +2376,19 @@ async function saveInsuranceExpiry(docId){
   alert('保険期限日を保存しました。使用承諾書もあわせて送付しました。');
   if(typeof loadAdminCarInsurance==='function')loadAdminCarInsurance();
 }
-async function resendCarInsuranceNotice(docId,staffName){
+async function resendCarInsuranceNotice(staffId,staffName){
   if(!supabaseClient)return;
-  var {data:doc}=await supabaseClient.from('documents').select('staff_id,insurance_expiry_date').eq('id',docId).maybeSingle();
-  if(!doc||!doc.insurance_expiry_date){alert('保険期限日が入力されていません。先に保険期限日を保存してください。');return;}
+  var {data:latestDoc}=await supabaseClient.from('documents').select('insurance_expiry_date')
+    .eq('staff_id',staffId).eq('title','自動車保険証券').is('cancelled_at',null).not('insurance_expiry_date','is',null)
+    .order('created_at',{ascending:false}).limit(1).maybeSingle();
+  if(!latestDoc||!latestDoc.insurance_expiry_date){alert('保険期限日が登録されていません。先に保険証券一覧で保険期限日を保存してください。');return;}
   if(!confirm(staffName+'さんに「自動車保険更新のお知らせ」を再送します。よろしいですか？'))return;
-  var expiry=new Date(doc.insurance_expiry_date+'T00:00:00');
+  var expiry=new Date(latestDoc.insurance_expiry_date+'T00:00:00');
   var threshold=new Date(expiry.getTime()+86400000);
   var nowIso=new Date().toISOString();
   var noticeHtml=buildCarInsuranceLetterHtml('renewal_notice',{staffName:staffName,sentDate:new Date(),thresholdDate:threshold});
   var ins=await supabaseClient.from('documents').insert({
-    staff_id:doc.staff_id,type:'notice',title:'自動車保険更新のお知らせ',
+    staff_id:staffId,type:'notice',title:'自動車保険更新のお知らせ',
     message:noticeHtml,created_at:nowIso,confirmed_at:nowIso,confirmed_by:'管理者による再送'
   });
   if(ins.error){alert('再送に失敗しました：'+ins.error.message);return;}
@@ -2545,17 +2559,13 @@ async function loadAdminUploads(){
       var statusBdg=d.confirmed_at?'<span class="bdg bg">確認済</span>':'<span class="bdg ba">未確認</span>';
       var confirmBtn=d.confirmed_at?'':' <button class="btn btn-sm btn-p" onclick="confirmUploadDoc(\''+d.id+'\')">確認済みにする</button>';
       var expiryTd='';
-      var resendBtn='';
       if(isCar){
         expiryTd=d.confirmed_at
           ?'<td><input type="date" id="expiry-'+d.id+'" value="'+(d.insurance_expiry_date||'')+'" style="font-size:12px;padding:2px 4px;width:130px"> <button class="btn btn-sm btn-p" onclick="saveInsuranceExpiry(\''+d.id+'\')">保存</button></td>'
           :'<td style="color:#888;font-size:12px">確認後に入力</td>';
-        if(d.insurance_expiry_date){
-          resendBtn=' <button class="btn btn-sm" onclick="resendCarInsuranceNotice(\''+d.id+'\',\''+name.replace(/'/g,"\\'")+'\')">📨 お知らせ再送</button>';
-        }
       }
       var tr=document.createElement('tr');
-      tr.innerHTML='<td>'+name+'</td><td>-</td><td style="white-space:nowrap">'+dateStr+'</td><td>'+statusBdg+'</td>'+expiryTd+'<td><a class="btn btn-sm" href="'+d.file_url+'" target="_blank" rel="noopener" style="text-decoration:none;display:inline-block">表示</a>'+confirmBtn+resendBtn+' <button class="btn btn-sm" style="border-color:#991b1b;color:#991b1b" onclick="cancelUploadDoc(\''+d.id+'\',\''+name.replace(/'/g,"\\'")+'\')">取消</button></td>';
+      tr.innerHTML='<td>'+name+'</td><td>-</td><td style="white-space:nowrap">'+dateStr+'</td><td>'+statusBdg+'</td>'+expiryTd+'<td><a class="btn btn-sm" href="'+d.file_url+'" target="_blank" rel="noopener" style="text-decoration:none;display:inline-block">表示</a>'+confirmBtn+' <button class="btn btn-sm" style="border-color:#991b1b;color:#991b1b" onclick="cancelUploadDoc(\''+d.id+'\',\''+name.replace(/'/g,"\\'")+'\')">取消</button></td>';
       tbody.appendChild(tr);
     });
   }
@@ -2565,28 +2575,53 @@ async function loadAdminUploads(){
 }
 async function loadAdminCarInsuranceLetters(){
   if(!supabaseClient)return;
-  var tbody=document.getElementById('admin-carins-letters-tbody');
-  if(!tbody)return;
-  var {data:docs}=await supabaseClient.from('documents').select('id,staff_id,title,created_at,message')
-    .eq('type','notice').in('title',['使用承諾書','自動車保険更新のお知らせ']).is('cancelled_at',null)
-    .order('created_at',{ascending:false});
-  if(!docs||docs.length===0){
-    tbody.innerHTML='<tr><td colspan="4" style="text-align:center;color:#888;padding:20px">送付済みの書類はまだありません</td></tr>';
-    return;
-  }
   var {data:staffs}=await supabaseClient.from('staffs').select('id,name');
   var staffMap={};if(staffs)staffs.forEach(function(s){staffMap[s.id]=s.name;});
-  tbody.innerHTML='';
-  docs.forEach(function(d){
-    var name=staffMap[d.staff_id]||'(不明)';
-    var dateStr=d.created_at?d.created_at.substring(0,10).replace(/-/g,'/'):'';
-    var tr=document.createElement('tr');
-    tr.innerHTML='<td>'+name+'</td><td>'+d.title+'</td><td>'+dateStr+'</td>'
-      +'<td><button class="btn btn-sm" onclick="openFilledDocInNewTab(window._carinsLetterMap[\''+d.id+'\'],\''+d.title+'\')">表示</button></td>';
-    tbody.appendChild(tr);
-  });
+
+  var noticeTbody=document.getElementById('admin-carins-notices-tbody');
+  var consentTbody=document.getElementById('admin-carins-consent-tbody');
   window._carinsLetterMap={};
-  docs.forEach(function(d){window._carinsLetterMap[d.id]=d.message;});
+
+  var {data:noticeDocs}=await supabaseClient.from('documents').select('id,staff_id,created_at,message')
+    .eq('type','notice').eq('title','自動車保険更新のお知らせ').is('cancelled_at',null)
+    .order('created_at',{ascending:false});
+  if(noticeTbody){
+    if(!noticeDocs||noticeDocs.length===0){
+      noticeTbody.innerHTML='<tr><td colspan="3" style="text-align:center;color:#888;padding:20px">送付済みのお知らせはまだありません</td></tr>';
+    } else {
+      noticeTbody.innerHTML='';
+      noticeDocs.forEach(function(d){
+        window._carinsLetterMap[d.id]=d.message;
+        var name=staffMap[d.staff_id]||'(不明)';
+        var dateStr=d.created_at?d.created_at.substring(0,10).replace(/-/g,'/'):'';
+        var tr=document.createElement('tr');
+        tr.innerHTML='<td>'+name+'</td><td>'+dateStr+'</td>'
+          +'<td><button class="btn btn-sm" onclick="openFilledDocInNewTab(window._carinsLetterMap[\''+d.id+'\'],\'自動車保険更新のお知らせ\')">表示</button>'
+          +' <button class="btn btn-sm" onclick="resendCarInsuranceNotice(\''+d.staff_id+'\',\''+name.replace(/'/g,"\\'")+'\')">📨 再送</button></td>';
+        noticeTbody.appendChild(tr);
+      });
+    }
+  }
+
+  var {data:consentDocs}=await supabaseClient.from('documents').select('id,staff_id,created_at,message')
+    .eq('type','notice').eq('title','使用承諾書').is('cancelled_at',null)
+    .order('created_at',{ascending:false});
+  if(consentTbody){
+    if(!consentDocs||consentDocs.length===0){
+      consentTbody.innerHTML='<tr><td colspan="3" style="text-align:center;color:#888;padding:20px">送付済みの使用承諾書はまだありません</td></tr>';
+    } else {
+      consentTbody.innerHTML='';
+      consentDocs.forEach(function(d){
+        window._carinsLetterMap[d.id]=d.message;
+        var name=staffMap[d.staff_id]||'(不明)';
+        var dateStr=d.created_at?d.created_at.substring(0,10).replace(/-/g,'/'):'';
+        var tr=document.createElement('tr');
+        tr.innerHTML='<td>'+name+'</td><td>'+dateStr+'</td>'
+          +'<td><button class="btn btn-sm" onclick="openFilledDocInNewTab(window._carinsLetterMap[\''+d.id+'\'],\'使用承諾書\')">表示</button></td>';
+        consentTbody.appendChild(tr);
+      });
+    }
+  }
 }
 async function loadAdminCarInsurance(){
   if(!supabaseClient)return;
