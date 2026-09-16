@@ -4642,7 +4642,13 @@ async function sendHealthNoticeConfirmed(){
     if(up.error){statusEl.style.background='#fee2e2';statusEl.style.color='#991b1b';statusEl.textContent='ファイルのアップロードに失敗しました：'+up.error.message;return;}
   }
   var title='健康診断受診の確認'+noticeNoCapped+'回目（'+name+'様）';
-  var body=name+'　様\n\nいつもお仕事お疲れさまです。\n\n健康診断がまだ受診済みとなっていないようです。お忙しいところ恐れ入りますが、お早めのご受診をお願いできますでしょうか。\n\n受診後は、結果のご提出もあわせてよろしくお願いいたします。\n\nご都合が悪い、分からないことがある、などございましたら、いつでもお気軽に担当までご連絡ください。\n\nフレックスビジネスサービス株式会社\n田中';
+  var isFollowUp=noticeNo>1;
+  var body;
+  if(isFollowUp){
+    body=name+'　様\n\n以前、健康診断受診のご案内をお送りしておりますが、まだ指定クリニックからの受診結果が届いておりません。受診はお済みでしょうか？\n\n健康診断の受診は法律で定められているものですので、まだの方はお早めに受診いただけますと助かります。平日に受診いただくこともできますので、勤務先とご相談のうえ、ご都合の良い日にお出かけください。\n\nもし行き違いで、すでに受診済みでしたら申し訳ございません。その場合は、お手数ですが受診日を担当までご連絡いただけますでしょうか。\n\nフレックスビジネスサービス株式会社\n健康診断担当：田中\nTEL　092-451-8341';
+  } else {
+    body=name+'　様\n\nいつもお仕事お疲れさまです。\n\n健康診断のご案内です。健康診断の受診は法律で定められているものですので、指定クリニックにてご受診いただけますようお願いいたします。平日に受診いただくこともできますので、勤務先とご相談のうえ、ご都合の良い日にお出かけください。\n\n受診後は、結果のご提出もあわせてよろしくお願いいたします。\n\nフレックスビジネスサービス株式会社\n健康診断担当：田中\nTEL　092-451-8341';
+  }
   var session=await supabaseClient.auth.getSession();
   var adminStaffId=null;
   if(session.data.session){
