@@ -596,6 +596,18 @@ input:disabled{background:#f5f4f0;color:#aaa;border-color:#e8e6e0}
         </table>
       </div>
     </div>
+    <div class="card" style="margin-top:12px">
+      <div class="ch"><span class="ct">送付済みの健康診断お知らせ</span></div>
+      <div style="font-size:12px;color:#666;margin-bottom:10px;line-height:1.6">「案内を送る」で送付したお知らせ（以前に「お知らせ」機能から送ったものも含む）をまとめて確認できます。</div>
+      <div class="tbl-scroll">
+        <table class="tbl">
+          <thead><tr><th>タイトル</th><th>送信先</th><th>確認状況</th><th>送信日</th><th></th></tr></thead>
+          <tbody id="admin-health-notices-tbody">
+            <tr><td colspan="5" style="text-align:center;color:#888;padding:20px">読み込み中...</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
   </div>
 </div>
 
@@ -4584,6 +4596,41 @@ async function populateHealthStaffOptions(){
   var filterSel=document.getElementById('health-filter-staff');
   if(filterSel)filterSel.innerHTML='<option value="all">全員</option>'+opts;
 }
+async function loadAdminHealthNotices(){
+  if(!supabaseClient)return;
+  var tbody=document.getElementById('admin-health-notices-tbody');
+  if(!tbody)return;
+  tbody.innerHTML='<tr><td colspan="5" style="text-align:center;color:#888;padding:20px">読み込み中...</td></tr>';
+  var {data:notices,error}=await supabaseClient.from('notices').select('*').ilike('title','%健康診断%').order('created_at',{ascending:false}).limit(200);
+  if(error){tbody.innerHTML='<tr><td colspan="5" style="text-align:center;color:#991b1b;padding:20px">読み込みに失敗しました</td></tr>';return;}
+  if(!notices||notices.length===0){
+    tbody.innerHTML='<tr><td colspan="5" style="text-align:center;color:#888;padding:40px 20px"><div style="font-size:32px;margin-bottom:8px">📢</div><div>送付済みのお知らせはまだありません</div></td></tr>';
+    return;
+  }
+  var noticeIds=notices.map(function(n){return n.id;});
+  var {data:recipients}=await supabaseClient.from('notice_recipients').select('notice_id,confirmed_at').in('notice_id',noticeIds);
+  var recMap={};
+  if(recipients){
+    recipients.forEach(function(r){
+      if(!recMap[r.notice_id])recMap[r.notice_id]={total:0,confirmed:0};
+      recMap[r.notice_id].total++;
+      if(r.confirmed_at)recMap[r.notice_id].confirmed++;
+    });
+  }
+  tbody.innerHTML='';
+  notices.forEach(function(n){
+    var stats=recMap[n.id]||{total:0,confirmed:0};
+    var confirmStr=stats.confirmed+' / '+stats.total;
+    var dateStr=n.created_at?n.created_at.substring(0,10).replace(/-/g,'/'):'';
+    var titleStr=n.title||'(無題)';
+    var tr=document.createElement('tr');
+    var cancelledStyle=n.cancelled_at?'background:#fee2e2;text-decoration:line-through;color:#aaa':'';
+    tr.style.cssText=cancelledStyle;
+    var cancelBtn=n.cancelled_at?'<span style="font-size:11px;color:#991b1b">取消済</span>':'<button class="btn btn-sm" onclick="cancelNotice(\''+n.id+'\').then(loadAdminHealthNotices)" style="margin-left:4px">取消</button>';
+    tr.innerHTML='<td>'+titleStr+'</td><td style="white-space:nowrap">'+stats.total+'名</td><td style="white-space:nowrap">'+confirmStr+'</td><td style="white-space:nowrap;font-size:11px;color:#888">'+dateStr+'</td><td><button class="btn btn-sm" onclick="openNoticeDetail(\''+n.id+'\')">詳細</button>'+cancelBtn+'</td>';
+    tbody.appendChild(tr);
+  });
+}
 async function loadAdminHealth(){
   if(!supabaseClient)return;
   await populateHealthStaffOptions();
@@ -4594,6 +4641,7 @@ async function loadAdminHealth(){
   if(error){tbody.innerHTML='<tr><td colspan="6" style="text-align:center;color:#991b1b;padding:20px">読み込みに失敗しました</td></tr>';return;}
   _healthRecordsCache=records||[];
   renderAdminHealth(_healthRecordsCache);
+  loadAdminHealthNotices();
 }
 function filterAdminHealth(){
   var staffId=document.getElementById('health-filter-staff').value;
