@@ -2654,19 +2654,43 @@ async function loadAdminCarInsuranceLetters(){
   var {data:consentDocs}=await supabaseClient.from('documents').select('id,staff_id,created_at,message')
     .eq('type','notice').eq('title','使用承諾書').is('cancelled_at',null)
     .order('created_at',{ascending:false});
+  // 過去に「お知らせ」機能で送った承諾書も合流させる
+  var {data:oldConsentNotices}=await supabaseClient.from('notices').select('id,title,created_at,cancelled_at')
+    .ilike('title','%承諾書%').order('created_at',{ascending:false});
+  var oldConsentRows=[];
+  if(oldConsentNotices&&oldConsentNotices.length>0){
+    var oldIds=oldConsentNotices.map(function(n){return n.id;});
+    var {data:oldRecs}=await supabaseClient.from('notice_recipients').select('notice_id,staff_id').in('notice_id',oldIds);
+    var oldRecMap={};
+    if(oldRecs)oldRecs.forEach(function(r){oldRecMap[r.notice_id]=r.staff_id;});
+    oldConsentNotices.forEach(function(n){
+      if(n.cancelled_at)return; // 取消済みは表示しない
+      oldConsentRows.push({
+        isOld:true,id:n.id,staff_id:oldRecMap[n.id],created_at:n.created_at,title:n.title
+      });
+    });
+  }
   if(consentTbody){
-    if(!consentDocs||consentDocs.length===0){
+    var allConsent=(consentDocs||[]).map(function(d){return {isOld:false,id:d.id,staff_id:d.staff_id,created_at:d.created_at,message:d.message};}).concat(oldConsentRows);
+    allConsent.sort(function(a,b){return new Date(b.created_at)-new Date(a.created_at);});
+    if(allConsent.length===0){
       consentTbody.innerHTML='<tr><td colspan="3" style="text-align:center;color:#888;padding:20px">送付済みの使用承諾書はまだありません</td></tr>';
     } else {
       consentTbody.innerHTML='';
-      consentDocs.forEach(function(d){
-        window._carinsLetterMap[d.id]=d.message;
+      allConsent.forEach(function(d){
         var name=staffMap[d.staff_id]||'(不明)';
         var dateStr=d.created_at?d.created_at.substring(0,10).replace(/-/g,'/'):'';
         var tr=document.createElement('tr');
-        tr.innerHTML='<td>'+name+'</td><td>'+dateStr+'</td>'
-          +'<td><button class="btn btn-sm" onclick="openFilledDocInNewTab(window._carinsLetterMap[\''+d.id+'\'],\'使用承諾書\')">表示</button>'
-          +' <button class="btn btn-sm" style="border-color:#991b1b;color:#991b1b" onclick="cancelCarInsuranceLetter(\''+d.id+'\',\''+name.replace(/'/g,"\\'")+'\')">取消</button></td>';
+        var actionBtns;
+        if(d.isOld){
+          actionBtns='<button class="btn btn-sm" onclick="openNoticeDetail(\''+d.id+'\')">詳細</button>'
+            +' <button class="btn btn-sm" style="border-color:#991b1b;color:#991b1b" onclick="cancelNotice(\''+d.id+'\').then(loadAdminCarInsuranceLetters)">取消</button>';
+        } else {
+          window._carinsLetterMap[d.id]=d.message;
+          actionBtns='<button class="btn btn-sm" onclick="openFilledDocInNewTab(window._carinsLetterMap[\''+d.id+'\'],\'使用承諾書\')">表示</button>'
+            +' <button class="btn btn-sm" style="border-color:#991b1b;color:#991b1b" onclick="cancelCarInsuranceLetter(\''+d.id+'\',\''+name.replace(/'/g,"\\'")+'\')">取消</button>';
+        }
+        tr.innerHTML='<td>'+name+'</td><td>'+dateStr+'</td><td>'+actionBtns+'</td>';
         consentTbody.appendChild(tr);
       });
     }
@@ -2678,7 +2702,8 @@ async function loadAdminCarInsuranceOldNotices(){
   if(!tbody)return;
   tbody.innerHTML='<tr><td colspan="5" style="text-align:center;color:#888;padding:20px">読み込み中...</td></tr>';
   var {data:notices,error}=await supabaseClient.from('notices').select('*')
-    .or('title.ilike.%自動車保険%,title.ilike.%車通勤%,title.ilike.%承諾書%')
+    .or('title.ilike.%自動車保険%,title.ilike.%車通勤%')
+    .not('title','ilike','%承諾書%')
     .order('created_at',{ascending:false}).limit(200);
   if(error){tbody.innerHTML='<tr><td colspan="5" style="text-align:center;color:#991b1b;padding:20px">読み込みに失敗しました</td></tr>';return;}
   if(!notices||notices.length===0){
