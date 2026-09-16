@@ -2613,6 +2613,13 @@ async function loadAdminUploads(){
   buildRecvRows(carDocs,'admin-uploads-tbody-carinsurance',true);
   buildRecvRows(otherDocs,'admin-uploads-tbody-other',false);
 }
+async function cancelCarInsuranceLetter(docId,staffName){
+  if(!supabaseClient)return;
+  if(!confirm(staffName+'さんへのこの書類を取消します。よろしいですか？'))return;
+  var {error}=await supabaseClient.from('documents').update({cancelled_at:new Date().toISOString(),cancelled_by:'管理者'}).eq('id',docId);
+  if(error){alert('取消に失敗しました：'+error.message);return;}
+  loadAdminCarInsuranceLetters();
+}
 async function loadAdminCarInsuranceLetters(){
   if(!supabaseClient)return;
   var {data:staffs}=await supabaseClient.from('staffs').select('id,name');
@@ -2637,7 +2644,8 @@ async function loadAdminCarInsuranceLetters(){
         var tr=document.createElement('tr');
         tr.innerHTML='<td>'+name+'</td><td>'+dateStr+'</td>'
           +'<td><button class="btn btn-sm" onclick="openFilledDocInNewTab(window._carinsLetterMap[\''+d.id+'\'],\'自動車保険更新のお知らせ\')">表示</button>'
-          +' <button class="btn btn-sm" onclick="resendCarInsuranceNotice(\''+d.staff_id+'\',\''+name.replace(/'/g,"\\'")+'\')">📨 再送</button></td>';
+          +' <button class="btn btn-sm" onclick="resendCarInsuranceNotice(\''+d.staff_id+'\',\''+name.replace(/'/g,"\\'")+'\')">📨 再送</button>'
+          +' <button class="btn btn-sm" style="border-color:#991b1b;color:#991b1b" onclick="cancelCarInsuranceLetter(\''+d.id+'\',\''+name.replace(/'/g,"\\'")+'\')">取消</button></td>';
         noticeTbody.appendChild(tr);
       });
     }
@@ -2657,7 +2665,8 @@ async function loadAdminCarInsuranceLetters(){
         var dateStr=d.created_at?d.created_at.substring(0,10).replace(/-/g,'/'):'';
         var tr=document.createElement('tr');
         tr.innerHTML='<td>'+name+'</td><td>'+dateStr+'</td>'
-          +'<td><button class="btn btn-sm" onclick="openFilledDocInNewTab(window._carinsLetterMap[\''+d.id+'\'],\'使用承諾書\')">表示</button></td>';
+          +'<td><button class="btn btn-sm" onclick="openFilledDocInNewTab(window._carinsLetterMap[\''+d.id+'\'],\'使用承諾書\')">表示</button>'
+          +' <button class="btn btn-sm" style="border-color:#991b1b;color:#991b1b" onclick="cancelCarInsuranceLetter(\''+d.id+'\',\''+name.replace(/'/g,"\\'")+'\')">取消</button></td>';
         consentTbody.appendChild(tr);
       });
     }
