@@ -503,7 +503,7 @@ input:disabled{background:#f5f4f0;color:#aaa;border-color:#e8e6e0}
 
   <div id="admin-settings" class="sp">
     <div class="card">
-      <div class="ch"><span class="ct">スタッフ追加</span><button class="btn btn-sm btn-g" onclick="populateClientDropdowns();openModal('add-staff')">＋ スタッフを追加する</button></div>
+      <div class="ch"><span class="ct">スタッフ追加</span><button class="btn btn-sm btn-g" onclick="populateClientDropdowns();populateClassificationCodeDropdown('add-classification-code');openModal('add-staff')">＋ スタッフを追加する</button></div>
       <div style="font-size:13px;color:#888;padding:4px 0">新しいスタッフのアカウントとプロフィールを作成します。</div>
     </div>
     <div class="card">
@@ -1364,6 +1364,9 @@ input:disabled{background:#f5f4f0;color:#aaa;border-color:#e8e6e0}
     <div class="g2">
       <div class="fg"><label class="fl">雇用形態</label><select id="add-employment-type"><option value="">選択してください</option><option value="無期雇用">無期雇用</option><option value="長期">長期</option><option value="単発">単発</option><option value="60歳以上">60歳以上</option><option value="請負">請負</option></select></div>
       <div class="fg"><label class="fl">支払時給（円）</label><input type="number" id="add-hourly-wage" placeholder="例：1230"></div>
+      <div class="fg"><label class="fl">業務分類コード</label><select id="add-classification-code"><option value="">未設定</option></select></div>
+      <div class="fg"><label class="fl">請求単価（円）</label><input type="number" id="add-billing-rate" placeholder="例：1850"></div>
+      <div class="fg"><label class="fl">賃金決定方式</label><select id="add-wage-method"><option value="労使協定">労使協定</option><option value="均等均衡">均等均衡</option></select></div>
     </div>
     <div class="fg"><label class="fl">派遣先</label><select id="add-workplace-client"><option value="">選択してください</option></select></div>
     <div class="fg"><label class="fl">派遣先住所</label><input type="text" id="add-workplace-address" placeholder="例：福岡市中央区六本松2-3-6 7F"></div>
@@ -3470,9 +3473,10 @@ async function populateClientDropdowns(){
     if(el)el.innerHTML=opts;
   });
 }
-async function populateClassificationCodeDropdown(){
+async function populateClassificationCodeDropdown(targetId){
   if(!supabaseClient)return;
-  var el=document.getElementById('modal-classification-code');
+  targetId=targetId||'modal-classification-code';
+  var el=document.getElementById(targetId);
   if(!el)return;
   if(el.options.length>1)return; // 一度読み込んだら再取得しない
   var {data:codes}=await supabaseClient.from('job_classification_codes').select('code,name').order('code');
@@ -4867,6 +4871,10 @@ async function confirmMyNotice(recipientId){
   var employmentType=document.getElementById('add-employment-type').value||null;
   var hourlyWageVal=document.getElementById('add-hourly-wage').value;
   var hourlyWage=hourlyWageVal!==''?parseInt(hourlyWageVal):null;
+  var classificationCode=document.getElementById('add-classification-code')?(document.getElementById('add-classification-code').value||null):null;
+  var billingRateVal=document.getElementById('add-billing-rate')?document.getElementById('add-billing-rate').value:'';
+  var billingRate=billingRateVal!==''?parseInt(billingRateVal):null;
+  var wageMethod=document.getElementById('add-wage-method')?(document.getElementById('add-wage-method').value||null):null;
   var workplaceClientSel=document.getElementById('add-workplace-client');
   var workplaceClientId=workplaceClientSel&&workplaceClientSel.value?workplaceClientSel.value:null;
   var workplace=workplaceClientSel&&workplaceClientSel.selectedIndex>0?workplaceClientSel.options[workplaceClientSel.selectedIndex].text:null;
@@ -4921,6 +4929,8 @@ async function confirmMyNotice(recipientId){
     status:status,
     employment_type:employmentType,
     hourly_wage:hourlyWage,
+    classification_code:classificationCode,
+    wage_determination_method:wageMethod,
     workplace:workplace||null,
     client_id:workplaceClientId,
     workplace_address:workplaceAddress,
@@ -4935,6 +4945,18 @@ async function confirmMyNotice(recipientId){
   if(ins.error){
     statusEl.style.background='#fee2e2';statusEl.style.color='#991b1b';
     statusEl.textContent='登録に失敗しました：'+ins.error.message;return;
+  }
+  if(billingRate!==null){
+    var insRate=await supabaseClient.from('billing_rates').insert({
+      staff_id:ins.data.id,
+      client_id:workplaceClientId,
+      billing_rate:billingRate,
+      effective_date:(dispatchStart||new Date().toISOString().slice(0,10))
+    });
+    if(insRate.error){
+      statusEl.style.background='#fee2e2';statusEl.style.color='#991b1b';
+      statusEl.textContent='スタッフは登録できましたが、請求単価の登録に失敗しました：'+insRate.error.message;
+    }
   }
   var addrWarning='';
   var newStaffAddress=document.getElementById('as-address').value.trim();
@@ -4981,7 +5003,7 @@ async function confirmMyNotice(recipientId){
   }
   statusEl.style.background='#e6f4d7';statusEl.style.color='#2d6a10';
   statusEl.textContent='追加しました！メール：'+email+'　初期パスワード：'+password+addrWarning;
-  ['add-employee-id','add-name','add-name-kana','add-employment-type','add-hourly-wage','add-workplace-client','add-workplace-address','add-dispatch-start','add-contract-start','add-contract-end','add-restriction','add-pension','add-insurance','add-note',
+  ['add-employee-id','add-name','add-name-kana','add-employment-type','add-hourly-wage','add-classification-code','add-billing-rate','add-wage-method','add-workplace-client','add-workplace-address','add-dispatch-start','add-contract-start','add-contract-end','add-restriction','add-pension','add-insurance','add-note',
    'as-postal','as-address','as-route1-company','as-route1-section','as-route1-fare','as-route1-pass','as-route2-company','as-route2-section','as-route2-fare','as-route2-pass','as-distance','as-allowance-input','as-allowance-basis-input'].forEach(function(id){
     var el=document.getElementById(id);if(el)el.value='';
   });
