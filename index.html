@@ -462,6 +462,18 @@ input:disabled{background:#f5f4f0;color:#aaa;border-color:#e8e6e0}
         </table>
       </div>
     </div>
+    <div class="card">
+      <div class="ch"><span class="ct">過去のお知らせ（「お知らせ」機能で送ったもの）</span></div>
+      <div style="font-size:12px;color:#666;margin-bottom:10px;line-height:1.6">以前は「お知らせ」機能から個別に送っていた分です。詳細確認・取消もここでできます。</div>
+      <div class="tbl-scroll">
+        <table class="tbl">
+          <thead><tr><th>タイトル</th><th>送信先</th><th>確認状況</th><th>送信日</th><th></th></tr></thead>
+          <tbody id="admin-carins-oldnotices-tbody">
+<tr><td colspan="5" style="text-align:center;color:#888;padding:20px">読み込み中...</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
   </div>
 
   <div id="admin-mynumber" class="sp">
@@ -2651,12 +2663,50 @@ async function loadAdminCarInsuranceLetters(){
     }
   }
 }
+async function loadAdminCarInsuranceOldNotices(){
+  if(!supabaseClient)return;
+  var tbody=document.getElementById('admin-carins-oldnotices-tbody');
+  if(!tbody)return;
+  tbody.innerHTML='<tr><td colspan="5" style="text-align:center;color:#888;padding:20px">読み込み中...</td></tr>';
+  var {data:notices,error}=await supabaseClient.from('notices').select('*')
+    .or('title.ilike.%自動車保険%,title.ilike.%車通勤%,title.ilike.%承諾書%')
+    .order('created_at',{ascending:false}).limit(200);
+  if(error){tbody.innerHTML='<tr><td colspan="5" style="text-align:center;color:#991b1b;padding:20px">読み込みに失敗しました</td></tr>';return;}
+  if(!notices||notices.length===0){
+    tbody.innerHTML='<tr><td colspan="5" style="text-align:center;color:#888;padding:40px 20px"><div style="font-size:32px;margin-bottom:8px">📢</div><div>過去のお知らせはありません</div></td></tr>';
+    return;
+  }
+  var noticeIds=notices.map(function(n){return n.id;});
+  var {data:recipients}=await supabaseClient.from('notice_recipients').select('notice_id,confirmed_at').in('notice_id',noticeIds);
+  var recMap={};
+  if(recipients){
+    recipients.forEach(function(r){
+      if(!recMap[r.notice_id])recMap[r.notice_id]={total:0,confirmed:0};
+      recMap[r.notice_id].total++;
+      if(r.confirmed_at)recMap[r.notice_id].confirmed++;
+    });
+  }
+  tbody.innerHTML='';
+  notices.forEach(function(n){
+    var stats=recMap[n.id]||{total:0,confirmed:0};
+    var confirmStr=stats.confirmed+' / '+stats.total;
+    var dateStr=n.created_at?n.created_at.substring(0,10).replace(/-/g,'/'):'';
+    var titleStr=n.title||'(無題)';
+    var tr=document.createElement('tr');
+    var cancelledStyle=n.cancelled_at?'background:#fee2e2;text-decoration:line-through;color:#aaa':'';
+    tr.style.cssText=cancelledStyle;
+    var cancelBtn=n.cancelled_at?'<span style="font-size:11px;color:#991b1b">取消済</span>':'<button class="btn btn-sm" onclick="cancelNotice(\''+n.id+'\').then(loadAdminCarInsuranceOldNotices)" style="margin-left:4px">取消</button>';
+    tr.innerHTML='<td>'+titleStr+'</td><td style="white-space:nowrap">'+stats.total+'名</td><td style="white-space:nowrap">'+confirmStr+'</td><td style="white-space:nowrap;font-size:11px;color:#888">'+dateStr+'</td><td><button class="btn btn-sm" onclick="openNoticeDetail(\''+n.id+'\')">詳細</button>'+cancelBtn+'</td>';
+    tbody.appendChild(tr);
+  });
+}
 async function loadAdminCarInsurance(){
   if(!supabaseClient)return;
   await checkAndSendCarInsuranceReminders();
   await loadCarCommuters();
   await loadAdminUploads();
   await loadAdminCarInsuranceLetters();
+  await loadAdminCarInsuranceOldNotices();
 }
 async function cancelUploadDoc(docId,staffName){
   if(!supabaseClient)return;
@@ -4369,8 +4419,15 @@ async function sendNotice(){
   var tbody=document.getElementById('admin-notices-tbody');
   if(!tbody)return;
   tbody.innerHTML='<tr><td colspan="5" style="text-align:center;color:#888;padding:20px">読み込み中...</td></tr>';
-  var {data:notices,error}=await supabaseClient.from('notices').select('*').order('created_at',{ascending:false}).limit(50);
+  var {data:notices,error}=await supabaseClient.from('notices').select('*').order('created_at',{ascending:false}).limit(150);
   if(error){tbody.innerHTML='<tr><td colspan="5" style="text-align:center;color:#991b1b;padding:20px">読み込みに失敗しました</td></tr>';return;}
+  var EXCLUDE_KEYWORDS=['健康診断','自動車保険','車通勤','承諾書'];
+  if(notices){
+    notices=notices.filter(function(n){
+      var t=n.title||'';
+      return !EXCLUDE_KEYWORDS.some(function(k){return t.indexOf(k)>=0;});
+    }).slice(0,50);
+  }
   if(!notices||notices.length===0){
     tbody.innerHTML='<tr><td colspan="5" style="text-align:center;color:#888;padding:40px 20px"><div style="font-size:40px;margin-bottom:10px">📢</div><div style="font-size:14px">送信済みのお知らせはまだありません</div></td></tr>';
     return;
