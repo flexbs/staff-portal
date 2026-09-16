@@ -958,6 +958,10 @@ input:disabled{background:#f5f4f0;color:#aaa;border-color:#e8e6e0}
     <div class="profile-row"><span class="profile-label">終了日</span><input type="date" id="modal-resignation-date" style="width:auto;font-size:12px;padding:4px 8px"></div>
     <div class="profile-row"><span class="profile-label">派遣先</span><select id="modal-workplace-client" style="width:auto;font-size:12px;padding:4px 8px;flex:1"><option value="">選択してください</option></select></div>
     <div class="profile-row"><span class="profile-label">派遣先住所</span><input type="text" id="modal-workplace-address" placeholder="例：福岡市中央区六本松2-3-6 7F" style="width:auto;font-size:12px;padding:4px 8px;text-align:right;flex:1"></div>
+    <div class="profile-row"><span class="profile-label">業務分類コード</span><select id="modal-classification-code" style="width:auto;font-size:12px;padding:4px 8px"><option value="">未設定</option></select></div>
+    <div class="profile-row"><span class="profile-label">請求単価</span><input type="number" id="modal-billing-rate" placeholder="未設定" style="width:80px;font-size:12px;padding:4px 8px"> <span style="font-size:12px;color:#888">円</span></div>
+    <div class="profile-row"><span class="profile-label">支払時給</span><input type="number" id="modal-hourly-wage" placeholder="未設定" style="width:80px;font-size:12px;padding:4px 8px"> <span style="font-size:12px;color:#888">円</span></div>
+    <div class="profile-row"><span class="profile-label">賃金決定方式</span><select id="modal-wage-method" style="width:auto;font-size:12px;padding:4px 8px"><option value="労使協定">労使協定</option><option value="均等均衡">均等均衡</option></select></div>
     <div class="profile-row"><span class="profile-label">通勤費<br><span style="font-size:10px;color:#aaa;font-weight:400">（住所・通勤変更届で確認済みの最新額）</span></span><span class="profile-val" id="modal-commute-allowance" style="color:#534AB7;font-weight:600">-</span></div>
     <div class="section-divider">住所・通勤情報<span style="font-size:11px;color:#aaa;font-weight:400">（変更すると住所・通勤変更届の履歴として登録されます）</span></div>
     <label style="display:flex;align-items:center;gap:8px;cursor:pointer;padding:9px 12px;background:#fef3cd;border-radius:8px;border:1px solid #f0d878;margin-bottom:12px">
@@ -3466,6 +3470,18 @@ async function populateClientDropdowns(){
     if(el)el.innerHTML=opts;
   });
 }
+async function populateClassificationCodeDropdown(){
+  if(!supabaseClient)return;
+  var el=document.getElementById('modal-classification-code');
+  if(!el)return;
+  if(el.options.length>1)return; // 一度読み込んだら再取得しない
+  var {data:codes}=await supabaseClient.from('job_classification_codes').select('code,name').order('code');
+  if(!codes)return;
+  var opts='<option value="">未設定</option>'+codes.map(function(c){
+    return '<option value="'+c.code+'">'+c.code+'　'+c.name+'</option>';
+  }).join('');
+  el.innerHTML=opts;
+}
 async function saveStaffProfile(){
   try{
     const empId=document.getElementById('modal-empid').textContent.replace('社員番号：','').replace('社員番号:','').trim();
@@ -3491,11 +3507,31 @@ async function saveStaffProfile(){
     const pensionNumber=document.getElementById('modal-pension').value||null;
     const insuranceNumber=document.getElementById('modal-insurance').value||null;
     const staffNote=document.getElementById('modal-note').value||null;
+    const classificationCode=document.getElementById('modal-classification-code')?(document.getElementById('modal-classification-code').value||null):null;
+    const hourlyWageVal=document.getElementById('modal-hourly-wage')?document.getElementById('modal-hourly-wage').value:'';
+    const hourlyWage=hourlyWageVal!==''?parseInt(hourlyWageVal):null;
+    const wageMethod=document.getElementById('modal-wage-method')?(document.getElementById('modal-wage-method').value||null):null;
+    const billingRateVal=document.getElementById('modal-billing-rate')?document.getElementById('modal-billing-rate').value:'';
+    const billingRate=billingRateVal!==''?parseInt(billingRateVal):null;
     const hourlyLeaveNote=document.getElementById('modal-hourly-leave-note')?(document.getElementById('modal-hourly-leave-note').value||null):null;
     const paidLeaveNote=document.getElementById('modal-paid-leave-note')?(document.getElementById('modal-paid-leave-note').value||null):null;
     if(!window._currentStaffProfileId){alert('保存失敗：対象スタッフの特定に失敗しました。一度モーダルを閉じて、プロフィールを開き直してください。');return;}
-    const{error}=await supabaseClient.from('staffs').update({status:staffStatus,workplace:workplace,client_id:workplaceClientId,workplace_address:workplaceAddress,dispatch_start_date:dispatchStart,restriction_date:restrictionDate,resignation_date:resignationDate,contract_end_date:contractEnd,paid_leave_grant_date:paidLeaveDate,paid_leave_grant_days:paidLeaveDays,paid_leave_exempt:paidLeaveExempt,paid_leave_remaining:paidLeaveRemaining,paid_leave_note:paidLeaveNote,work_minutes_per_day:workMinutesPerDay,pension_number:pensionNumber,insurance_number:insuranceNumber,note:staffNote,hourly_leave_note:hourlyLeaveNote,...(isHourlyEligible?{hourly_leave_remaining:hourlyLeaveRemaining}:{})}).eq('id',window._currentStaffProfileId);
+    const{error}=await supabaseClient.from('staffs').update({status:staffStatus,workplace:workplace,client_id:workplaceClientId,workplace_address:workplaceAddress,dispatch_start_date:dispatchStart,restriction_date:restrictionDate,resignation_date:resignationDate,contract_end_date:contractEnd,paid_leave_grant_date:paidLeaveDate,paid_leave_grant_days:paidLeaveDays,paid_leave_exempt:paidLeaveExempt,paid_leave_remaining:paidLeaveRemaining,paid_leave_note:paidLeaveNote,work_minutes_per_day:workMinutesPerDay,pension_number:pensionNumber,insurance_number:insuranceNumber,note:staffNote,hourly_leave_note:hourlyLeaveNote,classification_code:classificationCode,hourly_wage:hourlyWage,wage_determination_method:wageMethod,...(isHourlyEligible?{hourly_leave_remaining:hourlyLeaveRemaining}:{})}).eq('id',window._currentStaffProfileId);
     if(error){alert('保存失敗：'+error.message);return;}
+    // 請求単価：変更があった場合のみ、過去の単価に終了日を付けて新しい単価を追加登録（履歴を残す）
+    var billingRateWarning='';
+    if(billingRate!==window._currentStaffOriginalBillingRate){
+      var todayStr=new Date().toISOString().slice(0,10);
+      if(window._currentStaffOriginalBillingRate!==null){
+        var closeOld=await supabaseClient.from('billing_rates').update({end_date:todayStr}).eq('staff_id',window._currentStaffProfileId).is('end_date',null);
+        if(closeOld.error){billingRateWarning='（請求単価の履歴更新に失敗しました：'+closeOld.error.message+'）';}
+      }
+      if(billingRate!==null&&!billingRateWarning){
+        var insNewRate=await supabaseClient.from('billing_rates').insert({staff_id:window._currentStaffProfileId,client_id:workplaceClientId,billing_rate:billingRate,effective_date:todayStr});
+        if(insNewRate.error){billingRateWarning='（請求単価の登録に失敗しました：'+insNewRate.error.message+'）';}
+      }
+      window._currentStaffOriginalBillingRate=billingRate;
+    }
     var modAddress=document.getElementById('mod-address')?document.getElementById('mod-address').value.trim():'';
     var addrWarning='';
     var hasConfirmedAddress=!!window._currentStaffHasConfirmedAddress;
@@ -3558,7 +3594,7 @@ async function saveStaffProfile(){
         addrWarning='（住所・通勤情報の登録には失敗しました：'+modAddrIns.error.message+'）';
       }
     }
-    alert('保存しました！'+addrWarning);
+    alert('保存しました！'+addrWarning+billingRateWarning);
     closeModal('staff-profile');
   }catch(e){alert('エラー：'+e.message);}
 }
@@ -3763,8 +3799,18 @@ async function openStaffDetail(empId){
     document.getElementById('modal-empid').textContent='社員番号:'+(data.employee_id||'');
     document.getElementById('modal-avatar').textContent=data.name?data.name.replace(' ','').slice(0,2):'';
     await populateClientDropdowns();
+    await populateClassificationCodeDropdown();
     var wpClientEl=document.getElementById('modal-workplace-client');if(wpClientEl)wpClientEl.value=data.client_id||'';
     var wpAddrEl=document.getElementById('modal-workplace-address');if(wpAddrEl)wpAddrEl.value=data.workplace_address||'';
+    var clsCodeEl=document.getElementById('modal-classification-code');if(clsCodeEl)clsCodeEl.value=data.classification_code||'';
+    var hourlyWageEl=document.getElementById('modal-hourly-wage');if(hourlyWageEl)hourlyWageEl.value=(data.hourly_wage!==null&&data.hourly_wage!==undefined)?data.hourly_wage:'';
+    var wageMethodEl=document.getElementById('modal-wage-method');if(wageMethodEl)wageMethodEl.value=data.wage_determination_method||'労使協定';
+    var billingRateEl=document.getElementById('modal-billing-rate');
+    if(billingRateEl){
+      var {data:activeBr}=await supabaseClient.from('billing_rates').select('billing_rate').eq('staff_id',data.id).is('end_date',null).order('effective_date',{ascending:false}).limit(1).maybeSingle();
+      billingRateEl.value=(activeBr&&activeBr.billing_rate!==null&&activeBr.billing_rate!==undefined)?activeBr.billing_rate:'';
+      window._currentStaffOriginalBillingRate=(activeBr&&activeBr.billing_rate!==null&&activeBr.billing_rate!==undefined)?activeBr.billing_rate:null;
+    }
     var stSel=document.getElementById('modal-status');
     if(stSel)stSel.value=data.status||'稼働中';
     document.getElementById('modal-dispatch-start').value=data.dispatch_start_date||'';
