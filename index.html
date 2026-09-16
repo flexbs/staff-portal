@@ -2455,13 +2455,20 @@ async function loadAdminUploads(){
           :'<td style="color:#888;font-size:12px">確認後に入力</td>';
       }
       var tr=document.createElement('tr');
-      tr.innerHTML='<td>'+name+'</td><td>-</td><td style="white-space:nowrap">'+dateStr+'</td><td>'+statusBdg+'</td>'+expiryTd+'<td><a class="btn btn-sm" href="'+d.file_url+'" target="_blank" rel="noopener" style="text-decoration:none;display:inline-block">表示</a>'+confirmBtn+'</td>';
+      tr.innerHTML='<td>'+name+'</td><td>-</td><td style="white-space:nowrap">'+dateStr+'</td><td>'+statusBdg+'</td>'+expiryTd+'<td><a class="btn btn-sm" href="'+d.file_url+'" target="_blank" rel="noopener" style="text-decoration:none;display:inline-block">表示</a>'+confirmBtn+' <button class="btn btn-sm" style="border-color:#991b1b;color:#991b1b" onclick="cancelUploadDoc(\''+d.id+'\',\''+name.replace(/'/g,"\\'")+'\')">取消</button></td>';
       tbody.appendChild(tr);
     });
   }
   buildRecvRows(delayDocs,'admin-uploads-tbody-delay',false);
   buildRecvRows(carDocs,'admin-uploads-tbody-carinsurance',true);
   buildRecvRows(otherDocs,'admin-uploads-tbody-other',false);
+}
+async function cancelUploadDoc(docId,staffName){
+  if(!supabaseClient)return;
+  if(!confirm(staffName+'さんのこの提出書類を取消します。よろしいですか？（アップロードし直してもらう場合や、誤登録の削除に使えます）'))return;
+  var {error}=await supabaseClient.from('documents').update({cancelled_at:new Date().toISOString()}).eq('id',docId);
+  if(error){alert('取消に失敗しました：'+error.message);return;}
+  loadAdminUploads();
 }
 var _currentAddressDetailId=null;
 async function initSummaryMonthSelect(){
