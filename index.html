@@ -681,10 +681,22 @@ input:disabled{background:#f5f4f0;color:#aaa;border-color:#e8e6e0}
   </div>
 
   <div id="staff-snyusha" class="sp">
+    <div class="card" style="background:linear-gradient(135deg,#5b21b6,#7c3aed);color:#fff">
+      <div style="font-size:16px;font-weight:700;margin-bottom:8px">ご入社ありがとうございます！</div>
+      <div style="font-size:13px;line-height:1.8;opacity:0.95">これから一緒にお仕事できることを、スタッフ一同楽しみにしております。下記の書類のご確認・ご入力をお願いいたします。分からないことがあれば、いつでもお気軽にご連絡ください。どうぞよろしくお願いいたします。</div>
+    </div>
     <div class="card">
       <div class="ch"><span class="ct">入社手続き</span></div>
       <div style="font-size:13px;color:#666;margin-bottom:16px;line-height:1.7">下記の書類をご確認いただき、署名・入力をお願いします。</div>
       <div id="staff-nyusha-list"><div style="text-align:center;color:#aaa;padding:20px;font-size:13px">読み込み中...</div></div>
+    </div>
+    <div class="card" style="background:#fff3cd">
+      <div style="font-size:13px;color:#8a5a00;line-height:1.8">
+        <strong>📎 あわせてご提出をお願いします</strong><br>
+        ・マイナンバー：上の「マイナンバー」タブからご登録ください（マイナンバーカードの写しも添付できます）<br>
+        ・年金番号：下の「年金番号・雇用保険番号の登録」からご入力ください<br>
+        ・雇用保険番号：同上（お持ちでない方は空欄のままで大丈夫です）
+      </div>
     </div>
   </div>
 
@@ -1598,7 +1610,8 @@ input:disabled{background:#f5f4f0;color:#aaa;border-color:#e8e6e0}
       📄 誓約書（署名）<br>
       📄 出勤初日の注意点（読むだけ）<br>
       📄 お給料振込口座の登録（入力）<br>
-      📄 緊急連絡先届出書（入力）
+      📄 緊急連絡先届出書（入力）<br>
+      📄 年金番号・雇用保険番号の登録（入力）
     </div>
     <div class="section-divider">出勤初日の入り方（担当者記入欄）</div>
     <div class="fg"><label class="fl">同行</label>
@@ -1671,6 +1684,20 @@ input:disabled{background:#f5f4f0;color:#aaa;border-color:#e8e6e0}
     <div class="ma">
       <button class="btn btn-sm" onclick="closeModal('onboarding-emergency')">キャンセル</button>
       <button class="btn btn-sm btn-p" onclick="submitOnboardingEmergency()">保存する →</button>
+    </div>
+  </div>
+</div>
+
+<div class="mbg" id="modal-onboarding-insurance">
+  <div class="modal" style="max-width:440px">
+    <div class="mt">年金番号・雇用保険番号の登録</div>
+    <div style="font-size:12px;color:#666;margin-bottom:14px;line-height:1.7">お持ちでない方（初めてのお仕事の方など）は、空欄のままご提出いただいて大丈夫です。</div>
+    <div class="fg"><label class="fl">年金番号</label><input type="text" id="ob-ins-pension" placeholder="例：1234-567890"></div>
+    <div class="fg"><label class="fl">雇用保険番号（被保険者番号）</label><input type="text" id="ob-ins-employment" placeholder="例：1234-567890-1"></div>
+    <div id="ob-ins-status" style="display:none;font-size:13px;margin-top:8px;padding:10px;border-radius:8px"></div>
+    <div class="ma">
+      <button class="btn btn-sm" onclick="closeModal('onboarding-insurance')">キャンセル</button>
+      <button class="btn btn-sm btn-p" onclick="submitOnboardingInsurance()">保存する →</button>
     </div>
   </div>
 </div>
@@ -6258,7 +6285,8 @@ async function sendOnboardingDocs(){
     {staff_id:staffId,doc_key:'pledge',doc_name:'誓約書',needs_sign:true,needs_input:false,content_html:pledgeHtml},
     {staff_id:staffId,doc_key:'firstday',doc_name:'出勤初日の注意点',needs_sign:false,needs_input:false,content_html:firstdayHtml},
     {staff_id:staffId,doc_key:'bank',doc_name:'お給料振込口座の登録',needs_sign:false,needs_input:true},
-    {staff_id:staffId,doc_key:'emergency',doc_name:'緊急連絡先届出書',needs_sign:false,needs_input:true}
+    {staff_id:staffId,doc_key:'emergency',doc_name:'緊急連絡先届出書',needs_sign:false,needs_input:true},
+    {staff_id:staffId,doc_key:'insurance_numbers',doc_name:'年金番号・雇用保険番号の登録',needs_sign:false,needs_input:true}
   ];
   var {error}=await supabaseClient.from('onboarding_documents').insert(rows);
   if(error){statusEl.style.background='#fee2e2';statusEl.style.color='#991b1b';statusEl.textContent='送付に失敗しました：'+error.message;return;}
@@ -6339,6 +6367,11 @@ async function viewAdminOnboardingDoc(docId){
     alert('【緊急連絡先】\n氏名：'+(f.name||'（未入力）')+'（'+(f.relationship||'')+'）\n住所：'+(f.address||'')+'\n電話：'+(f.phone||'')+'\n\n【本人連絡先】\n現住所：'+(f.my_address||'')+'\n固定電話：'+(f.my_phone_home||'')+'\n携帯電話：'+(f.my_phone_mobile||'')+'\nメール：'+(f.email||'')+'\n\n【住民票住所】\n'+(f.jyuminhyo||''));
     return;
   }
+  if(d.doc_key==='insurance_numbers'){
+    var f=d.form_data||{};
+    alert('【年金番号・雇用保険番号】\n年金番号：'+(f.pension_number||'（未入力）')+'\n雇用保険番号：'+(f.insurance_number||'（未入力）')+'\n\n※プロフィールの該当欄にも反映済みです');
+    return;
+  }
   openFilledDocInNewTab(d.content_html,d.doc_name);
 }
 
@@ -6377,6 +6410,8 @@ async function loadMyOnboarding(){
       actionBtn = done? '<span style="color:#888;font-size:12px">入力済み</span>' : '<button class="btn btn-sm btn-p" onclick="openOnboardingBankModal(\''+d.id+'\')">入力する</button>';
     } else if(d.doc_key==='emergency'){
       actionBtn = done? '<span style="color:#888;font-size:12px">入力済み</span>' : '<button class="btn btn-sm btn-p" onclick="openOnboardingEmergencyModal(\''+d.id+'\')">入力する</button>';
+    } else if(d.doc_key==='insurance_numbers'){
+      actionBtn = done? '<span style="color:#888;font-size:12px">入力済み</span>' : '<button class="btn btn-sm btn-p" onclick="openOnboardingInsuranceModal(\''+d.id+'\')">入力する</button>';
     }
     html+='<div style="display:flex;align-items:center;justify-content:space-between;padding:12px 0;border-bottom:1px solid #f0efe9;gap:8px;flex-wrap:wrap">'
       +'<div><div style="font-size:14px;font-weight:600">'+d.doc_name+'</div><div style="margin-top:4px">'+statusBdg+'</div></div>'
@@ -6445,6 +6480,27 @@ async function submitOnboardingBank(){
   var {error}=await supabaseClient.from('onboarding_documents').update({submitted_at:new Date().toISOString(),form_data:data}).eq('id',_onboardingBankTargetId);
   if(error){statusEl.style.display='block';statusEl.style.background='#fee2e2';statusEl.style.color='#991b1b';statusEl.textContent='保存に失敗しました：'+error.message;return;}
   closeModal('onboarding-bank');
+  loadMyOnboarding();
+}
+
+var _onboardingInsTargetId=null;
+function openOnboardingInsuranceModal(docId){
+  _onboardingInsTargetId=docId;
+  document.getElementById('ob-ins-pension').value='';
+  document.getElementById('ob-ins-employment').value='';
+  var statusEl=document.getElementById('ob-ins-status');if(statusEl)statusEl.style.display='none';
+  openModal('onboarding-insurance');
+}
+async function submitOnboardingInsurance(){
+  if(!supabaseClient||!myStaffData)return;
+  var pension=document.getElementById('ob-ins-pension').value.trim();
+  var employment=document.getElementById('ob-ins-employment').value.trim();
+  var statusEl=document.getElementById('ob-ins-status');
+  var {error}=await supabaseClient.from('onboarding_documents').update({submitted_at:new Date().toISOString(),form_data:{pension_number:pension,insurance_number:employment}}).eq('id',_onboardingInsTargetId);
+  if(error){statusEl.style.display='block';statusEl.style.background='#fee2e2';statusEl.style.color='#991b1b';statusEl.textContent='保存に失敗しました：'+error.message;return;}
+  // プロフィール（staffs）の年金番号・雇用保険番号にも反映
+  await supabaseClient.from('staffs').update({pension_number:pension||null,insurance_number:employment||null}).eq('id',myStaffData.id);
+  closeModal('onboarding-insurance');
   loadMyOnboarding();
 }
 
