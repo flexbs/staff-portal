@@ -191,7 +191,7 @@ input:disabled{background:#f5f4f0;color:#aaa;border-color:#e8e6e0}
   <div class="sub-tabs">
     <button class="sub-tab active" onclick="showSub('admin','stafflist',this);loadAdminStaffListOnly()">スタッフ一覧</button>
     <button class="sub-tab" onclick="showSub('admin','docs',this)">書類送付</button>
-    <button class="sub-tab" onclick="showSub('admin','nyusha',this)">入社手続き</button>
+    <button class="sub-tab" onclick="showSub('admin','nyusha',this);loadAdminOnboarding()">入社手続き</button>
     <button class="sub-tab" onclick="showSub('admin','taisha',this);loadAdminTaisha()">退職手続き</button>
     <button id="nav-tab-paid" class="sub-tab" onclick="showSub('admin','paid',this);loadAdminLeaveRequests();loadAdminPaidLeaveList();loadLeaveHistory()">有給管理</button>
     <button id="nav-tab-uploads" class="sub-tab" onclick="showSub('admin','uploads',this);loadAdminUploads()">書類授受</button>
@@ -275,11 +275,31 @@ input:disabled{background:#f5f4f0;color:#aaa;border-color:#e8e6e0}
 
   <div id="admin-nyusha" class="sp">
     <div class="card">
-      <div class="ch"><span class="ct">入社手続き</span></div>
-      <div style="padding:40px 20px;text-align:center;color:#888">
-        <div style="font-size:48px;margin-bottom:12px">📋</div>
-        <div style="font-size:16px;font-weight:600;color:#555;margin-bottom:8px">準備中</div>
-        <div style="font-size:13px;line-height:1.7;color:#aaa">入社手続き機能は現在準備中です。<br>公開まで今しばらくお待ちください。</div>
+      <div class="ch">
+        <span class="ct">入社手続き書類の準備</span>
+      </div>
+      <div style="font-size:12px;color:#666;margin-bottom:12px;line-height:1.7">就業規則（抜粋）のPDFを登録しておくと、入社手続きに自動で添付されます。最新のものに差し替える場合は、新しいファイルをアップロードしてください。</div>
+      <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap">
+        <span id="onboarding-rules-status" style="font-size:13px;color:#888">確認中...</span>
+        <input type="file" id="onboarding-rules-file" accept="application/pdf" style="font-size:12px">
+        <button class="btn btn-sm btn-p" onclick="uploadOnboardingRulesPdf()">アップロード</button>
+      </div>
+    </div>
+    <div class="card">
+      <div class="ch">
+        <span class="ct">入社手続き</span>
+        <button class="btn btn-sm btn-p" onclick="openOnboardingSendModal()">＋ 入社手続きを送付する</button>
+      </div>
+      <div style="background:#fef3cd;border-radius:8px;padding:10px 12px;font-size:12px;color:#8a5a00;margin-bottom:14px;line-height:1.7">
+        就業規則・個人情報取り扱い・誓約書・出勤初日の注意点・給与振込口座・緊急連絡先の6点を、まとめてスタッフに送付します。
+      </div>
+      <div class="tbl-scroll">
+        <table class="tbl">
+          <thead><tr><th>名前</th><th>進捗</th><th>送付日</th><th></th></tr></thead>
+          <tbody id="admin-nyusha-tbody">
+            <tr><td colspan="4" style="text-align:center;color:#888;padding:20px">読み込み中...</td></tr>
+          </tbody>
+        </table>
       </div>
     </div>
   </div>
@@ -638,6 +658,7 @@ input:disabled{background:#f5f4f0;color:#aaa;border-color:#e8e6e0}
     <button class="sub-tab" id="staff-notice-tab" onclick="showSub('staff','snotice',this);loadMyNotices();clearNoticeBadge()">お知らせ<span id="notice-badge" style="display:none;background:#e53e3e;color:#fff;border-radius:10px;font-size:10px;font-weight:700;padding:1px 6px;margin-left:4px;vertical-align:middle"></span></button>
     <button class="sub-tab" onclick="showSub('staff','straining',this);loadStaffTraining()">研修</button>
     <button class="sub-tab" id="staff-tab-resign" onclick="showSub('staff','sresign',this);loadMyResignDocs()" style="display:none">退職書類</button>
+    <button class="sub-tab" id="staff-tab-nyusha" onclick="showSub('staff','snyusha',this);loadMyOnboarding()" style="display:none">入社手続き</button>
     <button class="sub-tab" onclick="showSub('staff','supload',this);loadUploadHistory()">アップロード</button>
     <button class="sub-tab" onclick="showSub('staff','scar',this);loadMyCarInsurance()">車通勤</button>
     <button class="sub-tab" onclick="showSub('staff','sprofile',this)">プロフィール</button>
@@ -657,6 +678,14 @@ input:disabled{background:#f5f4f0;color:#aaa;border-color:#e8e6e0}
       <div id="staff-docs-contract-area" style="display:none"></div>
     </div>
 <div class="card" id="staff-docs-bottom-card"></div>
+  </div>
+
+  <div id="staff-snyusha" class="sp">
+    <div class="card">
+      <div class="ch"><span class="ct">入社手続き</span></div>
+      <div style="font-size:13px;color:#666;margin-bottom:16px;line-height:1.7">下記の書類をご確認いただき、署名・入力をお願いします。</div>
+      <div id="staff-nyusha-list"><div style="text-align:center;color:#aaa;padding:20px;font-size:13px">読み込み中...</div></div>
+    </div>
   </div>
 
   <div id="staff-sresign" class="sp">
@@ -1555,6 +1584,105 @@ input:disabled{background:#f5f4f0;color:#aaa;border-color:#e8e6e0}
 </div>
 
 <!-- 退職書類送付モーダル -->
+<div class="mbg" id="modal-send-onboarding">
+  <div class="modal" style="max-width:540px">
+    <div class="mt">入社手続きを送付する</div>
+    <div class="fg">
+      <label class="fl">対象スタッフ <span style="color:#991b1b">*必須</span></label>
+      <select id="onboarding-target"><option value="">選択してください</option></select>
+    </div>
+    <div style="font-weight:700;color:#1a1a1a;margin:14px 0 8px">送付する書類（6点）</div>
+    <div style="background:#f5f4f0;border-radius:10px;padding:12px 14px;margin-bottom:14px;font-size:13px;color:#555;line-height:2">
+      📄 就業規則（抜粋）（読むだけ）<br>
+      📄 個人情報の取り扱いについて（署名）<br>
+      📄 誓約書（署名）<br>
+      📄 出勤初日の注意点（読むだけ）<br>
+      📄 お給料振込口座の登録（入力）<br>
+      📄 緊急連絡先届出書（入力）
+    </div>
+    <div class="section-divider">出勤初日の入り方（担当者記入欄）</div>
+    <div class="fg"><label class="fl">同行</label>
+      <select id="onboarding-firstday-accompany"><option value="同行なし">同行なし</option><option value="同行あり">同行あり</option></select>
+    </div>
+    <div class="fg"><label class="fl">場所</label><input type="text" id="onboarding-firstday-place" placeholder="例：ニチロジ鳥栖物流センター"></div>
+    <div class="fg"><label class="fl">時間</label><input type="text" id="onboarding-firstday-time" placeholder="例：8:30集合"></div>
+    <div class="fg"><label class="fl">同行者</label><input type="text" id="onboarding-firstday-companion" placeholder="例：田中"></div>
+    <div class="fg"><label class="fl">備考</label><input type="text" id="onboarding-firstday-note" placeholder="任意"></div>
+    <div id="onboarding-send-status" style="display:none;font-size:13px;margin-top:8px;padding:10px;border-radius:8px"></div>
+    <div class="ma">
+      <button class="btn btn-sm" onclick="closeModal('send-onboarding')">キャンセル</button>
+      <button class="btn btn-sm btn-p" onclick="sendOnboardingDocs()">送付する →</button>
+    </div>
+  </div>
+</div>
+
+<div class="mbg" id="modal-onboarding-sign">
+  <div class="modal" style="max-width:600px">
+    <div class="mt" id="onboarding-sign-title">書類に署名する</div>
+    <div style="background:#fef3cd;border-radius:8px;padding:10px 12px;font-size:12px;color:#8a5a00;margin-bottom:14px;line-height:1.7">
+      内容をよくお読みいただき、同意いただける場合はお名前を入力して署名してください。
+    </div>
+    <div id="onboarding-sign-content" style="max-height:320px;overflow-y:auto;background:#faf9f6;border:1px solid #e8e5e0;border-radius:8px;padding:14px;font-size:13px;line-height:1.8;margin-bottom:14px"></div>
+    <div class="fg"><label class="fl">お名前（署名） <span style="color:#991b1b">*必須</span></label><input type="text" id="onboarding-sign-name" placeholder="例：山田 太郎"></div>
+    <div id="onboarding-sign-status" style="display:none;font-size:13px;margin-top:8px;padding:10px;border-radius:8px"></div>
+    <div class="ma">
+      <button class="btn btn-sm" onclick="closeModal('onboarding-sign')">キャンセル</button>
+      <button class="btn btn-sm btn-p" onclick="submitOnboardingSign()">同意して署名する →</button>
+    </div>
+  </div>
+</div>
+
+<div class="mbg" id="modal-onboarding-bank">
+  <div class="modal" style="max-width:480px">
+    <div class="mt">お給料振込口座の登録</div>
+    <div class="fg"><label class="fl">銀行名 <span style="color:#991b1b">*必須</span></label><input type="text" id="ob-bank-name" placeholder="例：福岡銀行"></div>
+    <div class="fg"><label class="fl">支店名 <span style="color:#991b1b">*必須</span></label><input type="text" id="ob-bank-branch" placeholder="例：博多支店"></div>
+    <div class="fg"><label class="fl">預金種目 <span style="color:#991b1b">*必須</span></label>
+      <select id="ob-bank-type"><option value="普通">普通</option><option value="当座">当座</option></select>
+    </div>
+    <div class="fg"><label class="fl">口座番号 <span style="color:#991b1b">*必須</span></label><input type="text" id="ob-bank-number" placeholder="例：1234567"></div>
+    <div class="fg"><label class="fl">口座名義（カタカナ） <span style="color:#991b1b">*必須</span></label><input type="text" id="ob-bank-holder" placeholder="例：フクオカ タロウ"></div>
+    <div id="ob-bank-status" style="display:none;font-size:13px;margin-top:8px;padding:10px;border-radius:8px"></div>
+    <div class="ma">
+      <button class="btn btn-sm" onclick="closeModal('onboarding-bank')">キャンセル</button>
+      <button class="btn btn-sm btn-p" onclick="submitOnboardingBank()">保存する →</button>
+    </div>
+  </div>
+</div>
+
+<div class="mbg" id="modal-onboarding-emergency">
+  <div class="modal" style="max-width:560px">
+    <div class="mt">緊急連絡先届出書</div>
+    <div class="section-divider">緊急連絡先（事故や災害等の緊急時の連絡先）</div>
+    <div class="fg"><label class="fl">氏名 <span style="color:#991b1b">*必須</span></label><input type="text" id="ob-em-name" placeholder="例：山田 花子"></div>
+    <div class="fg"><label class="fl">続柄</label>
+      <select id="ob-em-relationship"><option value="親">親</option><option value="配偶者">配偶者</option><option value="兄弟姉妹">兄弟姉妹</option><option value="子">子</option><option value="親戚">親戚</option><option value="友人">友人</option><option value="その他">その他</option></select>
+    </div>
+    <div class="fg"><label class="fl">住所</label><input type="text" id="ob-em-address" placeholder="〒000-0000　住所"></div>
+    <div class="fg"><label class="fl">電話番号 <span style="color:#991b1b">*必須</span></label><input type="text" id="ob-em-phone" placeholder="000-0000-0000"></div>
+    <div class="section-divider">ご本人の連絡先</div>
+    <div class="fg"><label class="fl">現住所 <span style="color:#991b1b">*必須</span></label><input type="text" id="ob-em-myaddress" placeholder="〒000-0000　住所"></div>
+    <div class="fg"><label class="fl">固定電話</label><input type="text" id="ob-em-myphone-home" placeholder="000-0000-0000"></div>
+    <div class="fg"><label class="fl">携帯電話 <span style="color:#991b1b">*必須</span></label><input type="text" id="ob-em-myphone-mobile" placeholder="000-0000-0000"></div>
+    <div class="fg"><label class="fl">メールアドレス</label><input type="text" id="ob-em-email" placeholder="例：taro@example.com"></div>
+    <div class="section-divider">住民票上の住所地</div>
+    <div class="fg"><label class="fl">住民票住所地 <span style="color:#991b1b">*必須</span></label><input type="text" id="ob-em-jyuminhyo" placeholder="現住所と同じ場合は「現住所と同じ」とご記入ください"></div>
+    <div id="ob-em-status" style="display:none;font-size:13px;margin-top:8px;padding:10px;border-radius:8px"></div>
+    <div class="ma">
+      <button class="btn btn-sm" onclick="closeModal('onboarding-emergency')">キャンセル</button>
+      <button class="btn btn-sm btn-p" onclick="submitOnboardingEmergency()">保存する →</button>
+    </div>
+  </div>
+</div>
+
+<div class="mbg" id="modal-onboarding-detail">
+  <div class="modal" style="max-width:560px">
+    <div class="mt" id="onboarding-detail-title">入社手続き詳細</div>
+    <div id="onboarding-detail-body" style="max-height:60vh;overflow-y:auto"></div>
+    <div class="ma"><button class="btn btn-sm" onclick="closeModal('onboarding-detail')">閉じる</button></div>
+  </div>
+</div>
+
 <div class="mbg" id="modal-send-resignation">
   <div class="modal" style="max-width:540px">
     <div class="mt">退職書類を送付する</div>
@@ -2166,6 +2294,12 @@ async function loadStaffProfile(){
   var resignTab=document.getElementById('staff-tab-resign');
   if(resignTab){
     resignTab.style.display=(data.status==='退職手続き中')?'':'none';
+  }
+  var nyushaTab=document.getElementById('staff-tab-nyusha');
+  if(nyushaTab&&supabaseClient){
+    supabaseClient.from('onboarding_documents').select('id',{count:'exact',head:true}).eq('staff_id',data.id).is('cancelled_at',null).then(function(res){
+      nyushaTab.style.display=(res.count&&res.count>0)?'':'none';
+    });
   }
   var statusBadge=document.getElementById('staff-status-badge');
     if(statusBadge){
@@ -6008,6 +6142,341 @@ var CAR_INSURANCE_CONSENT_ITEMS=[
   '会社が必要とする書類を速やかに提出すること',
   '派遣先・派遣元２社の承諾がなければ許可はできません'
 ];
+
+var ONBOARDING_PRIVACY_PARAGRAPHS=["履歴書、登録表等に記入頂いた貴方の個人情報は以下の通り、取扱い致します。", "①　登録頂いた個人情報は、顧客からの人材派遣要請及び人材紹介要請に応えるべく、要求されたキャリアに対応出来る人材の選択を行う為に利用します。", "②　顧客へスキルシート（氏名はブランク、住所は区名まで、保有資格、経験職種及び年数、希望就業条件）を提供する場合があります。但し、その場合は貴方の事前の同意を得る事とします。", "③　健康診断受診の際、あなたの個人情報（氏名・性別・生年月日）を担当医院へ委託する場合があります。尚、適正な配置、職場での配慮事項の確認などのために現在の疾病の状況などうかがう場合があります。", "④　年末調整作業の際、賃金台帳・源泉徴収簿を顧問税理士へ預託する場合があります。", "⑤　社会保険、労働保険の取得、喪失の手続で賃金台帳・タイムシート・労働者名簿・年金手帳を顧問社会保険労務士へ委託する場合があります。", "⑥　上記利用目的のうち源泉徴収作成、健康保険・厚生年金保険届出、雇用保険届出の為マイナンバーを取得します。またマイナンバー取得に際には個人番号カード（写真付き）、マイナンバー通知カード、運転免許証などにより本人確認を行う場合がございます。", "　個人番号の利用目的：給与所得の源泉徴収票作成事務／雇用保険届け出・申請事務／健康保険、厚生年金保険届け出・申請事務／国民年金の第3号被保険者の届出に関する事務／労働者災害補償保険法に基づく請求に関する事務／その他、行政手続きにおける特定の個人を識別するための番号の利用等に関する法律19条各号のいずれかに該当し、特定個人情報の提供を受ける事ができる関連事務", "⑦　以上の目的以外には利用致しません。", "⑧　個人情報の提供を頂く事は貴方の任意です。但し、もしご提供頂けない事項によっては仕事情報の提供が難しくなる場合があります。", "⑨　貴方は弊社に対して、弊社が既に保有している貴方の個人情報に対して、資格の追加、スキルのレベルアップ及び情報の変更等で個人情報の修正、削除及び開示を求める事ができます。但し、これへの対応は合理的な期間をもって行うものとします。", "⑩　前項の修正、削除及び開示を要求される場合は次の個人情報に関する相談窓口まで、お電話か又は文書でご連絡下さい。但し就労中の方を除き、登録後3年経過した時点で当社規定に従い個人情報保護細則に基づき、廃棄とさせて頂きます。", "　〒812-0013　福岡市博多区博多駅東2-2-2　ハニービル5F　フレックスビジネスサービス株式会社　個人情報相談窓口担当者　掃本 健児　電話 092-451-8341", "⑪　但し、下記の場合は前①～⑨項については適用されません：法令に基づく場合／人の生命、身体、財産の保護の為必要がある場合であって、本人の同意を得る事が困難である時／公衆衛生の向上又は児童の健全な育成の推進の為必要がある場合であって、本人の同意を得る事が困難な場合／国の機関もしくは地方公共団体又はその委託を受けた者が法令の定める事務を遂行する事に対して協力する必要がある場合であって、本人の同意を得ることにより当該事務の遂行に支障を及ぼす恐れがある時。", "⑫　尚、登録の際にお預かりした履歴書、写真等の書類は当社で厳重に保管し他へ漏洩する事はありません。但し、書類を体系的にファイリングする為に穴を開けたり又並べ替え等で形状的に変化しますので、それらを返却することは出来かねます。", "以上の事から当社では前項①～⑫の事項についてのご同意を頂いた方を対象に登録（就業）手続を行う事としております。"];
+var ONBOARDING_PLEDGE_SECTIONS=[["雇用契約期間及び更新", ["当社はお仕事を引き受けていただくことの強制はいたしません。あなたにとってこのお仕事が必要かどうかということが大切です。引き受けていただくことになりますと契約期間が発生し、仕事が計画的に発生することになります。「嫌だったらすぐに辞めればいい」といった考えの段階ではそのお仕事はお受けしないことも大切な選択です。", "お互いのために、お仕事を受ける前に次の事項をご確認ください。", "（遵守事項）", "1．雇用契約期間を通じて就業できること。", "2．雇用契約は無期限ではなく有期雇用契約であり、期間満了時に雇用契約が終了することが前提であること。", "3．雇用契約が更新する場合には条件があり、「会社の経営状況」「従事業務の業務量・継続性」の他、あなたの「能力・適性・勤怠（出勤率8割以上）」が必要であること。", "4．有期雇用契約が更新される場合であっても、前回の労働条件と同一とは限らないこと。"]], ["反社会的勢力の排除", ["全国では暴力団排除条例が順次制定・施行されており、当社でも社会的責任や企業防衛の観点から反社会的勢力との関与が疑われる方は採用いたしません。また今後、反社会的勢力との関与が疑われた場合は、直ちに雇用契約を解除いたします。"]], ["誓約事項", ["下記事項のいずれかに反した場合、内定取消し、解雇その他一切の処分を受けても異議を述べません。", "1．就業規則及び服務に関する諸規定に従い、誠実に勤務すること。", "2．履歴書その他の会社に提出した書面に記載した内容は、真実であること。", "3．暴力団、暴力団関係者、暴力団関係企業、総会屋又はこれらに準ずる団体（反社会的勢力）と関係を持っておらず、将来においても一切持たないこと。"]], ["企業情報・個人情報の取り扱いについて", ["各企業において企業情報、個人情報の取り扱い、情報漏洩防止に関する規定や職場のルールを定め漏洩防止の措置を講じています。皆さんの職場である派遣先も同様の趣旨から漏洩防止に関する覚書、念書等を求めてくることが考えられます。このことは当然の流れと理解しなければなりません。働く皆さんも業務遂行上、さまざまな情報を取り扱うことになるからです。", "情報漏洩の問題が生じれば会社や第三者に甚大な被害が生じてしまい状況によっては個人にも損害賠償がなされる恐れがあります。ひとたび情報漏洩や取り扱いに問題が生じた場合、自分を助けるのは日常の強い自覚と「職場の手順やルール通りに遂行していたか」「規定や念書通りに遂行していたか」、このポイントが大切になります。「私は知らない」「職場から説明がなかった」ということが現代では通用しないことを意識してお仕事に対処してください。", "当社では、このテーマについても定期的に研修を行い注意喚起を行いますので、くれぐれも企業情報・個人情報の取り扱い、情報漏洩防止に関して油断しないよう心がけましょう。"]], ["企業情報・個人情報漏洩防止に役立つルール", ["1．漏洩すると自分自身にも損害賠償を要求されることがあります。", "2．漏洩は裁判に巻き込まれる可能性があります。", "3．場合によっては自分一人だけで争わなければならないこともあります。", "4．懲戒解雇の対象となることもあります。", "5．正社員、派遣社員、パート等雇用形態に関係なく共通の重要テーマです。", "6．リスク発生予測の能力を養わなければなりません。", "7．作業遂行上、タイムリーに上司に報告・連絡・相談をすることが必要です。", "8．職場、派遣先との人間関係、連携を上手に構築することが必要です。", "9．個人情報へのアクセスを会社の指示無く行ってはいけません。", "10．個人所有のパソコン、周辺機器、電子記憶媒体を許可無く持ち込んではいけません。", "11．エレベーター、トイレ、食堂等の作業場所以外での会話内容にも節度を持つことが必要です。", "12．会社のOA機器を個人目的で無断使用してはいけません。", "13．社内の人事情報、個人データ、業務上知り得た内容を自分のため、また外部のために使用しない・持ち出してはいけません。", "14．書類、チラシ等の制作物や各種印刷物、また、CD、DVD、USBメモリ等の情報が保存されている媒体は、それがたとえ不良品や失敗作であっても持ち帰ってはいけません。", "15．会社から「君にあげる」と言われても事前に当社にご相談いただくことが必要です。", "16．上記以外に、会社が指示する本テーマの対策に従うことが必要です。"]], ["情報管理に関する誓約事項", ["私はフレックスビジネスサービス株式会社と個別に締結する雇用契約（以下「本契約」という）に基づき本契約業務に従事するにあたり、次の事項の遵守を誓約いたします。", "1．本契約業務に従事する期間中は、法令等を遵守し、誠実に本契約業務を遂行すること。", "2．派遣元及び派遣先顧客の秘密情報（個人情報を含み、以下同じ。）については、本契約業務に従事する期間中はもとより本契約業務に従事しなくなった後も、派遣元の承諾なしに、社員等、その他の第三者に開示漏洩しないとともに、自己のため又は派遣元及び派遣先と競合する他の事業者その他の第三者のために使用しないこと。", "3．管理情報はすべて社外秘とし、派遣先指揮命令者の指示に基づき取り扱うこと。", "4．就業先で発生する文書、関係書類、コピー（文書、書類、プログラム、ディスク、磁気テープ等の一切の情報媒体を含む）を無断で社外に持ち出したり、自己の為更には他人の為にも活用しないこと。", "5．本派遣業務に従事する以前に知得した営業秘密に該当する情報で、かつ、退職後においても守秘義務を負う情報を、社内で開示しないこと。", "6．管理情報が記載された文書、又は外部記録媒体及び情報機器等が盗難、紛失したとき、あるいは管理情報の漏洩及び改ざん、もしくは不正な開示を発見したときは、直ちに派遣先指揮命令者にその旨を届け出ること。", "7．就業先でのインターネットやメールの操作禁止事項を充分に理解しこれに違反しないこと。", "8．派遣元及び派遣先の社員間の個人的なメールのやり取りは節度ある範囲内で行い、相手に不快又は嫌悪の念を起させるような発信その他の不適切な発信を行わないこと。", "9．就業先での電子メールでの送受信に関しては、派遣先から与えられたメールアドレスやIDパスワードによるものを業務利用に限定し使用し、他人のメールアドレスやIDパスワードを不正に利用しないこと。これに違反したものは損害賠償の対象となる。", "10．自己の所有する情報機器等の取扱いについては、社内に持ち込まない・会社のネットワークにアクセスしない・派遣先指揮命令者の許可なく接続しない・携帯電話や私物の取扱いに関する指示に従うこと。", "11．上記のいずれかに違反し、派遣元あるいは派遣先が損害を蒙った場合は、その実損害について賠償の責務に応じること。"]], ["知的財産権に関する覚書", ["1．派遣社員が、事業場の内外を問わず、派遣先会社での職務に関して作成したソフトウェア、イラスト、デザイン、写真等の著作物に関する著作権、並びに派遣社員が職務上作成した成果物に関する特許権、実用新案権、意匠権、商標権その他一切の知的財産権（以下「本件知的財産権」という。）は、派遣先会社に帰属するものとし、派遣社員には帰属しないものとする。", "2．派遣社員は、本件知的財産権に関し、デザイン料、著作権料等一切の対価を得るものではない。", "3．派遣先会社及び派遣元会社は、前項の著作物及び成果物を改変し、任意の権利者名で公表し、又は利用することができる。", "4．派遣社員は、既存の未報告の発明、考案、ノウハウ、著作物等を有するとき、又は新たにこれらを作成した場合には、直ちに派遣先会社に報告しなければならない。", "5．派遣社員は、派遣先会社での勤務期間中及び期間終了後を問わず、本件知的財産権に関する一切の情報について守秘義務を負い、有償無償を問わず、第三者に開示、漏洩してはならない。", "6．派遣社員は、職務にあたり、第三者の権利を侵害してはならない。特に、一般に配布されている素材等については、フリー素材であっても使用目的が限定されている場合があるため、使用に際して、素材の権利者の権利を侵害しないよう注意するものとする。", "7．派遣社員は、本覚書に違反した場合、債務不履行責任又は不法行為責任を負うだけでなく、不正競争防止法違反の罪又は著作権法違反の罪として、10年以下の懲役、1,000万円以下の罰金を受ける場合があることを了解する。", "8．派遣社員は、派遣先会社から派遣先会社独自の知的財産権に関する覚書、誓約書、念書への押印を求められた場合、あらかじめ署名押印することを了解するものとする。但し、押印の前において必ず派遣元会社の承認を得るものとする。"]], ["健康管理・健康診断の社内ルール", ["健康管理上、スタッフの皆さんに下記の点をお守りいただきますので宜しくお願いいたします。お仕事上、納期のひっぱく、クレーム等によって労働時間が増えることがあります。しかし、健康や体調を無視して労働させること、労働することはできません。", "健康診断については、仕事の事情で受診する時間が取りにくいなどの理由もあるでしょうが、派遣先と話し合えば受診時期の調整ができるはずです。もし、言いにくい時は当社からも支援することができます。", "（遵守事項）", "1．労働時間が多くても月間の労働範囲を示す36協定枠を守ること（明示書に添付）", "2．徹夜勤務は絶対禁止いたします。ただし、業務上避けられない場合、事前協議のうえフォロー体制を確認後に認める場合がありますので必ず相談が必要です。", "3．深夜勤務明けの場合には8時間以上の休息がなければ認められません。", "4．月間残業60時間以上の場合、当社から連絡をして状況を確認することがあります。", "5．1週間に1日も休みがなく働くことは禁止いたします。", "6．月間残業80時間以上又は3カ月連続60時間以上の場合は特別に産業医の受診や臨時健康診断を受診していただきます。", "7．休日における過ごし方（深酒、夜更し等）も注意が必要です。", "8．夜10:00を超えることが見込める時にはきちんと食事をとること。", "9．体調が悪い時には休みを取る、勤務先に早退を申し出るなどの意思表示をすること。", "10．労働時間中の休憩や仮眠は指示に従い取ること。", "11．健診再検査対象の方は速やかに受診後の結果を当社宛に提出すること（自己負担）。", "（注意）労働基準監督署に健康診断結果の提出義務があるため、受診しない方がいれば提出ができません。再三の督促にも関わらず受診されない方は就業規則第58条懲戒解雇事由に該当するため解雇対象となります。受診を促進させるために職場の上司にFAXや電話で未受診者をお知らせします。"]], ["ソーシャルメディアの私的利用に当たってのルール", ["（目的）本来、ソーシャルメディアの私的利用は、個人の自覚と責任において自由に行うべきものであることは言うまでもありませんが、ソーシャルメディアに関する重大な問題事例の発生が社会的問題となっていることに鑑み、留意点をよく理解して利用するよう注意を促すものです。", "（遵守事項）", "1．派遣元及び派遣先が規定する守秘義務に反することや、信用失墜行為の禁止に違反する発信を行わないこと。", "2．業務中や移動時間に発信を行わないこと。", "3．業務上支給されている端末を用いて発信を行わないこと。", "4．個人情報、肖像、プライバシー等に関わる内容の発信に当たっては、関係者の同意があらかじめ得ておく等必要な措置が講じられない場合には、発信を行わないこと。", "5．事実に反する情報や単なる噂の拡散への加担は慎むこと。", "6．事実に反する発信、他人に不快又は嫌悪の念を起させるような発信その他の不適切な発信を行わないこと。万が一これらの発信を行った場合には、当該発信を削除するに留まることなく、訂正やお詫びを行うなど誠実な対応を心がけること。", "7．自己又は他人のプライバシーに関する情報を意に反して公開してしまわないよう、ソーシャルメディアの設定を十分に確認すること。", "8．発信を行う際に発言、画像等に位置情報を自動的に付与する機能を有するサービスが多数あることから、当該サービスを利用する場合には、その影響について留意するとともに、必要に応じて当該機能の停止等の対応を行うこと。", "9．通信端末、パソコン等のウィルス対策を怠らないこと。特にスマートフォンではアプリケーションを装ったウィルスに注意すること。", "（注意）ソーシャルメディアの利用は原則として個人の自覚と責任において行うものですが、業務に関する内容を含む場合や業務に影響を与える内容を含む場合は、就業規則の規定に基づき懲戒の対象となる場合がございます。"]]];
+
+function buildOnboardingContentHtml(docKey, ctx){
+  ctx=ctx||{};
+  if(docKey==='privacy'){
+    var html='<div style="font-weight:700;margin-bottom:10px">履歴書、登録表、希望条件等に記載された個人情報の取扱いについて</div>';
+    ONBOARDING_PRIVACY_PARAGRAPHS.forEach(function(p){html+='<p style="margin-top:8px">'+p+'</p>';});
+    return html;
+  }
+  if(docKey==='pledge'){
+    var html='<div style="font-weight:700;margin-bottom:10px">誓約書（フレックスビジネスサービス株式会社 御中）</div>'
+      +'<p style="margin-bottom:10px">私は各書面について承諾致します。本書面に署名の上、提出致します。</p>';
+    ONBOARDING_PLEDGE_SECTIONS.forEach(function(sec){
+      html+='<div style="font-weight:700;margin-top:16px">'+sec[0]+'</div>';
+      sec[1].forEach(function(p){html+='<p style="margin-top:6px">'+p+'</p>';});
+    });
+    return html;
+  }
+  if(docKey==='firstday'){
+    var html='<div style="font-weight:700;margin-bottom:10px">出勤初日の注意点</div>'
+      +'<p>はじめての出勤を安心してスタートするためのガイドです。</p>'
+      +'<div style="font-weight:700;margin-top:14px">1. 受付での対応</div>'
+      +'<p>企業に到着したら、まず受付でスタッフにお声がけください。</p>'
+      +'<p>・「フレックスより派遣で参りました、〇〇と申します」とお伝えください<br>・入館証や来訪者バッジが必要な場合は、受付スタッフの指示に従ってください</p>'
+      +'<p style="color:#8a5a00">💡 事前に担当者名や部署名を確認しておくと、スムーズに案内してもらえます</p>'
+      +'<div style="font-weight:700;margin-top:14px">2. 自己紹介のポイント</div>'
+      +'<p>朝礼など皆さんの前で自己紹介をお願いされることがあります。以下のポイントを意識しましょう。</p>'
+      +'<p>・挨拶の前に一礼してから話し始める<br>・名前と「よろしくお願いいたします」を明確に伝える程度でOK<br>・ハキハキとした声でゆっくり、聞き取りやすく話す<br>・過度に緊張せず、自然体で</p>'
+      +'<p style="color:#8a5a00">💡 第一印象はとても大切です。明るく元気な挨拶が、良いスタートへの第一歩です！</p>'
+      +'<div style="font-weight:700;margin-top:14px">3. 当日の持ち物</div>'
+      +'<p>□ e-timecardの簡易マニュアル<br>□ 筆記用具（ボールペン・メモ帳など）<br>□ 引継ぎ・メモ用のノート</p>'
+      +'<div style="font-weight:700;margin-top:14px">4. 初日終了後のご連絡</div>'
+      +'<p>初日が終了しましたら、必ず弊社へご報告のご連絡をお願いします。<br>・連絡先：担当者へ電話またはメール<br>・報告内容：業務の様子・気になる点・不明な点など何でもOK</p>'
+      +'<p style="color:#8a5a00">💡 些細なことでもお気軽にご相談ください。一緒にサポートします！</p>'
+      +'<div style="font-weight:700;margin-top:14px;background:#f5f4f0;padding:10px 12px;border-radius:8px">5. 初日の入り方</div>'
+      +'<table style="width:100%;margin-top:8px;font-size:13px"><tr><td style="padding:4px 0;width:80px;color:#888">同行</td><td>'+(ctx.accompany||'')+'</td></tr>'
+      +'<tr><td style="padding:4px 0;color:#888">場所</td><td>'+(ctx.place||'')+'</td></tr>'
+      +'<tr><td style="padding:4px 0;color:#888">時間</td><td>'+(ctx.time||'')+'</td></tr>'
+      +'<tr><td style="padding:4px 0;color:#888">同行者</td><td>'+(ctx.companion||'')+'</td></tr>'
+      +'<tr><td style="padding:4px 0;color:#888">備考</td><td>'+(ctx.note||'')+'</td></tr></table>'
+      +'<p style="margin-top:14px">ご不明な点がございましたら、担当者までお気軽にお問い合わせください。初日を笑顔でスタートしましょう！</p>';
+    return html;
+  }
+  return '';
+}
+
+
+async function loadOnboardingRulesStatus(){
+  if(!supabaseClient)return;
+  var {data}=await supabaseClient.from('onboarding_templates').select('*').eq('key','rules').maybeSingle();
+  var statusEl=document.getElementById('onboarding-rules-status');
+  if(!statusEl)return;
+  if(data&&data.file_url){
+    statusEl.textContent='登録済み（最終更新：'+(data.updated_at?data.updated_at.substring(0,10).replace(/-/g,'/'):'')+'）';
+    statusEl.style.color='#2d6a10';
+  } else {
+    statusEl.textContent='未登録（就業規則PDFをアップロードしてください）';
+    statusEl.style.color='#991b1b';
+  }
+}
+async function uploadOnboardingRulesPdf(){
+  if(!supabaseClient)return;
+  var fileInput=document.getElementById('onboarding-rules-file');
+  if(!fileInput.files||fileInput.files.length===0){alert('PDFファイルを選んでください');return;}
+  var file=fileInput.files[0];
+  var path='rules_'+Date.now()+'.pdf';
+  var up=await supabaseClient.storage.from('onboarding-docs').upload(path,file);
+  if(up.error){alert('アップロードに失敗しました：'+up.error.message);return;}
+  var {error}=await supabaseClient.from('onboarding_templates').upsert({key:'rules',file_url:path,updated_at:new Date().toISOString()},{onConflict:'key'});
+  if(error){alert('保存に失敗しました：'+error.message);return;}
+  alert('アップロードしました');
+  fileInput.value='';
+  loadOnboardingRulesStatus();
+}
+
+async function openOnboardingSendModal(){
+  if(!supabaseClient)return;
+  var {data:staffs}=await supabaseClient.from('staffs').select('id,name,employee_id').order('employee_id');
+  var sel=document.getElementById('onboarding-target');
+  sel.innerHTML='<option value="">選択してください</option>'+(staffs||[]).map(function(s){return '<option value="'+s.id+'">'+s.name+'（'+s.employee_id+'）</option>';}).join('');
+  document.getElementById('onboarding-firstday-accompany').value='同行なし';
+  document.getElementById('onboarding-firstday-place').value='';
+  document.getElementById('onboarding-firstday-time').value='';
+  document.getElementById('onboarding-firstday-companion').value='';
+  document.getElementById('onboarding-firstday-note').value='';
+  var statusEl=document.getElementById('onboarding-send-status');if(statusEl)statusEl.style.display='none';
+  openModal('send-onboarding');
+}
+
+async function sendOnboardingDocs(){
+  if(!supabaseClient)return;
+  var staffId=document.getElementById('onboarding-target').value;
+  var statusEl=document.getElementById('onboarding-send-status');
+  if(!staffId){alert('対象スタッフを選択してください');return;}
+  var accompany=document.getElementById('onboarding-firstday-accompany').value;
+  var place=document.getElementById('onboarding-firstday-place').value;
+  var time=document.getElementById('onboarding-firstday-time').value;
+  var companion=document.getElementById('onboarding-firstday-companion').value;
+  var note=document.getElementById('onboarding-firstday-note').value;
+  statusEl.style.display='block';statusEl.style.background='#f5f4f0';statusEl.style.color='#666';statusEl.textContent='送付中...';
+
+  var {data:tmpl}=await supabaseClient.from('onboarding_templates').select('file_url').eq('key','rules').maybeSingle();
+  var rulesFileUrl=tmpl?tmpl.file_url:null;
+
+  var firstdayHtml=buildOnboardingContentHtml('firstday',{accompany:accompany,place:place,time:time,companion:companion,note:note});
+  var privacyHtml=buildOnboardingContentHtml('privacy');
+  var pledgeHtml=buildOnboardingContentHtml('pledge');
+
+  var rows=[
+    {staff_id:staffId,doc_key:'rules',doc_name:'就業規則（抜粋）',needs_sign:false,needs_input:false,file_url:rulesFileUrl},
+    {staff_id:staffId,doc_key:'privacy',doc_name:'個人情報の取り扱いについて',needs_sign:true,needs_input:false,content_html:privacyHtml},
+    {staff_id:staffId,doc_key:'pledge',doc_name:'誓約書',needs_sign:true,needs_input:false,content_html:pledgeHtml},
+    {staff_id:staffId,doc_key:'firstday',doc_name:'出勤初日の注意点',needs_sign:false,needs_input:false,content_html:firstdayHtml},
+    {staff_id:staffId,doc_key:'bank',doc_name:'お給料振込口座の登録',needs_sign:false,needs_input:true},
+    {staff_id:staffId,doc_key:'emergency',doc_name:'緊急連絡先届出書',needs_sign:false,needs_input:true}
+  ];
+  var {error}=await supabaseClient.from('onboarding_documents').insert(rows);
+  if(error){statusEl.style.background='#fee2e2';statusEl.style.color='#991b1b';statusEl.textContent='送付に失敗しました：'+error.message;return;}
+  statusEl.style.background='#e6f4d7';statusEl.style.color='#2d6a10';statusEl.textContent='送付しました！';
+  setTimeout(function(){closeModal('send-onboarding');loadAdminOnboarding();},900);
+}
+
+async function loadAdminOnboarding(){
+  if(!supabaseClient)return;
+  await loadOnboardingRulesStatus();
+  var tbody=document.getElementById('admin-nyusha-tbody');
+  if(!tbody)return;
+  tbody.innerHTML='<tr><td colspan="4" style="text-align:center;color:#888;padding:20px">読み込み中...</td></tr>';
+  var {data:docs}=await supabaseClient.from('onboarding_documents').select('*').is('cancelled_at',null).order('created_at',{ascending:false});
+  if(!docs||docs.length===0){tbody.innerHTML='<tr><td colspan="4" style="text-align:center;color:#888;padding:20px">まだ送付していません</td></tr>';return;}
+  var {data:staffs}=await supabaseClient.from('staffs').select('id,name');
+  var staffMap={};if(staffs)staffs.forEach(function(s){staffMap[s.id]=s.name;});
+  var byStaff={};
+  docs.forEach(function(d){
+    if(!byStaff[d.staff_id])byStaff[d.staff_id]={docs:[],latest:d.created_at};
+    byStaff[d.staff_id].docs.push(d);
+    if(new Date(d.created_at)>new Date(byStaff[d.staff_id].latest))byStaff[d.staff_id].latest=d.created_at;
+  });
+  tbody.innerHTML='';
+  Object.keys(byStaff).sort(function(a,b){return new Date(byStaff[b].latest)-new Date(byStaff[a].latest);}).forEach(function(staffId){
+    var group=byStaff[staffId];
+    var name=staffMap[staffId]||'(不明)';
+    var total=group.docs.length;
+    var done=group.docs.filter(function(d){
+      return d.needs_sign ? !!d.signed_at : !!d.submitted_at;
+    }).length;
+    var dateStr=group.latest?group.latest.substring(0,10).replace(/-/g,'/'):'';
+    var tr=document.createElement('tr');
+    tr.innerHTML='<td>'+name+'</td><td>'+done+' / '+total+'</td><td style="font-size:12px;color:#888">'+dateStr+'</td>'
+      +'<td><button class="btn btn-sm" onclick="openAdminOnboardingDetail(\''+staffId+'\',\''+name.replace(/'/g,"\\'")+'\')">詳細</button></td>';
+    tbody.appendChild(tr);
+  });
+}
+
+async function openAdminOnboardingDetail(staffId,staffName){
+  if(!supabaseClient)return;
+  var {data:docs}=await supabaseClient.from('onboarding_documents').select('*').eq('staff_id',staffId).is('cancelled_at',null).order('created_at',{ascending:true});
+  window._adminOnboardingDocs={};
+  (docs||[]).forEach(function(d){window._adminOnboardingDocs[d.id]=d;});
+  var html='';
+  (docs||[]).forEach(function(d){
+    var done = d.needs_sign ? !!d.signed_at : !!d.submitted_at;
+    var statusBdg = done ? '<span class="bdg bg">完了</span>' : '<span class="bdg ba">未対応</span>';
+    var viewBtn='<button class="btn btn-sm" onclick="viewAdminOnboardingDoc(\''+d.id+'\')">表示</button>';
+    var cancelBtn='<button class="btn btn-sm" style="border-color:#991b1b;color:#991b1b" onclick="cancelOnboardingDoc(\''+d.id+'\',\''+staffName.replace(/'/g,"\\'")+'\')">取消</button>';
+    html+='<div style="display:flex;justify-content:space-between;align-items:center;padding:10px 0;border-bottom:1px solid #f0efe9;gap:8px;flex-wrap:wrap">'
+      +'<div><div style="font-weight:600;font-size:14px">'+d.doc_name+'</div><div style="margin-top:4px">'+statusBdg+'</div></div>'
+      +'<div>'+viewBtn+' '+cancelBtn+'</div></div>';
+  });
+  document.getElementById('onboarding-detail-title').textContent=staffName+'さんの入社手続き';
+  document.getElementById('onboarding-detail-body').innerHTML=html||'<div style="text-align:center;color:#888;padding:20px">書類がありません</div>';
+  openModal('onboarding-detail');
+}
+
+async function viewAdminOnboardingDoc(docId){
+  if(!supabaseClient)return;
+  var d=window._adminOnboardingDocs[docId];
+  if(!d)return;
+  if(d.doc_key==='rules'){
+    if(!d.file_url){alert('就業規則PDFが登録されていません');return;}
+    var {data,error}=await supabaseClient.storage.from('onboarding-docs').createSignedUrl(d.file_url,3600);
+    if(error||!data){alert('表示に失敗しました');return;}
+    window.open(data.signedUrl,'_blank');
+    return;
+  }
+  if(d.doc_key==='bank'){
+    var f=d.form_data||{};
+    alert('【口座情報】\n銀行名：'+(f.bank_name||'（未入力）')+'\n支店名：'+(f.branch||'')+'\n種目：'+(f.account_type||'')+'\n口座番号：'+(f.account_number||'')+'\n名義（カナ）：'+(f.holder_kana||''));
+    return;
+  }
+  if(d.doc_key==='emergency'){
+    var f=d.form_data||{};
+    alert('【緊急連絡先】\n氏名：'+(f.name||'（未入力）')+'（'+(f.relationship||'')+'）\n住所：'+(f.address||'')+'\n電話：'+(f.phone||'')+'\n\n【本人連絡先】\n現住所：'+(f.my_address||'')+'\n固定電話：'+(f.my_phone_home||'')+'\n携帯電話：'+(f.my_phone_mobile||'')+'\nメール：'+(f.email||'')+'\n\n【住民票住所】\n'+(f.jyuminhyo||''));
+    return;
+  }
+  openFilledDocInNewTab(d.content_html,d.doc_name);
+}
+
+async function cancelOnboardingDoc(docId,staffName){
+  if(!supabaseClient)return;
+  if(!confirm(staffName+'さんのこの書類を取消します。よろしいですか？'))return;
+  var {error}=await supabaseClient.from('onboarding_documents').update({cancelled_at:new Date().toISOString()}).eq('id',docId);
+  if(error){alert('取消に失敗しました：'+error.message);return;}
+  loadAdminOnboarding();
+  closeModal('onboarding-detail');
+}
+
+async function loadMyOnboarding(){
+  if(!supabaseClient||!myStaffData)return;
+  var listEl=document.getElementById('staff-nyusha-list');
+  if(!listEl)return;
+  listEl.innerHTML='<div style="text-align:center;color:#aaa;padding:20px;font-size:13px">読み込み中...</div>';
+  var {data:docs}=await supabaseClient.from('onboarding_documents').select('*').eq('staff_id',myStaffData.id).is('cancelled_at',null).order('created_at',{ascending:true});
+  if(!docs||docs.length===0){listEl.innerHTML='<div style="text-align:center;color:#aaa;padding:20px;font-size:13px">まだ送付されていません</div>';return;}
+  window._myOnboardingDocs={};
+  docs.forEach(function(d){window._myOnboardingDocs[d.id]=d;});
+  var html='';
+  docs.forEach(function(d){
+    var done = d.needs_sign ? !!d.signed_at : !!d.submitted_at;
+    var statusBdg = done ? '<span class="bdg bg">完了</span>' : '<span class="bdg ba">未対応</span>';
+    var actionBtn='';
+    if(d.doc_key==='rules'){
+      actionBtn = d.file_url? '<button class="btn btn-sm" onclick="viewOnboardingRulesPdf(\''+d.id+'\')">表示</button>':'<span style="color:#888;font-size:12px">未登録</span>';
+      if(!done)actionBtn+=' <button class="btn btn-sm btn-p" onclick="markOnboardingRead(\''+d.id+'\')">既読にする</button>';
+    } else if(d.doc_key==='firstday'){
+      actionBtn='<button class="btn btn-sm" onclick="openFilledDocInNewTab(window._myOnboardingDocs[\''+d.id+'\'].content_html,\''+d.doc_name+'\')">表示</button>';
+      if(!done)actionBtn+=' <button class="btn btn-sm btn-p" onclick="markOnboardingRead(\''+d.id+'\')">既読にする</button>';
+    } else if(d.needs_sign){
+      actionBtn = done? '<button class="btn btn-sm" onclick="openFilledDocInNewTab(window._myOnboardingDocs[\''+d.id+'\'].content_html,\''+d.doc_name+'\')">表示</button>' : '<button class="btn btn-sm btn-p" onclick="openOnboardingSignModal(\''+d.id+'\')">署名する</button>';
+    } else if(d.doc_key==='bank'){
+      actionBtn = done? '<span style="color:#888;font-size:12px">入力済み</span>' : '<button class="btn btn-sm btn-p" onclick="openOnboardingBankModal(\''+d.id+'\')">入力する</button>';
+    } else if(d.doc_key==='emergency'){
+      actionBtn = done? '<span style="color:#888;font-size:12px">入力済み</span>' : '<button class="btn btn-sm btn-p" onclick="openOnboardingEmergencyModal(\''+d.id+'\')">入力する</button>';
+    }
+    html+='<div style="display:flex;align-items:center;justify-content:space-between;padding:12px 0;border-bottom:1px solid #f0efe9;gap:8px;flex-wrap:wrap">'
+      +'<div><div style="font-size:14px;font-weight:600">'+d.doc_name+'</div><div style="margin-top:4px">'+statusBdg+'</div></div>'
+      +'<div>'+actionBtn+'</div></div>';
+  });
+  listEl.innerHTML=html;
+}
+
+async function viewOnboardingRulesPdf(docId){
+  if(!supabaseClient)return;
+  var d=window._myOnboardingDocs[docId];
+  if(!d||!d.file_url){alert('まだ登録されていません。担当者にご確認ください。');return;}
+  var {data,error}=await supabaseClient.storage.from('onboarding-docs').createSignedUrl(d.file_url,3600);
+  if(error||!data){alert('表示に失敗しました');return;}
+  window.open(data.signedUrl,'_blank');
+}
+
+async function markOnboardingRead(docId){
+  if(!supabaseClient)return;
+  var {error}=await supabaseClient.from('onboarding_documents').update({submitted_at:new Date().toISOString()}).eq('id',docId);
+  if(error){alert('保存に失敗しました：'+error.message);return;}
+  loadMyOnboarding();
+}
+
+var _onboardingSignTargetId=null;
+function openOnboardingSignModal(docId){
+  var d=window._myOnboardingDocs[docId];
+  if(!d)return;
+  _onboardingSignTargetId=docId;
+  document.getElementById('onboarding-sign-title').textContent=d.doc_name+'に署名する';
+  document.getElementById('onboarding-sign-content').innerHTML=d.content_html;
+  document.getElementById('onboarding-sign-name').value=myStaffData?myStaffData.name:'';
+  var statusEl=document.getElementById('onboarding-sign-status');if(statusEl)statusEl.style.display='none';
+  openModal('onboarding-sign');
+}
+async function submitOnboardingSign(){
+  if(!supabaseClient)return;
+  var name=document.getElementById('onboarding-sign-name').value.trim();
+  var statusEl=document.getElementById('onboarding-sign-status');
+  if(!name){alert('お名前を入力してください');return;}
+  var {error}=await supabaseClient.from('onboarding_documents').update({signed_at:new Date().toISOString(),form_data:{signer_name:name}}).eq('id',_onboardingSignTargetId);
+  if(error){statusEl.style.display='block';statusEl.style.background='#fee2e2';statusEl.style.color='#991b1b';statusEl.textContent='保存に失敗しました：'+error.message;return;}
+  closeModal('onboarding-sign');
+  loadMyOnboarding();
+}
+
+var _onboardingBankTargetId=null;
+function openOnboardingBankModal(docId){
+  _onboardingBankTargetId=docId;
+  ['ob-bank-name','ob-bank-branch','ob-bank-number','ob-bank-holder'].forEach(function(id){document.getElementById(id).value='';});
+  document.getElementById('ob-bank-type').value='普通';
+  var statusEl=document.getElementById('ob-bank-status');if(statusEl)statusEl.style.display='none';
+  openModal('onboarding-bank');
+}
+async function submitOnboardingBank(){
+  if(!supabaseClient)return;
+  var data={
+    bank_name:document.getElementById('ob-bank-name').value.trim(),
+    branch:document.getElementById('ob-bank-branch').value.trim(),
+    account_type:document.getElementById('ob-bank-type').value,
+    account_number:document.getElementById('ob-bank-number').value.trim(),
+    holder_kana:document.getElementById('ob-bank-holder').value.trim()
+  };
+  var statusEl=document.getElementById('ob-bank-status');
+  if(!data.bank_name||!data.branch||!data.account_number||!data.holder_kana){alert('必須項目を入力してください');return;}
+  var {error}=await supabaseClient.from('onboarding_documents').update({submitted_at:new Date().toISOString(),form_data:data}).eq('id',_onboardingBankTargetId);
+  if(error){statusEl.style.display='block';statusEl.style.background='#fee2e2';statusEl.style.color='#991b1b';statusEl.textContent='保存に失敗しました：'+error.message;return;}
+  closeModal('onboarding-bank');
+  loadMyOnboarding();
+}
+
+var _onboardingEmTargetId=null;
+function openOnboardingEmergencyModal(docId){
+  _onboardingEmTargetId=docId;
+  ['ob-em-name','ob-em-address','ob-em-phone','ob-em-myaddress','ob-em-myphone-home','ob-em-myphone-mobile','ob-em-email','ob-em-jyuminhyo'].forEach(function(id){document.getElementById(id).value='';});
+  document.getElementById('ob-em-relationship').value='親';
+  var statusEl=document.getElementById('ob-em-status');if(statusEl)statusEl.style.display='none';
+  openModal('onboarding-emergency');
+}
+async function submitOnboardingEmergency(){
+  if(!supabaseClient)return;
+  var data={
+    name:document.getElementById('ob-em-name').value.trim(),
+    relationship:document.getElementById('ob-em-relationship').value,
+    address:document.getElementById('ob-em-address').value.trim(),
+    phone:document.getElementById('ob-em-phone').value.trim(),
+    my_address:document.getElementById('ob-em-myaddress').value.trim(),
+    my_phone_home:document.getElementById('ob-em-myphone-home').value.trim(),
+    my_phone_mobile:document.getElementById('ob-em-myphone-mobile').value.trim(),
+    email:document.getElementById('ob-em-email').value.trim(),
+    jyuminhyo:document.getElementById('ob-em-jyuminhyo').value.trim()
+  };
+  var statusEl=document.getElementById('ob-em-status');
+  if(!data.name||!data.phone||!data.my_address||!data.my_phone_mobile||!data.jyuminhyo){alert('必須項目を入力してください');return;}
+  var {error}=await supabaseClient.from('onboarding_documents').update({submitted_at:new Date().toISOString(),form_data:data}).eq('id',_onboardingEmTargetId);
+  if(error){statusEl.style.display='block';statusEl.style.background='#fee2e2';statusEl.style.color='#991b1b';statusEl.textContent='保存に失敗しました：'+error.message;return;}
+  closeModal('onboarding-emergency');
+  loadMyOnboarding();
+}
+
 function buildCarInsuranceLetterHtml(letterType, ctx){
   // letterType: 'consent'（使用承諾書） または 'renewal_notice'（更新のお知らせ）
   // ctx: {staffName, sentDate, thresholdDate}
