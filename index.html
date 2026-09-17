@@ -2403,17 +2403,20 @@ async function saveInsuranceExpiry(docId){
   if(!input||!input.value){alert('保険期限日を入力してください');return;}
   var u=await supabaseClient.from('documents').update({insurance_expiry_date:input.value,reminder_sent_at:null}).eq('id',docId).select('staff_id').single();
   if(u.error){alert('保存に失敗しました：'+u.error.message);return;}
-  // 使用承諾書を自動生成して送付
-  var {data:staffRow}=await supabaseClient.from('staffs').select('id,name').eq('id',u.data.staff_id).maybeSingle();
-  if(staffRow){
+  // 使用承諾書を自動生成して送付（本人設定で自動送信オフの場合はスキップ）
+  var {data:staffRow}=await supabaseClient.from('staffs').select('id,name,skip_car_insurance_auto_notice').eq('id',u.data.staff_id).maybeSingle();
+  var skipped=false;
+  if(staffRow&&!staffRow.skip_car_insurance_auto_notice){
     var nowIso=new Date().toISOString();
     var consentHtml=buildCarInsuranceLetterHtml('consent',{staffName:staffRow.name,sentDate:new Date()});
     await supabaseClient.from('documents').insert({
       staff_id:staffRow.id,type:'notice',title:'使用承諾書',
       message:consentHtml,created_at:nowIso,confirmed_at:nowIso,confirmed_by:'システム自動送付'
     });
+  } else if(staffRow){
+    skipped=true;
   }
-  alert('保険期限日を保存しました。使用承諾書もあわせて送付しました。');
+  alert('保険期限日を保存しました。'+(skipped?'（この方は自動送信をオフにしているため、使用承諾書は送付していません）':'使用承諾書もあわせて送付しました。'));
   if(typeof loadAdminCarInsurance==='function')loadAdminCarInsurance();
 }
 async function resendCarInsuranceNotice(staffId,staffName){
@@ -2455,12 +2458,14 @@ async function checkAndSendCarInsuranceReminders(){
     return daysLeft<=14;
   });
   if(targets.length===0)return;
-  var {data:staffs}=await supabaseClient.from('staffs').select('id,name');
-  var staffMap={};if(staffs)staffs.forEach(function(s){staffMap[s.id]=s.name;});
+  var {data:staffs}=await supabaseClient.from('staffs').select('id,name,skip_car_insurance_auto_notice');
+  var staffMap={};var skipMap={};
+  if(staffs)staffs.forEach(function(s){staffMap[s.id]=s.name;skipMap[s.id]=!!s.skip_car_insurance_auto_notice;});
   for(var i=0;i<targets.length;i++){
     var d=targets[i];
     var name=staffMap[d.staff_id];
     if(!name)continue;
+    if(skipMap[d.staff_id])continue; // 自動送信オフの場合はスキップ
     var expiry=new Date(d.insurance_expiry_date+'T00:00:00');
     var threshold=new Date(expiry.getTime()+86400000); // 期限の翌日から
     var nowIso=new Date().toISOString();
@@ -2550,9 +2555,10 @@ async function loadAdminUploads(){
   if(!supabaseClient) return;
   var {data:docs}=await supabaseClient.from('documents').select('*').is('cancelled_at',null).order('created_at',{ascending:false});
   if(!docs) return;
-  var {data:staffs}=await supabaseClient.from('staffs').select('id,name');
+  var {data:staffs}=await supabaseClient.from('staffs').select('id,name,skip_car_insurance_auto_notice');
   var staffMap={};
-  if(staffs){staffs.forEach(function(s){staffMap[s.id]=s.name;});}
+  var skipAutoMap={};
+  if(staffs){staffs.forEach(function(s){staffMap[s.id]=s.name;skipAutoMap[s.id]=!!s.skip_car_insurance_auto_notice;});}
   var payslipDocs=docs.filter(function(d){return d.type==='payslip';});
   var contractDocs=docs.filter(function(d){return d.type==='contract'||d.requires_signature;});
   async function buildUploadsRows(targetDocs,tbodyId){
@@ -2601,7 +2607,8 @@ async function loadAdminUploads(){
       var expiryTd='';
       if(isCar){
         expiryTd=d.confirmed_at
-          ?'<td><input type="date" id="expiry-'+d.id+'" value="'+(d.insurance_expiry_date||'')+'" style="font-size:12px;padding:2px 4px;width:130px"> <button class="btn btn-sm btn-p" onclick="saveInsuranceExpiry(\''+d.id+'\')">保存</button></td>'
+          ?'<td><input type="date" id="expiry-'+d.id+'" value="'+(d.insurance_expiry_date||'')+'" style="font-size:12px;padding:2px 4px;width:130px"> <button class="btn btn-sm btn-p" onclick="saveInsuranceExpiry(\''+d.id+'\')">保存</button>'
+            +'<label style="display:block;margin-top:4px;font-size:11px;color:#888;white-space:nowrap"><input type="checkbox" '+(skipAutoMap[d.staff_id]?'checked':'')+' onchange="toggleSkipCarAutoNotice(\''+d.staff_id+'\',this.checked)"> 案内・承諾書を自動送信しない</label></td>'
           :'<td style="color:#888;font-size:12px">確認後に入力</td>';
       }
       var tr=document.createElement('tr');
@@ -2612,6 +2619,11 @@ async function loadAdminUploads(){
   buildRecvRows(delayDocs,'admin-uploads-tbody-delay',false);
   buildRecvRows(carDocs,'admin-uploads-tbody-carinsurance',true);
   buildRecvRows(otherDocs,'admin-uploads-tbody-other',false);
+}
+async function toggleSkipCarAutoNotice(staffId,checked){
+  if(!supabaseClient)return;
+  var {error}=await supabaseClient.from('staffs').update({skip_car_insurance_auto_notice:checked}).eq('id',staffId);
+  if(error){alert('設定の保存に失敗しました：'+error.message);return;}
 }
 async function cancelCarInsuranceLetter(docId,staffName){
   if(!supabaseClient)return;
