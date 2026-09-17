@@ -702,6 +702,10 @@ input:disabled{background:#f5f4f0;color:#aaa;border-color:#e8e6e0}
   </div>
 
   <div id="staff-sresign" class="sp">
+    <div class="card" style="background:linear-gradient(135deg,#5b21b6,#7c3aed);color:#fff">
+      <div style="font-size:16px;font-weight:700;margin-bottom:8px">お仕事、今までありがとうございました</div>
+      <div style="font-size:13px;line-height:1.8;opacity:0.95">下記の書類のご確認・ご入力をお願いいたします。今後のご活躍を、スタッフ一同心より応援しております。またどこかでご一緒できる日を楽しみにしております。</div>
+    </div>
     <div class="card">
       <div class="ch"><span class="ct">退職書類</span></div>
       <div style="background:#fef3cd;border-radius:8px;padding:10px 12px;font-size:12px;color:#8a5a00;margin-bottom:14px;line-height:1.7">
@@ -1772,6 +1776,12 @@ input:disabled{background:#f5f4f0;color:#aaa;border-color:#e8e6e0}
       <div class="section-divider">PDFファイルをアップロード</div>
       <div id="resign-file-inputs"></div>
     </div>
+    <div class="section-divider">追加の書類（任意）</div>
+    <div class="fg"><label class="fl">書類名</label><input type="text" id="resign-extra-doc-name" placeholder="例：離職証明書"></div>
+    <div class="fg"><label class="fl">PDFファイル</label><input type="file" id="resign-extra-doc-file" accept="application/pdf"></div>
+    <div class="section-divider">個別メッセージ（任意）</div>
+    <div style="font-size:12px;color:#888;margin-bottom:6px">スタッフには標準のねぎらいメッセージが必ず表示されます。それとは別に、個人宛のメッセージを追加したい場合はここに入力してください（「お知らせ」から届きます）。</div>
+    <textarea id="resign-farewell-message" rows="4" style="width:100%;font-size:13px;padding:8px;border-radius:8px;border:1px solid #ddd;font-family:inherit" placeholder="例：〇〇さん、本当にお疲れさまでした。個人的にもとても助けられました。これからも元気でいてくださいね。"></textarea>
     <div id="resign-status" style="display:none;font-size:13px;margin-top:8px;padding:10px;border-radius:8px"></div>
     <div class="ma">
       <button class="btn btn-sm" onclick="closeModal('send-resignation')">キャンセル</button>
@@ -5963,11 +5973,53 @@ async function sendResignDocs(){
     statusEl.style.background='#fee2e2';statusEl.style.color='#991b1b';
     statusEl.textContent='エラー：'+errors.join('、');return;
   }
+  // 追加のPDF書類（任意）
+  var extraFileInput=document.getElementById('resign-extra-doc-file');
+  var extraDocName=document.getElementById('resign-extra-doc-name').value.trim();
+  if(extraFileInput&&extraFileInput.files&&extraFileInput.files.length>0){
+    var extraFile=extraFileInput.files[0];
+    var extraPath='extra_'+staffUuid+'_'+Date.now()+'.pdf';
+    var upExtra=await supabaseClient.storage.from('resignation-docs').upload(extraPath,extraFile);
+    if(upExtra.error){
+      errors.push('追加書類のアップロードに失敗：'+upExtra.error.message);
+    } else {
+      await supabaseClient.from('resignation_documents').insert({
+        staff_id:staffUuid,pattern:pattern,resignation_date:resignDate,
+        document_type:'extra',title:extraDocName||'追加書類',file_url:extraPath,needs_sign:false
+      });
+    }
+  }
+  // ねぎらいのメッセージ（任意）：お知らせとして送付
+  var farewellMsg=document.getElementById('resign-farewell-message').value.trim();
+  if(farewellMsg){
+    var session=await supabaseClient.auth.getSession();
+    var adminStaffId=null;
+    if(session.data.session){
+      var email=session.data.session.user.email;
+      var empId2=email.replace('@flexbs.com','');
+      var sRow2=await supabaseClient.from('staffs').select('id').eq('employee_id',empId2).single();
+      if(sRow2.data)adminStaffId=sRow2.data.id;
+    }
+    var noticeIns=await supabaseClient.from('notices').insert({title:targetName+'さんへ',body:farewellMsg,created_by:adminStaffId}).select().single();
+    if(!noticeIns.error){
+      await supabaseClient.from('notice_recipients').insert({notice_id:noticeIns.data.id,staff_id:staffUuid});
+      sendLineNotify({staff_id:staffUuid,type:'notice'});
+    }
+  }
+  if(errors.length>0){
+    statusEl.style.background='#fef3cd';statusEl.style.color='#8a5a00';
+    statusEl.textContent='送付しましたが、一部エラーがありました：'+errors.join('、');
+    setTimeout(function(){closeModal('send-resignation');statusEl.style.display='none';loadAdminTaisha();loadAdminStaffList();},2500);
+    return;
+  }
   statusEl.style.background='#e6f4d7';statusEl.style.color='#2d6a10';
   statusEl.textContent='送付完了！スタッフのポータルに表示されます。';
   setTimeout(function(){
     closeModal('send-resignation');
     statusEl.style.display='none';
+    document.getElementById('resign-extra-doc-name').value='';
+    document.getElementById('resign-extra-doc-file').value='';
+    document.getElementById('resign-farewell-message').value='';
     loadAdminTaisha();
     loadAdminStaffList();
   },1500);
