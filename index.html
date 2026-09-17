@@ -196,7 +196,7 @@ input:disabled{background:#f5f4f0;color:#aaa;border-color:#e8e6e0}
     <button id="nav-tab-paid" class="sub-tab" onclick="showSub('admin','paid',this);loadAdminLeaveRequests();loadAdminPaidLeaveList();loadLeaveHistory()">有給管理</button>
     <button id="nav-tab-uploads" class="sub-tab" onclick="showSub('admin','uploads',this);loadAdminUploads()">書類授受</button>
     <button id="nav-tab-carins" class="sub-tab" onclick="showSub('admin','carins',this);loadAdminCarInsurance()">車通勤</button>
-    <button class="sub-tab" onclick="showSub('admin','mynumber',this)">マイナンバー</button>
+    <button id="nav-tab-mynumber" class="sub-tab" onclick="showSub('admin','mynumber',this);loadAdminMynumber()">マイナンバー</button>
     <button class="sub-tab" onclick="showSub('admin','notice',this);loadAdminNotices()">お知らせ</button>
     <button class="sub-tab" onclick="showSub('admin','training',this);loadAdminTraining()">研修</button>
     <button id="nav-tab-health" class="sub-tab" onclick="showSub('admin','health',this);loadAdminHealth()">健康診断</button>
@@ -478,26 +478,21 @@ input:disabled{background:#f5f4f0;color:#aaa;border-color:#e8e6e0}
 
   <div id="admin-mynumber" class="sp">
     <div style="background:#fee2e2;border-radius:10px;padding:12px 14px;font-size:12px;color:#991b1b;margin-bottom:14px;line-height:1.7">
-      マイナンバーは番号法により厳格な管理が必要です。閲覧は担当者のみ、提供記録を必ず残してください。
+      マイナンバーは番号法により厳格な管理が必要です。閲覧は田中さん（0004）のみ許可されています。この画面のデータはデータベース側の権限設定で保護されており、田中さん以外のアカウントでは表示されません。
     </div>
+    <div id="mynumber-noaccess" style="display:none;background:#f5f4f0;border-radius:10px;padding:30px;text-align:center;color:#888">
+      この機能は担当者（田中さん）のみご利用いただけます。
+    </div>
+    <div id="mynumber-access-area">
     <div class="card">
       <div class="ch">
         <span class="ct">マイナンバー一覧</span>
-        <span style="font-size:11px;color:#888">担当者パスワードで閲覧可能</span>
       </div>
       <div class="tbl-scroll">
         <table class="tbl">
-          <thead><tr><th>名前</th><th>社員番号</th><th>マイナンバー</th><th>登録日</th><th></th></tr></thead>
-          <tbody>
-            <tr>
-              <td>田中 花子</td><td>0001</td>
-              <td><span id="mn-0001" style="font-family:monospace;letter-spacing:1px">****-****-****</span></td>
-              <td style="font-size:12px;color:#888">2025/04/01</td>
-              <td><div style="display:flex;gap:4px">
-                <button class="btn btn-sm" style="color:#991b1b;border-color:#fca5a5" onclick="showMynumber('0001','田中 花子')">確認する</button>
-                <button class="btn btn-sm btn-p" onclick="openModal('provide-record');document.getElementById('provide-staff').value='田中 花子（0001）'">提供記録</button>
-              </div></td>
-            </tr>
+          <thead><tr><th>名前</th><th>社員番号</th><th>マイナンバー</th><th>マイナンバーカードの写し</th><th>扶養親族</th><th>登録日</th><th></th></tr></thead>
+          <tbody id="mynumber-tbody">
+            <tr><td colspan="7" style="text-align:center;color:#888;padding:20px">読み込み中...</td></tr>
           </tbody>
         </table>
       </div>
@@ -511,10 +506,11 @@ input:disabled{background:#f5f4f0;color:#aaa;border-color:#e8e6e0}
         <table class="tbl">
           <thead><tr><th>日時</th><th>スタッフ名</th><th>提供先</th><th>目的</th><th>担当者</th></tr></thead>
           <tbody id="provide-log">
-            <tr><td style="font-size:12px;white-space:nowrap">2025/04/01 10:22</td><td>田中 花子</td><td>年金事務所</td><td>社会保険加入手続き</td><td>山本</td></tr>
+            <tr><td colspan="5" style="text-align:center;color:#888;padding:20px">読み込み中...</td></tr>
           </tbody>
         </table>
       </div>
+    </div>
     </div>
   </div>
 
@@ -645,6 +641,7 @@ input:disabled{background:#f5f4f0;color:#aaa;border-color:#e8e6e0}
     <button class="sub-tab" onclick="showSub('staff','supload',this);loadUploadHistory()">アップロード</button>
     <button class="sub-tab" onclick="showSub('staff','scar',this);loadMyCarInsurance()">車通勤</button>
     <button class="sub-tab" onclick="showSub('staff','sprofile',this)">プロフィール</button>
+    <button class="sub-tab" onclick="showSub('staff','smynumber',this);loadMyMynumber()">マイナンバー</button>
     <button class="sub-tab" onclick="showSub('staff','sqa',this)">Q&A</button>
   </div>
 
@@ -816,6 +813,24 @@ input:disabled{background:#f5f4f0;color:#aaa;border-color:#e8e6e0}
     </div>
   </div>
 
+  <div id="staff-smynumber" class="sp">
+    <div class="card">
+      <div class="ch"><span class="ct">マイナンバー登録</span></div>
+      <div style="font-size:12px;color:#666;margin-bottom:16px;line-height:1.7">ここで入力・アップロードした内容は、担当者（田中）以外は閲覧できません。厳重に管理されます。</div>
+      <div class="fg"><label class="fl">ご自身のマイナンバー</label><input type="text" id="mynum-self" placeholder="例：1234-5678-9012" maxlength="14"></div>
+      <div class="fg"><label class="fl">マイナンバーカードの写し</label><input type="file" id="mynum-card-file" accept="image/*,application/pdf">
+        <div id="mynum-card-current" style="font-size:12px;color:#888;margin-top:4px"></div>
+      </div>
+      <div class="fg">
+        <label class="fl">扶養親族（いる場合のみ）</label>
+        <div id="mynum-dependents-list"></div>
+        <button class="btn btn-sm" onclick="addDependentRow()">＋ 扶養親族を追加</button>
+      </div>
+      <div id="mynum-status" style="display:none;margin-top:12px;padding:10px 14px;border-radius:8px;font-size:13px"></div>
+      <button class="btn btn-p" style="width:100%;padding:10px;font-weight:700;margin-top:14px" onclick="saveMyMynumber()">保存する</button>
+    </div>
+  </div>
+
   <div id="staff-sprofile" class="sp">
     <div class="card">
 
@@ -954,13 +969,11 @@ input:disabled{background:#f5f4f0;color:#aaa;border-color:#e8e6e0}
   <div class="modal" style="max-width:400px">
     <div class="mt">マイナンバー確認</div>
     <div style="background:#fee2e2;border-radius:8px;padding:10px 12px;font-size:12px;color:#991b1b;margin-bottom:14px;line-height:1.7">
-      マイナンバーの閲覧は担当者のみ許可されています。専用パスワードを入力してください。
+      表示すると30秒後に自動的に非表示になります。周囲に画面が見えていないか確認してから表示してください。
     </div>
+    <div class="fg"><label class="fl">確認するスタッフ</label><input type="text" id="mn-staff-name" readonly style="background:#f5f4f0"></div>
     <div id="mn-confirm-form">
-      <div class="fg"><label class="fl">担当者パスワード</label><input type="password" id="mn-password" placeholder="担当者専用パスワード"></div>
-      <div id="mn-error" style="display:none;color:#991b1b;font-size:12px;margin-bottom:8px">パスワードが違います</div>
-      <div class="fg"><label class="fl">確認するスタッフ</label><input type="text" id="mn-staff-name" readonly style="background:#f5f4f0"></div>
-      <button class="btn btn-p" style="width:100%;padding:10px;font-weight:700" onclick="confirmMynumber()">確認する</button>
+      <button class="btn btn-p" style="width:100%;padding:10px;font-weight:700" onclick="confirmMynumber()">表示する</button>
     </div>
     <div id="mn-result" style="display:none">
       <div style="background:#f5f4f0;border-radius:10px;padding:16px;text-align:center;margin-bottom:12px">
@@ -976,7 +989,8 @@ input:disabled{background:#f5f4f0;color:#aaa;border-color:#e8e6e0}
 <div class="mbg" id="modal-provide-record">
   <div class="modal" style="max-width:480px">
     <div class="mt">マイナンバー提供記録</div>
-    <div class="fg"><label class="fl">対象スタッフ</label><input type="text" id="provide-staff" placeholder="スタッフ名（社員番号）"></div>
+    <div class="fg"><label class="fl">対象スタッフ</label><input type="text" id="provide-staff" placeholder="スタッフ名（社員番号）" readonly style="background:#f5f4f0">
+      <input type="hidden" id="provide-staff-id"></div>
     <div class="fg"><label class="fl">提供先</label><select id="provide-dest">
       <option>年金事務所</option><option>ハローワーク</option><option>税務署</option><option>その他</option>
     </select></div>
@@ -1712,30 +1726,147 @@ function toggleLoginBtn(){
 }
 
 var mnTimer=null;
-var mnNumbers={'0001':'1234-5678-9012'};
-var currentMnId='';
-var MN_PASSWORD='mynumber2025';
+var currentMnStaffId='';
+
+function addDependentRow(name,number,relationship){
+  var list=document.getElementById('mynum-dependents-list');
+  var row=document.createElement('div');
+  row.style.cssText='display:flex;gap:6px;margin-bottom:6px;align-items:center';
+  row.innerHTML='<input type="text" placeholder="氏名" class="dep-name" value="'+(name?name.replace(/"/g,'&quot;'):'')+'" style="flex:1;font-size:13px">'
+    +'<input type="text" placeholder="続柄" class="dep-rel" value="'+(relationship?relationship.replace(/"/g,'&quot;'):'')+'" style="width:80px;font-size:13px">'
+    +'<input type="text" placeholder="マイナンバー" class="dep-num" value="'+(number?number.replace(/"/g,'&quot;'):'')+'" style="width:140px;font-size:13px">'
+    +'<button class="btn btn-sm" onclick="this.parentElement.remove()">削除</button>';
+  list.appendChild(row);
+}
+async function loadMyMynumber(){
+  if(!supabaseClient||!myStaffData)return;
+  var {data,error}=await supabaseClient.from('my_numbers').select('*').eq('staff_id',myStaffData.id).maybeSingle();
+  document.getElementById('mynum-dependents-list').innerHTML='';
+  if(data){
+    document.getElementById('mynum-self').value=data.my_number||'';
+    if(data.card_copy_file_url){
+      document.getElementById('mynum-card-current').textContent='現在のファイル：登録済み（差し替える場合は新しいファイルを選んでください）';
+    } else {
+      document.getElementById('mynum-card-current').textContent='';
+    }
+    (data.dependents||[]).forEach(function(d){addDependentRow(d.name,d.my_number,d.relationship);});
+  }
+}
+async function saveMyMynumber(){
+  if(!supabaseClient||!myStaffData)return;
+  var statusEl=document.getElementById('mynum-status');
+  statusEl.style.display='block';statusEl.style.background='#f5f4f0';statusEl.style.color='#666';
+  statusEl.textContent='保存中...';
+  var myNumber=document.getElementById('mynum-self').value.trim();
+  var dependents=[];
+  document.querySelectorAll('#mynum-dependents-list > div').forEach(function(row){
+    var name=row.querySelector('.dep-name').value.trim();
+    var rel=row.querySelector('.dep-rel').value.trim();
+    var num=row.querySelector('.dep-num').value.trim();
+    if(name||rel||num)dependents.push({name:name,relationship:rel,my_number:num});
+  });
+  var fileInput=document.getElementById('mynum-card-file');
+  var cardPath=null;
+  if(fileInput.files&&fileInput.files.length>0){
+    var file=fileInput.files[0];
+    var ext=file.name.split('.').pop();
+    cardPath=myStaffData.employee_id+'/card_'+Date.now()+'.'+ext;
+    var up=await supabaseClient.storage.from('my-number-docs').upload(cardPath,file);
+    if(up.error){statusEl.style.background='#fee2e2';statusEl.style.color='#991b1b';statusEl.textContent='ファイルのアップロードに失敗しました：'+up.error.message;return;}
+  }
+  var payload={staff_id:myStaffData.id,my_number:myNumber,dependents:dependents,updated_at:new Date().toISOString(),updated_by:myStaffData.name};
+  if(cardPath)payload.card_copy_file_url=cardPath;
+  var {error}=await supabaseClient.from('my_numbers').upsert(payload,{onConflict:'staff_id'});
+  if(error){statusEl.style.background='#fee2e2';statusEl.style.color='#991b1b';statusEl.textContent='保存に失敗しました：'+error.message;return;}
+  statusEl.style.background='#e6f4d7';statusEl.style.color='#2d6a10';
+  statusEl.textContent='保存しました！';
+  fileInput.value='';
+  loadMyMynumber();
+}
+async function loadAdminMynumber(){
+  if(!supabaseClient)return;
+  var session=await supabaseClient.auth.getSession();
+  var email=session.data.session?session.data.session.user.email:'';
+  var isTanaka=(email==='0004@flexbs.com');
+  var accessArea=document.getElementById('mynumber-access-area');
+  var noAccess=document.getElementById('mynumber-noaccess');
+  if(!isTanaka){
+    if(accessArea)accessArea.style.display='none';
+    if(noAccess)noAccess.style.display='block';
+    return;
+  }
+  if(accessArea)accessArea.style.display='block';
+  if(noAccess)noAccess.style.display='none';
+
+  var tbody=document.getElementById('mynumber-tbody');
+  if(tbody){
+    var {data:staffs}=await supabaseClient.from('staffs').select('id,name,employee_id').order('employee_id');
+    var {data:mnRows,error}=await supabaseClient.from('my_numbers').select('*');
+    if(error){
+      tbody.innerHTML='<tr><td colspan="7" style="text-align:center;color:#991b1b;padding:20px">読み込みに失敗しました（'+error.message+'）</td></tr>';
+    } else {
+      var mnMap={};if(mnRows)mnRows.forEach(function(m){mnMap[m.staff_id]=m;});
+      tbody.innerHTML='';
+      (staffs||[]).forEach(function(s){
+        var m=mnMap[s.id];
+        var hasNumber=m&&m.my_number;
+        var cardTd=m&&m.card_copy_file_url?'<button class="btn btn-sm" onclick="viewMynumberCard(\''+m.card_copy_file_url+'\')">表示</button>':'<span style="color:#888;font-size:12px">未登録</span>';
+        var depCount=m&&m.dependents&&m.dependents.length?m.dependents.length+'名':'-';
+        var dateStr=m&&m.updated_at?m.updated_at.substring(0,10).replace(/-/g,'/'):'-';
+        var tr=document.createElement('tr');
+        tr.innerHTML='<td>'+s.name+'</td><td>'+s.employee_id+'</td>'
+          +'<td><span id="mn-'+s.id+'" style="font-family:monospace;letter-spacing:1px">'+(hasNumber?'****-****-****':'<span style=\"color:#888\">未登録</span>')+'</span></td>'
+          +'<td>'+cardTd+'</td><td>'+depCount+'</td><td style="font-size:12px;color:#888">'+dateStr+'</td>'
+          +'<td><div style="display:flex;gap:4px">'
+          +(hasNumber?'<button class="btn btn-sm" style="color:#991b1b;border-color:#fca5a5" onclick="showMynumber(\''+s.id+'\',\''+s.name.replace(/'/g,"\\'")+'\')">確認する</button>':'')
+          +' <button class="btn btn-sm btn-p" onclick="openModal(\'provide-record\');document.getElementById(\'provide-staff-id\').value=\''+s.id+'\';document.getElementById(\'provide-staff\').value=\''+s.name.replace(/'/g,"\\'")+'（'+s.employee_id+'）\'">提供記録</button>'
+          +'</div></td>';
+        tbody.appendChild(tr);
+      });
+    }
+  }
+
+  var logTbody=document.getElementById('provide-log');
+  if(logTbody){
+    var {data:provisions}=await supabaseClient.from('my_number_provisions').select('*,staffs(name)').order('created_at',{ascending:false}).limit(100);
+    if(!provisions||provisions.length===0){
+      logTbody.innerHTML='<tr><td colspan="5" style="text-align:center;color:#888;padding:20px">提供記録はまだありません</td></tr>';
+    } else {
+      logTbody.innerHTML='';
+      provisions.forEach(function(p){
+        var dt=new Date(p.created_at);
+        var dtStr=dt.getFullYear()+'/'+(dt.getMonth()+1)+'/'+dt.getDate()+' '+String(dt.getHours()).padStart(2,'0')+':'+String(dt.getMinutes()).padStart(2,'0');
+        var name=p.staffs?p.staffs.name:'(不明)';
+        var tr=document.createElement('tr');
+        tr.innerHTML='<td style="font-size:12px;white-space:nowrap">'+dtStr+'</td><td>'+name+'</td><td>'+(p.destination||'')+'</td><td>'+(p.purpose||'')+'</td><td>'+(p.person||'')+'</td>';
+        logTbody.appendChild(tr);
+      });
+    }
+  }
+}
+
+async function viewMynumberCard(path){
+  if(!supabaseClient)return;
+  var {data,error}=await supabaseClient.storage.from('my-number-docs').createSignedUrl(path,300);
+  if(error||!data){alert('表示に失敗しました');return;}
+  window.open(data.signedUrl,'_blank');
+}
 
 function showMynumber(staffId,staffName){
-  currentMnId=staffId;
+  currentMnStaffId=staffId;
   document.getElementById('mn-staff-name').value=staffName;
-  document.getElementById('mn-password').value='';
-  document.getElementById('mn-error').style.display='none';
   document.getElementById('mn-confirm-form').style.display='block';
   document.getElementById('mn-result').style.display='none';
   openModal('mynumber-confirm');
 }
 
-function confirmMynumber(){
-  var pw=document.getElementById('mn-password').value;
-  if(pw!==MN_PASSWORD){
-    document.getElementById('mn-error').style.display='block';
-    return;
-  }
-  document.getElementById('mn-error').style.display='none';
+async function confirmMynumber(){
+  if(!supabaseClient)return;
+  var {data,error}=await supabaseClient.from('my_numbers').select('my_number').eq('staff_id',currentMnStaffId).maybeSingle();
+  if(error||!data){alert('取得に失敗しました。権限がない可能性があります。');return;}
   document.getElementById('mn-confirm-form').style.display='none';
   document.getElementById('mn-result').style.display='block';
-  document.getElementById('mn-display').textContent=mnNumbers[currentMnId]||'****-****-****';
+  document.getElementById('mn-display').textContent=data.my_number||'未登録';
   var sec=30;
   document.getElementById('mn-timer').textContent=sec+'秒後に自動非表示';
   if(mnTimer)clearInterval(mnTimer);
@@ -1752,12 +1883,19 @@ function closeMynumberModal(){
   closeModal('mynumber-confirm');
 }
 
-function saveProvideRecord(){
-  var staff=document.getElementById('provide-staff').value;
+async function saveProvideRecord(){
+  if(!supabaseClient)return;
+  var staffId=document.getElementById('provide-staff-id').value;
   var person=document.getElementById('provide-person').value;
-  if(!staff||!person){alert('スタッフ名と担当者名を入力してください');return;}
+  if(!staffId||!person){alert('対象スタッフと担当者名を入力してください');return;}
+  var dest=document.getElementById('provide-dest').value;
+  var purpose=document.getElementById('provide-purpose').value;
+  var {error}=await supabaseClient.from('my_number_provisions').insert({staff_id:staffId,destination:dest,purpose:purpose,person:person});
+  if(error){alert('保存に失敗しました：'+error.message);return;}
   closeModal('provide-record');
+  document.getElementById('provide-person').value='';
   alert('提供記録を保存しました');
+  loadAdminMynumber();
 }
 
 async function doLogin(type){
