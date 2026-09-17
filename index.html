@@ -1438,20 +1438,34 @@ input:disabled{background:#f5f4f0;color:#aaa;border-color:#e8e6e0}
     </div>
     <div style="background:#f7f6f2;border-radius:8px;padding:10px 12px;font-size:12px;color:#666;margin:14px 0">交通機関を利用する方のみ、通勤経路をご記入ください。</div>
     <div style="font-size:12px;font-weight:700;color:#555;margin-bottom:6px">通勤経路①</div>
-    <div class="fg"><label class="fl">交通機関名</label><input type="text" id="addr-route1-company" placeholder="例：西鉄バス"></div>
-    <div class="fg"><label class="fl">乗車区間</label><input type="text" id="addr-route1-section" placeholder="例：〇〇駅 〜 △△駅"></div>
-    <div style="margin:-8px 0 10px;text-align:right"><a href="#" onclick="return openTransitRouteOnMap(1)" style="font-size:12px;color:#5b21b6;text-decoration:underline">🚃 この経路をGoogleマップで見る</a></div>
     <div style="display:flex;gap:8px">
-      <div class="fg" style="flex:1"><label class="fl">片道運賃</label><input type="number" id="addr-route1-fare" placeholder="円"></div>
-      <div class="fg" style="flex:1"><label class="fl">定期代（1ヶ月）</label><input type="number" id="addr-route1-pass" placeholder="円"></div>
+      <div class="fg" style="flex:1"><label class="fl">発車駅</label><input type="text" id="addr-route1-from" placeholder="例：〇〇駅"></div>
+      <div class="fg" style="flex:1"><label class="fl">到着駅</label><input type="text" id="addr-route1-to" placeholder="例：△△駅"></div>
+    </div>
+    <div style="margin:-8px 0 10px;text-align:right"><a href="#" onclick="return openTransitRouteOnMap(1)" style="font-size:12px;color:#5b21b6;text-decoration:underline">🚃 この経路をGoogleマップで見る</a></div>
+    <div class="fg"><label class="fl">乗物</label>
+      <select id="addr-route1-vehicle"><option value="旅客鉄道">旅客鉄道（JR）</option><option value="私鉄・地下鉄">私鉄・地下鉄</option><option value="バス">バス</option></select>
+    </div>
+    <div style="display:flex;gap:8px">
+      <div class="fg" style="flex:1"><label class="fl">区分</label>
+        <select id="addr-route1-faretype"><option value="片道">片道</option><option value="往復">往復</option><option value="1ヶ月定期">1ヶ月定期</option><option value="3ヶ月定期">3ヶ月定期</option></select>
+      </div>
+      <div class="fg" style="flex:1"><label class="fl">金額</label><input type="number" id="addr-route1-fare" placeholder="円"></div>
     </div>
     <div style="font-size:12px;font-weight:700;color:#555;margin-bottom:6px">通勤経路②</div>
-    <div class="fg"><label class="fl">交通機関名</label><input type="text" id="addr-route2-company" placeholder="例：JR"></div>
-    <div class="fg"><label class="fl">乗車区間</label><input type="text" id="addr-route2-section" placeholder="例：〇〇駅 〜 △△駅"></div>
-    <div style="margin:-8px 0 10px;text-align:right"><a href="#" onclick="return openTransitRouteOnMap(2)" style="font-size:12px;color:#5b21b6;text-decoration:underline">🚃 この経路をGoogleマップで見る</a></div>
     <div style="display:flex;gap:8px">
-      <div class="fg" style="flex:1"><label class="fl">片道運賃</label><input type="number" id="addr-route2-fare" placeholder="円"></div>
-      <div class="fg" style="flex:1"><label class="fl">定期代（1ヶ月）</label><input type="number" id="addr-route2-pass" placeholder="円"></div>
+      <div class="fg" style="flex:1"><label class="fl">発車駅</label><input type="text" id="addr-route2-from" placeholder="例：〇〇駅"></div>
+      <div class="fg" style="flex:1"><label class="fl">到着駅</label><input type="text" id="addr-route2-to" placeholder="例：△△駅"></div>
+    </div>
+    <div style="margin:-8px 0 10px;text-align:right"><a href="#" onclick="return openTransitRouteOnMap(2)" style="font-size:12px;color:#5b21b6;text-decoration:underline">🚃 この経路をGoogleマップで見る</a></div>
+    <div class="fg"><label class="fl">乗物</label>
+      <select id="addr-route2-vehicle"><option value="旅客鉄道">旅客鉄道（JR）</option><option value="私鉄・地下鉄">私鉄・地下鉄</option><option value="バス">バス</option></select>
+    </div>
+    <div style="display:flex;gap:8px">
+      <div class="fg" style="flex:1"><label class="fl">区分</label>
+        <select id="addr-route2-faretype"><option value="片道">片道</option><option value="往復">往復</option><option value="1ヶ月定期">1ヶ月定期</option><option value="3ヶ月定期">3ヶ月定期</option></select>
+      </div>
+      <div class="fg" style="flex:1"><label class="fl">金額</label><input type="number" id="addr-route2-fare" placeholder="円"></div>
     </div>
     <div style="background:#f7f6f2;border-radius:8px;padding:10px 12px;font-size:12px;color:#666;margin:14px 0">自動車通勤の方のみご記入ください。</div>
     <div style="display:flex;gap:8px">
@@ -3161,14 +3175,10 @@ function splitRouteSection(section){
 }
 
 function openTransitRouteOnMap(routeNum){
-  var section=(document.getElementById('addr-route'+routeNum+'-section').value||'').trim();
-  if(!section){alert('先に乗車区間を入力してください');return false;}
-  var parts=splitRouteSection(section);
-  if(parts&&parts.from&&parts.to){
-    window.open('https://www.google.com/maps/dir/?api=1&origin='+encodeURIComponent(parts.from)+'&destination='+encodeURIComponent(parts.to)+'&travelmode=transit','_blank');
-  }else{
-    window.open('https://www.google.com/maps/search/?api=1&query='+encodeURIComponent(section),'_blank');
-  }
+  var from=(document.getElementById('addr-route'+routeNum+'-from').value||'').trim();
+  var to=(document.getElementById('addr-route'+routeNum+'-to').value||'').trim();
+  if(!from||!to){alert('先に発車駅・到着駅を入力してください');return false;}
+  window.open('https://www.google.com/maps/dir/?api=1&origin='+encodeURIComponent(from)+'&destination='+encodeURIComponent(to)+'&travelmode=transit','_blank');
   return false;
 }
 
@@ -3184,15 +3194,25 @@ function openTransitRouteOnMapAdmin(section){
 
 function openAddressChangeModal(){
   ['addr-relocation-date','addr-new-name','addr-name-change-date','addr-new-postal','addr-new-address','addr-old-postal','addr-old-address',
-   'addr-route1-company','addr-route1-section','addr-route1-fare','addr-route1-pass',
-   'addr-route2-company','addr-route2-section','addr-route2-fare','addr-route2-pass',
+   'addr-route1-from','addr-route1-to','addr-route1-fare',
+   'addr-route2-from','addr-route2-to','addr-route2-fare',
    'addr-distance','addr-time'].forEach(function(id){var el=document.getElementById(id);if(el)el.value='';});
+  var v1=document.getElementById('addr-route1-vehicle');if(v1)v1.value='旅客鉄道';
+  var f1=document.getElementById('addr-route1-faretype');if(f1)f1.value='片道';
+  var v2=document.getElementById('addr-route2-vehicle');if(v2)v2.value='旅客鉄道';
+  var f2=document.getElementById('addr-route2-faretype');if(f2)f2.value='片道';
   ['addr-change-address','addr-change-name','addr-change-commute',
    'addr-cm-train','addr-cm-bus','addr-cm-car','addr-cm-bicycle','addr-cm-walk','addr-cm-other'].forEach(function(id){var el=document.getElementById(id);if(el)el.checked=false;});
   var s=document.getElementById('addr-status');if(s)s.style.display='none';
   openModal('address-change');
 }
 
+function buildRouteSection(fromId,toId){
+  var from=(document.getElementById(fromId)?document.getElementById(fromId).value:'').trim();
+  var to=(document.getElementById(toId)?document.getElementById(toId).value:'').trim();
+  if(!from&&!to)return null;
+  return from+' 〜 '+to;
+}
 async function submitAddressChange(){
   if(!supabaseClient||!myStaffData){alert('データ取得中です。少し待ってもう一度お試しください');return;}
   var relocationDate=document.getElementById('addr-relocation-date').value;
@@ -3228,14 +3248,18 @@ async function submitAddressChange(){
     old_address: val('addr-old-address'),
     new_postal_code: val('addr-new-postal'),
     new_address: newAddress,
-    route1_company: val('addr-route1-company'),
-    route1_section: val('addr-route1-section'),
+    route1_company: null,
+    route1_section: buildRouteSection('addr-route1-from','addr-route1-to'),
+    route1_vehicle: val('addr-route1-vehicle'),
+    route1_fare_type: val('addr-route1-faretype'),
     route1_fare: valInt('addr-route1-fare'),
-    route1_pass_fare: valInt('addr-route1-pass'),
-    route2_company: val('addr-route2-company'),
-    route2_section: val('addr-route2-section'),
+    route1_pass_fare: null,
+    route2_company: null,
+    route2_section: buildRouteSection('addr-route2-from','addr-route2-to'),
+    route2_vehicle: val('addr-route2-vehicle'),
+    route2_fare_type: val('addr-route2-faretype'),
     route2_fare: valInt('addr-route2-fare'),
-    route2_pass_fare: valInt('addr-route2-pass'),
+    route2_pass_fare: null,
     commute_distance_km: valFloat('addr-distance'),
     commute_time_minutes: valInt('addr-time')
   };
@@ -3357,7 +3381,7 @@ function openAddressDetail(id){
       routeRow.style.display='none';
     }
   }
-  var r1=[];if(d.route1_company)r1.push(d.route1_company);if(d.route1_section)r1.push(d.route1_section);if(d.route1_fare)r1.push('片道'+d.route1_fare+'円');if(d.route1_pass_fare)r1.push('定期'+d.route1_pass_fare+'円');
+  var r1=[];if(d.route1_vehicle)r1.push(d.route1_vehicle);if(d.route1_section)r1.push(d.route1_section);if(d.route1_fare_type)r1.push(d.route1_fare_type);if(d.route1_fare)r1.push(d.route1_fare+'円');
   document.getElementById('addrd-route1').textContent=r1.length?r1.join(' / '):'-';
   var route1MapRow=document.getElementById('addrd-route1-map-row');
   var route1MapLink=document.getElementById('addrd-route1-map-link');
@@ -3369,7 +3393,7 @@ function openAddressDetail(id){
       route1MapRow.style.display='none';
     }
   }
-  var r2=[];if(d.route2_company)r2.push(d.route2_company);if(d.route2_section)r2.push(d.route2_section);if(d.route2_fare)r2.push('片道'+d.route2_fare+'円');if(d.route2_pass_fare)r2.push('定期'+d.route2_pass_fare+'円');
+  var r2=[];if(d.route2_vehicle)r2.push(d.route2_vehicle);if(d.route2_section)r2.push(d.route2_section);if(d.route2_fare_type)r2.push(d.route2_fare_type);if(d.route2_fare)r2.push(d.route2_fare+'円');
   document.getElementById('addrd-route2').textContent=r2.length?r2.join(' / '):'-';
   var route2MapRow=document.getElementById('addrd-route2-map-row');
   var route2MapLink=document.getElementById('addrd-route2-map-link');
@@ -3615,8 +3639,8 @@ async function loadAdminLeaveRequests(){
 function printAddressDetail(){
   var d=(window._addressChangesCache||{})[_currentAddressDetailId];
   if(!d){alert('データが見つかりません');return;}
-  var r1=[];if(d.route1_company)r1.push(d.route1_company);if(d.route1_section)r1.push(d.route1_section);if(d.route1_fare)r1.push('片道'+d.route1_fare+'円');if(d.route1_pass_fare)r1.push('定期'+d.route1_pass_fare+'円');
-  var r2=[];if(d.route2_company)r2.push(d.route2_company);if(d.route2_section)r2.push(d.route2_section);if(d.route2_fare)r2.push('片道'+d.route2_fare+'円');if(d.route2_pass_fare)r2.push('定期'+d.route2_pass_fare+'円');
+  var r1=[];if(d.route1_vehicle)r1.push(d.route1_vehicle);if(d.route1_section)r1.push(d.route1_section);if(d.route1_fare_type)r1.push(d.route1_fare_type);if(d.route1_fare)r1.push(d.route1_fare+'円');
+  var r2=[];if(d.route2_vehicle)r2.push(d.route2_vehicle);if(d.route2_section)r2.push(d.route2_section);if(d.route2_fare_type)r2.push(d.route2_fare_type);if(d.route2_fare)r2.push(d.route2_fare+'円');
   var dt=[];if(d.commute_distance_km)dt.push('約'+d.commute_distance_km+'km');if(d.commute_time_minutes)dt.push('約'+d.commute_time_minutes+'分');
   var rows=[
     ['氏名',(d._staffName||'')+'（'+(d._staffEmpId||'')+'）']
