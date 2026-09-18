@@ -1220,6 +1220,12 @@ input:disabled{background:#f5f4f0;color:#aaa;border-color:#e8e6e0}
   <iframe id="contract-preview-frame" style="width:100%;height:320px;border:1px solid #d8d6d0;border-radius:8px;background:#fff"></iframe>
 </div>
     <div class="fg"><label class="fl">一言コメント（任意）</label><textarea id="contract-message" rows="2" placeholder="例：以前送付していましたが、指揮命令者などの氏名が変更になった為、再送付です"></textarea></div>
+    <div class="fg" style="border-top:1px solid #eee;padding-top:10px">
+      <label style="display:flex;align-items:center;gap:6px;font-size:13px;cursor:pointer"><input type="checkbox" id="contract-include-ip" onchange="document.getElementById('contract-ip-file-area').style.display=this.checked?'block':'none'" style="width:16px;height:16px"> 知的財産権に関する覚書も一緒に送る</label>
+    </div>
+    <div id="contract-ip-file-area" style="display:none">
+      <div class="fg"><label class="fl">知的財産権に関する覚書のPDF</label><input type="file" id="contract-ip-file" accept=".pdf"></div>
+    </div>
     <div id="contract-status" style="display:none;font-size:12px;margin-top:8px"></div>
     <div id="contract-paper-warning" style="display:none;background:#fee;border:2px solid #c00;border-radius:8px;padding:12px;margin-top:8px;color:#c00;font-weight:bold;font-size:14px;text-align:center">🚨 この方は契約書を紙で受け取る方です<br>ポータルからは送付できません</div>
     <div class="ma"><button class="btn btn-sm" onclick="closeModal('send-contract')">キャンセル</button><button id="contract-send-btn"  class="btn btn-sm btn-p" onclick="sendContract()">送付する →</button></div>
@@ -4053,8 +4059,28 @@ async function sendContract(){
     requires_signature:needsSig
   });
   if(ins.error){status.style.color='#991b1b';status.textContent='登録失敗:'+ins.error.message;return;}
+  var includeIp=document.getElementById('contract-include-ip');
+  var ipFileInput=document.getElementById('contract-ip-file');
+  if(includeIp&&includeIp.checked&&ipFileInput&&ipFileInput.files&&ipFileInput.files[0]){
+    var ipFile=ipFileInput.files[0];
+    var ipPath=target+'/ip_agreement_'+Date.now()+'.pdf';
+    var upIp=await supabaseClient.storage.from('contracts').upload(ipPath,ipFile);
+    if(!upIp.error){
+      await supabaseClient.from('documents').insert({
+        staff_id:staffUuid,
+        type:'contract',
+        title:'知的財産権に関する覚書',
+        file_url:ipPath,
+        message:'就業条件明示書とあわせてご確認・署名をお願いいたします。',
+        requires_signature:true
+      });
+    }
+  }
   status.style.color='#2d6a10';status.textContent='送付完了!';sendLineNotify({employee_id:target,type:'contract'});const titleVal=document.getElementById('contract-title')?document.getElementById('contract-title').value:'';const dateMatch=titleVal.match(/(\d{4})年(\d{1,2})月(\d{1,2})日[〜～](\d{4})年(\d{1,2})月(\d{1,2})日/);const cStart=dateMatch?dateMatch[1]+'-'+String(dateMatch[2]).padStart(2,'0')+'-'+String(dateMatch[3]).padStart(2,'0'):null;const cEnd=dateMatch?dateMatch[4]+'-'+String(dateMatch[5]).padStart(2,'0')+'-'+String(dateMatch[6]).padStart(2,'0'):null;if(cEnd){await supabaseClient.from('staffs').update({contract_end_date:cEnd,contract_start_date:cStart}).eq('employee_id',target);}
   if(messageEl)messageEl.value='';
+  if(includeIp)includeIp.checked=false;
+  if(ipFileInput)ipFileInput.value='';
+  var ipArea=document.getElementById('contract-ip-file-area');if(ipArea)ipArea.style.display='none';
   setTimeout(()=>{closeModal('send-contract');resetDocPreview('contract');loadAdminUploads();if(typeof loadAdminStaffList==='function')loadAdminStaffList();},1000);
 }
   function displayPaidLeaveInfo(data){
