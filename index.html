@@ -1224,9 +1224,12 @@ input:disabled{background:#f5f4f0;color:#aaa;border-color:#e8e6e0}
       <label style="display:flex;align-items:center;gap:6px;font-size:13px;cursor:pointer"><input type="checkbox" id="contract-include-ip" onchange="document.getElementById('contract-ip-file-area').style.display=this.checked?'block':'none';if(this.checked)checkIpAgreementTemplateStatus();" style="width:16px;height:16px"> 知的財産権に関する覚書も一緒に送る</label>
     </div>
     <div id="contract-ip-file-area" style="display:none">
-      <div id="contract-ip-template-status" style="font-size:12px;color:#888;margin:4px 0">確認中...</div>
-      <div class="fg"><label class="fl">差し替える場合のみ、新しいPDFを選択</label><input type="file" id="contract-ip-file" accept=".pdf">
-        <button class="btn btn-sm" type="button" onclick="uploadIpAgreementTemplate()" style="margin-top:6px">このPDFをテンプレートとして登録</button>
+      <div id="contract-ip-template-status" style="font-size:12px;color:#888;margin:4px 0"></div>
+      <div id="contract-ip-replace-link" style="display:none;margin-bottom:8px"><a href="#" onclick="document.getElementById('contract-ip-replace-area').style.display='block';this.parentElement.style.display='none';return false;" style="font-size:12px;color:#5b21b6;text-decoration:underline">テンプレートPDFを差し替える</a></div>
+      <div id="contract-ip-replace-area" style="display:none">
+        <div class="fg"><label class="fl">新しいPDFを選択</label><input type="file" id="contract-ip-file" accept=".pdf">
+          <button class="btn btn-sm" type="button" onclick="uploadIpAgreementTemplate()" style="margin-top:6px">このPDFをテンプレートとして登録</button>
+        </div>
       </div>
     </div>
     <div id="contract-status" style="display:none;font-size:12px;margin-top:8px"></div>
@@ -4051,14 +4054,20 @@ async function uploadIpAgreementTemplate(){
 async function checkIpAgreementTemplateStatus(){
   if(!supabaseClient)return;
   var statusEl=document.getElementById('contract-ip-template-status');
+  var replaceLink=document.getElementById('contract-ip-replace-link');
+  var replaceArea=document.getElementById('contract-ip-replace-area');
   if(!statusEl)return;
   var {data}=await supabaseClient.from('onboarding_templates').select('*').eq('key','ip_agreement_contract').maybeSingle();
   if(data&&data.file_url){
     statusEl.textContent='✅ テンプレート登録済み（最終更新：'+(data.updated_at?data.updated_at.substring(0,10).replace(/-/g,'/'):'')+'）。チェックを入れるだけで送付できます。';
     statusEl.style.color='#2d6a10';
+    if(replaceLink)replaceLink.style.display='block';
+    if(replaceArea)replaceArea.style.display='none';
   } else {
-    statusEl.textContent='未登録です。下のPDFを選んで「テンプレートとして登録」を押してください（初回のみ）。';
+    statusEl.textContent='未登録です。PDFを選んで「テンプレートとして登録」を押してください（初回のみ）。';
     statusEl.style.color='#991b1b';
+    if(replaceLink)replaceLink.style.display='none';
+    if(replaceArea)replaceArea.style.display='block';
   }
 }
 async function sendContract(){
