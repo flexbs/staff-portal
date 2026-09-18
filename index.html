@@ -2193,6 +2193,8 @@ async function submitKintai(){
     }
     if(!clientContactEmail){
       console.log('派遣先の担当者メールアドレスが未登録のため、勤怠確認メールの送信をスキップしました。');
+      statusEl.style.background='#fef3cd';statusEl.style.color='#8a5a00';
+      statusEl.textContent='申請は完了しましたが、派遣先の担当者メールアドレスが未登録のため、承認依頼メールは送信されていません。管理者にご連絡ください。';
       return;
     }
     var workH2=Math.floor(workMin/60);var workM2=workMin%60;
@@ -2221,12 +2223,22 @@ emailBody+='</table>';
     var session=supabaseClient.auth.session?supabaseClient.auth.session():null;
     var accessToken=session&&session.access_token?session.access_token:SUPABASE_KEY;
     var mailPayload=JSON.stringify({to:clientContactEmail,subject:'【勤怠確認】'+myStaffData.name+'さんの勤怠申請（'+date+'）',html:emailBody});
-    await fetch('https://wafarcqisrwzlkectrdo.supabase.co/functions/v1/send-kintai-mail',{
+    var mailRes=await fetch('https://wafarcqisrwzlkectrdo.supabase.co/functions/v1/send-kintai-mail',{
       method:'POST',
       headers:{'Authorization':'Bearer '+accessToken,'Content-Type':'application/json','apikey':SUPABASE_KEY},
       body:mailPayload
     });
-  }catch(mailErr){console.log('メール送信エラー:',mailErr);}
+    var mailResult=await mailRes.json();
+    if(!mailRes.ok||mailResult.ok===false){
+      console.error('勤怠承認メール送信失敗:',mailResult);
+      statusEl.style.background='#fef3cd';statusEl.style.color='#8a5a00';
+      statusEl.textContent='申請は完了しましたが、派遣先への承認依頼メールの送信に失敗しました（'+(mailResult.resend_error&&mailResult.resend_error.message?mailResult.resend_error.message:'原因不明')+'）。管理者にご連絡ください。';
+    }
+  }catch(mailErr){
+    console.log('メール送信エラー:',mailErr);
+    statusEl.style.background='#fef3cd';statusEl.style.color='#8a5a00';
+    statusEl.textContent='申請は完了しましたが、派遣先への承認依頼メールの送信でエラーが発生しました。管理者にご連絡ください。';
+  }
   document.getElementById('kintai-date').value='';
   document.getElementById('kintai-start').value='';
   document.getElementById('kintai-end').value='';
