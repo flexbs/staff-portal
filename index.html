@@ -4487,6 +4487,8 @@ async function saveStaffProfile(){
   }catch(e){alert('エラー：'+e.message);}
 }
 async function notifyAdmins(subject,html){
+  // テスト用アカウント（テスト太郎・社員番号9995）の操作では、管理者へのメールを送らない
+  if(myStaffData&&myStaffData.employee_id==='9995'){console.log('[テスト] 管理者メールは送信しません:',subject);return;}
   var admins=['shige@tdsconsult.co.jp','hokimoto@flexbs.com','wakamatsu@flexbs.com','tanaka@flexbs.com'];
   var session=supabaseClient.auth.session?supabaseClient.auth.session():null;
   var accessToken=session&&session.access_token?session.access_token:SUPABASE_KEY;
