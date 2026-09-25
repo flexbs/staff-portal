@@ -448,6 +448,18 @@ input:disabled{background:#f5f4f0;color:#aaa;border-color:#e8e6e0}
       </div>
     </div>
     <div class="card">
+      <div class="ch"><span class="ct">📝 車通勤の申請</span></div>
+      <div style="font-size:12px;color:#666;margin-bottom:10px;line-height:1.6">スタッフが案内・注意事項を読んだうえで提出した「車通勤許可申請」です。内容と免許証の写しを確認し、保険証券の期限日を入力すると使用承諾書が自動で送付されます。</div>
+      <div class="tbl-scroll">
+        <table class="tbl">
+          <thead><tr><th>名前</th><th>申請日</th><th>車種・ナンバー</th><th>免許証の有効期限</th><th>状態</th><th></th></tr></thead>
+          <tbody id="admin-car-app-tbody">
+<tr><td colspan="6" style="text-align:center;color:#888;padding:20px">読み込み中...</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+    <div class="card">
       <div class="ch"><span class="ct">スタッフから受け取った自動車保険証券</span><button class="btn btn-sm btn-p" onclick="openCarInsuranceAdminModal()">＋ 代理でアップロード</button></div>
       <div class="tbl-scroll">
         <table class="tbl">
@@ -697,7 +709,7 @@ input:disabled{background:#f5f4f0;color:#aaa;border-color:#e8e6e0}
         ・マイナンバー：上の「マイナンバー」タブからご登録ください（マイナンバーカードの写しも添付できます）<br>
         ・年金番号：下の「年金番号・雇用保険番号の登録」からご入力ください<br>
         ・雇用保険番号：同上（お持ちでない方は空欄のままで大丈夫です）<br>
-        ・自動車保険証券：車で通勤される方は、上の「車通勤」タブからアップロードしてください
+        ・車で通勤される方：上の「車通勤」タブから「車通勤の申請」と自動車保険証券のアップロードをお願いします
       </div>
     </div>
   </div>
@@ -843,6 +855,11 @@ input:disabled{background:#f5f4f0;color:#aaa;border-color:#e8e6e0}
   </div>
 
   <div id="staff-scar" class="sp">
+    <div class="card" style="margin-bottom:12px">
+      <div class="ch"><span class="ct">📝 車通勤の申請</span></div>
+      <div id="car-app-status" style="font-size:13px;color:#666;line-height:1.7;margin-bottom:12px">読み込み中...</div>
+      <button class="btn btn-p" id="car-app-open-btn" onclick="openCarAppModal()" style="width:100%;display:none">🚗 車通勤を申請する</button>
+    </div>
     <div class="card">
       <div class="ch"><span class="ct">🚗 車通勤・自動車保険</span></div>
       <div id="car-insurance-status" style="font-size:13px;color:#666;line-height:1.7;margin-bottom:16px">読み込み中...</div>
@@ -1512,10 +1529,41 @@ input:disabled{background:#f5f4f0;color:#aaa;border-color:#e8e6e0}
       <div class="fg" style="flex:1"><label class="fl">通勤時間（片道）</label><input type="number" id="addr-time" placeholder="分"></div>
     </div>
     <div id="addr-onboarding-car-note" style="display:none;background:#fff3cd;border-radius:8px;padding:10px 12px;font-size:12px;color:#8a5a00;margin:6px 0;line-height:1.7">
-      🚗 車で通勤される方は、届出のあと「車通勤」タブから自動車保険証券（任意保険）をアップロードしてください。担当者が確認後、自動車通勤の使用承諾書をお送りします。
+      🚗 車で通勤される方は、届出のあと「車通勤」タブから「車通勤の申請」（案内・注意事項の確認、車種・ナンバー、免許証の写し）と、自動車保険証券のアップロードをお願いします。審査のうえ、使用承諾書をお送りします。許可までは車での通勤はできません。
     </div>
     <div id="addr-status" style="display:none;font-size:12px;margin-top:8px;padding:10px;border-radius:8px"></div>
     <div class="ma"><button class="btn btn-sm" onclick="closeModal('address-change')">キャンセル</button><button class="btn btn-sm btn-p" onclick="submitAddressChange()">提出する →</button></div>
+  </div>
+</div>
+
+<div class="mbg" id="modal-car-app">
+  <div class="modal">
+    <div class="mt">車通勤許可申請</div>
+    <div style="font-size:12px;color:#666;margin-bottom:8px;line-height:1.7">まず下の「車通勤を申請する方へ」と「車通退勤に関する注意」をよくお読みください。</div>
+    <div id="car-app-notice" style="max-height:300px;overflow-y:auto;border:1px solid #e8e5e0;border-radius:8px;padding:12px 14px;font-size:12.5px;line-height:1.8;background:#fafaf8;margin-bottom:10px"></div>
+    <label style="display:flex;align-items:flex-start;gap:8px;font-size:13px;cursor:pointer;margin-bottom:14px"><input type="checkbox" id="car-app-read"> <span>上記の内容を読み、理解しました</span></label>
+    <div style="background:#f0edff;border-radius:8px;padding:10px 12px;font-size:12px;color:#4c1d95;margin-bottom:14px;line-height:1.7">通勤経路・通勤距離は「通勤経路・交通費の届出（住所変更届）」でご提出ください。保険証券は、この画面を閉じたあと「車通勤」タブの「自動車保険証券」からアップロードしてください。</div>
+    <div class="fg"><label class="fl">申請理由 <span style="color:#991b1b">*必須</span></label><textarea id="car-app-reason" rows="3" placeholder="例：勤務先が駅から遠く、公共交通機関での通勤が難しいため"></textarea></div>
+    <div style="display:flex;gap:8px">
+      <div class="fg" style="flex:1"><label class="fl">車種 <span style="color:#991b1b">*必須</span></label><input type="text" id="car-app-model" placeholder="例：トヨタ アクア"></div>
+      <div class="fg" style="flex:1"><label class="fl">ナンバー <span style="color:#991b1b">*必須</span></label><input type="text" id="car-app-number" placeholder="例：福岡 500 あ 12-34"></div>
+    </div>
+    <div style="display:flex;gap:8px">
+      <div class="fg" style="flex:1"><label class="fl">免許証番号 <span style="color:#991b1b">*必須</span></label><input type="text" id="car-app-license-no" placeholder="12桁の番号"></div>
+      <div class="fg" style="flex:1"><label class="fl">免許証の有効期限 <span style="color:#991b1b">*必須</span></label><input type="date" id="car-app-license-exp"></div>
+    </div>
+    <div class="fg"><label class="fl">免許証の写し（表面） <span style="color:#991b1b">*必須</span></label><input type="file" id="car-app-license-file" accept="image/*,application/pdf" style="font-size:12px"></div>
+    <div style="font-size:11px;color:#888;margin:-6px 0 10px">※免許証の写しは担当者のみが確認します。</div>
+    <div id="car-app-msg" style="display:none;font-size:12px;margin-top:8px;padding:10px;border-radius:8px"></div>
+    <div class="ma"><button class="btn btn-sm" onclick="closeModal('car-app')">キャンセル</button><button class="btn btn-sm btn-p" onclick="submitCarApp()">申請する →</button></div>
+  </div>
+</div>
+
+<div class="mbg" id="modal-car-app-detail">
+  <div class="modal">
+    <div class="mt" id="car-app-detail-title">車通勤許可申請</div>
+    <div id="car-app-detail-body" style="font-size:13px;line-height:1.8"></div>
+    <div class="ma" id="car-app-detail-actions"></div>
   </div>
 </div>
 
@@ -2692,8 +2740,8 @@ async function loadAdminMetrics(){
   if(c)c.textContent=unsignedContract+'件';
   var {data:leaveReqs}=await supabaseClient.from('leave_requests').select('id').eq('status','pending');
   var pendingLeave=leaveReqs?leaveReqs.length:0;
-  var {data:addrReqs}=await supabaseClient.from('address_change_requests').select('id').is('confirmed_at',null);
-  var pendingAddress=addrReqs?addrReqs.length:0;
+  var {data:addrReqs}=await supabaseClient.from('address_change_requests').select('id,change_types').is('confirmed_at',null);
+  var pendingAddress=addrReqs?addrReqs.filter(function(d){return !isOnboardingCommuteRequest(d);}).length:0;
   var total=pendingLeave+pendingAddress+unconfirmedUpload;
   var t=document.getElementById('combinedPendingCount');
   if(t)t.textContent=total+'件';
@@ -3129,6 +3177,7 @@ async function loadAdminCarInsurance(){
   if(!supabaseClient)return;
   await checkAndSendCarInsuranceReminders();
   await loadCarCommuters();
+  await loadAdminCarApps();
   await loadAdminUploads();
   await loadAdminCarInsuranceLetters();
   await loadAdminCarInsuranceOldNotices();
@@ -3170,8 +3219,8 @@ async function loadMonthlySummary(){
   var {data:leaveReqs}=await supabaseClient.from('leave_requests').select('id').gte('leave_date',startDate).lte('leave_date',endDate);
   var lEl=document.getElementById('summary-leave-count');if(lEl)lEl.textContent=(leaveReqs?leaveReqs.length:0)+'件';
 
-  var {data:addrReqs}=await supabaseClient.from('address_change_requests').select('id').gte('created_at',startDate).lt('created_at',nextMonthStart);
-  var aEl=document.getElementById('summary-address-count');if(aEl)aEl.textContent=(addrReqs?addrReqs.length:0)+'件';
+  var {data:addrReqs}=await supabaseClient.from('address_change_requests').select('id,change_types').gte('created_at',startDate).lt('created_at',nextMonthStart);
+  var aEl=document.getElementById('summary-address-count');if(aEl)aEl.textContent=(addrReqs?addrReqs.filter(function(d){return !isOnboardingCommuteRequest(d);}).length:0)+'件';
 
   var {data:uploadDocs}=await supabaseClient.from('documents').select('id').eq('type','upload').is('cancelled_at',null).gte('created_at',startDate).lt('created_at',nextMonthStart);
   var uEl=document.getElementById('summary-upload-count');if(uEl)uEl.textContent=(uploadDocs?uploadDocs.length:0)+'件';
@@ -3272,6 +3321,9 @@ function openAddressChangeModal(){
   setAddressModalOnboardingMode(false);
   openModal('address-change');
 }
+
+// 入社時の通勤届（入社手続きから提出されたもの）は、住所変更届の一覧・件数には含めない
+function isOnboardingCommuteRequest(d){return !!(d&&d.change_types==='入社時の通勤届');}
 
 // 入社手続きの「通勤経路・交通費の届出」用に、住所変更届のフォームを入社時モードで開く
 window._addrOnboardingDocId=null;
@@ -3379,12 +3431,12 @@ async function submitAddressChange(){
     commute_time_minutes: valInt('addr-time')
   };
   status.style.display='block';status.style.background='#f0f0f0';status.style.color='#666';status.textContent='送信中...';
-  var ins=await supabaseClient.from('address_change_requests').insert(payload);
+  var ins=await supabaseClient.from('address_change_requests').insert(payload).select('id').single();
   if(ins.error){status.style.background='#fee2e2';status.style.color='#991b1b';status.textContent='送信に失敗しました：'+ins.error.message;return;}
   status.style.background='#dcfce7';status.style.color='#166534';status.textContent='届出が完了しました！';
   if(onboardingDocId){
     var hasCar=commuteMethods.indexOf('自家用車')>=0;
-    await supabaseClient.from('onboarding_documents').update({submitted_at:new Date().toISOString(),form_data:{commute_methods:payload.commute_methods,has_car:hasCar,distance_km:payload.commute_distance_km}}).eq('id',onboardingDocId);
+    await supabaseClient.from('onboarding_documents').update({submitted_at:new Date().toISOString(),form_data:{commute_methods:payload.commute_methods,has_car:hasCar,distance_km:payload.commute_distance_km,address_request_id:(ins.data?ins.data.id:null)}}).eq('id',onboardingDocId);
     notifyAdmins(
       '【入社時の通勤届】'+myStaffData.name+'さんより届出がありました',
       '<div style="font-family:sans-serif;padding:16px"><h3 style="color:#5b21b6">入社時の通勤経路・交通費の届出</h3>'
@@ -3392,14 +3444,14 @@ async function submitAddressChange(){
       +'<table style="border-collapse:collapse;font-size:13px">'
       +'<tr><td style="padding:4px 10px;border:1px solid #ddd">通勤手段</td><td style="padding:4px 10px;border:1px solid #ddd">'+(payload.commute_methods||'-')+'</td></tr>'
       +'<tr><td style="padding:4px 10px;border:1px solid #ddd">現住所</td><td style="padding:4px 10px;border:1px solid #ddd">'+(newAddress||'-')+'</td></tr></table>'
-      +(hasCar?'<p style="color:#8a5a00">※自家用車通勤です。自動車保険証券の提出をご確認ください。</p>':'')
-      +'<p style="color:#888;font-size:12px;margin-top:12px">管理画面の「書類授受」→「スタッフからの提出書類」→「住所・通勤変更届」タブからご確認ください。</p></div>'
+      +(hasCar?'<p style="color:#8a5a00">※自家用車通勤です。「車通勤」タブの「車通勤の申請」と自動車保険証券の提出をご確認ください。</p>':'')
+      +'<p style="color:#888;font-size:12px;margin-top:12px">管理画面の「入社手続き」→ 該当スタッフの「詳細」→「通勤経路・交通費の届出」の「表示」からご確認ください。</p></div>'
     );
     setTimeout(function(){
       closeModal('address-change');
       setAddressModalOnboardingMode(false);
       loadMyOnboarding();
-      if(hasCar)alert('届出が完了しました。\n\n車で通勤される方は、「車通勤」タブから自動車保険証券をアップロードしてください。');
+      if(hasCar)alert('届出が完了しました。\n\n車で通勤される方は、「車通勤」タブから「車通勤の申請」と自動車保険証券のアップロードをお願いします。\n許可（使用承諾書の送付）までは車での通勤はできません。');
     },1200);
     return;
   }
@@ -3421,6 +3473,7 @@ async function loadMyAddressChanges(){
   var tbody=document.getElementById('my-address-tbody');
   if(!tbody)return;
   var {data,error}=await supabaseClient.from('address_change_requests').select('*').eq('staff_id',myStaffData.id).order('created_at',{ascending:false});
+  if(data)data=data.filter(function(d){return !isOnboardingCommuteRequest(d);});
   if(error||!data||data.length===0){
     tbody.innerHTML='<tr><td colspan="4" style="text-align:center;color:#888;padding:16px;font-size:12px">届出履歴はまだありません</td></tr>';
     return;
@@ -3442,6 +3495,7 @@ async function loadAdminAddressChanges(){
   if(!tbody)return;
   var {data,error}=await supabaseClient.from('address_change_requests').select('*').order('created_at',{ascending:false});
   if(error||!data){tbody.innerHTML='<tr><td colspan="6" style="text-align:center;color:#991b1b;padding:20px">読み込みに失敗しました</td></tr>';return;}
+  data=data.filter(function(d){return !isOnboardingCommuteRequest(d);});
   var {data:staffs}=await supabaseClient.from('staffs').select('id,name,employee_id,workplace_address');
   var staffMap={};(staffs||[]).forEach(function(s){staffMap[s.id]={name:s.name,employee_id:s.employee_id,workplace_address:s.workplace_address};});
   window._addressChangesCache={};
@@ -6651,7 +6705,20 @@ async function viewAdminOnboardingDoc(docId){
   if(d.doc_key==='commute'){
     var f=d.form_data||{};
     if(!d.submitted_at){alert('まだ提出されていません');return;}
-    alert('【通勤経路・交通費の届出】\n通勤手段：'+(f.commute_methods||'-')+(f.has_car?'\n通勤距離（片道）：'+(f.distance_km!=null?f.distance_km+'km':'-')+'\n\n※自家用車通勤です。自動車保険証券の提出をご確認ください。':'')+'\n\n経路・運賃などの詳細は「書類授受」→「住所・通勤変更届」タブでご確認ください。');
+    var q=supabaseClient.from('address_change_requests').select('*');
+    q = f.address_request_id ? q.eq('id',f.address_request_id) : q.eq('staff_id',d.staff_id).eq('change_types','入社時の通勤届').order('created_at',{ascending:false}).limit(1);
+    var {data:reqs}=await q;
+    var r=reqs&&reqs[0];
+    if(r){
+      var {data:st}=await supabaseClient.from('staffs').select('name,employee_id,workplace_address').eq('id',r.staff_id).maybeSingle();
+      r._staffName=st?st.name:'';r._staffEmpId=st?st.employee_id:'';r._staffWorkplaceAddress=st?st.workplace_address:'';
+      window._addressChangesCache=window._addressChangesCache||{};
+      window._addressChangesCache[r.id]=r;
+      closeModal('onboarding-detail');
+      openAddressDetail(r.id);
+      return;
+    }
+    alert('【通勤経路・交通費の届出】\n通勤手段：'+(f.commute_methods||'-')+(f.has_car?'\n通勤距離（片道）：'+(f.distance_km!=null?f.distance_km+'km':'-')+'\n\n※自家用車通勤です。自動車保険証券の提出をご確認ください。':'')+'\n\n詳細データが見つかりませんでした。');
     return;
   }
   openFilledDocInNewTab(d.content_html,d.doc_name);
@@ -7051,6 +7118,7 @@ async function loadUploadHistory(){
 }
 async function loadMyCarInsurance(){
   if(!supabaseClient||!myStaffData)return;
+  loadMyCarApp();
   var statusEl=document.getElementById('car-insurance-status');
   if(statusEl){
     var {data:latest}=await supabaseClient.from('documents').select('insurance_expiry_date,created_at')
@@ -7089,6 +7157,169 @@ async function loadMyCarInsurance(){
       listEl.innerHTML=html;
     }
   }
+}
+
+// ===== 車通勤許可申請（紙の3枚：案内文・申請書・注意事項をポータル化） =====
+var CAR_APP_LETTER_PARAS=[
+  '日頃からお仕事に対しご苦労さまです。',
+  'さて本来、車になる方の場合、別紙の申請手続きがあってはじめて運行することができます。車通勤に関する注意を読み、必要事項を記載の上、通勤許可申請書を至急当社に返送ください。あなたがどこの会社に勤務していても就業規則に関連するこのような書類は発生いたしますのでしっかりとお読みすることをおすすめします。',
+  '許可申請⇒審査⇒承諾の流れまでには少し時間を要し、この審査期間中は規則に示すとおり車使用はできません。審査後に車使用承諾書を送付することになります。',
+  'ただし、審査結果として許可に該当しない基準や記載が不備の方には、直ちに是正をお願いすることになります上、その間の運行もできませんのでご注意ください。',
+  'また、就業時に申請した通勤手段に基づき通勤交通費が支給されている方が使用承諾を得ずに他の通勤手段を通勤に使用した場合は、その期間の通勤交通費が不支給（支給後に発覚した場合は返納）になるのは勿論のこと、規則により懲戒処分に該当します。',
+  '尚、車通勤が無事に許可された後、事故が生じた場合でも事故処理について会社はその支援を一切行うことができませんのであらかじめ認識が必要です。'
+];
+var CAR_APP_RULES_HTML=
+  '<p>当社では、労務管理、事故防止のため、自転車や車通勤を禁止しておりますが、審査によっては認めることができます。ただし、申請されるにあたっては以下に関連規則を事前に示しますので十分認識した上でご検討ください。尚、バイクについては全面禁止です。</p>'
+ +'<p style="font-weight:700;margin-top:10px">（通退勤手段）第7条</p>'
+ +'<p>(1) 派遣労働者は就業に際し、通退勤手段、通勤経路を事前に申請しなければならない。</p>'
+ +'<p>(2) 派遣労働者が派遣先へ通退勤する際の交通手段は、公共交通機関を利用し、原則として自動車、バイク、自転車等の使用は禁止する。ただし勤務場所等のやむを得ない事情で派遣元が定めた条件をすべて満たし、派遣元及び派遣先が許可した場合は、自家用車及び自転車の使用を認めることがある。なお、バイクについてはいかなる事由があっても全面的に禁止する。</p>'
+ +'<p>(3) 派遣元及び派遣先の許可を得ることなく無断で自動車、バイク、自転車等により通退勤していることが発見又は発覚した場合は、第58条により懲戒解雇とする。</p>'
+ +'<p>(4) 申請した内容と異なる手段で通退勤した場合は、第58条により懲戒解雇とする。</p>'
+ +'<p style="font-weight:700;margin-top:10px">（通退勤時における運転の心得）第8条</p>'
+ +'<p>(1) 第7条(2)により派遣元及び派遣先の許可を得て通退勤に自動車、自転車を使用する際は、常に道路交通法を守り、安全運転に努め、次の事項を遵守しなければならない。なおこの規定に違反したことが発見又は発覚した場合においては、いつでも使用許可を取り消すことができ、場合によっては第58条により懲戒解雇とする。</p>'
+ +'<p style="padding-left:1em">① 派遣元指定の無事故・無違反・運転記録証明書交付申請委任状を提出すること<br>② 道路交通法規を遵守し、常に安全運転を行うこと。（路上違法駐車を含む）<br>③ 乗り物の整備点検を常に行うこと。<br>④ 自賠責・任意保険の加入期限が切れていないことを注意すること。<br>⑤ 保険証券は、更新時に必ずその写しを派遣元に提出すること。<br>⑥ 飲酒・酒気帯び運転を絶対にしないこと。<br>⑦ 雪、雨その他天候状態、道路事情によって運転しないこと。<br>⑧ 事故の際、相手方に無関係である派遣先企業名を言わないこと。<br>⑨ 派遣元名を伝える場合には、派遣元の許可を得ること。<br>⑩ 運転中に携帯電話の通話及びメールをしないこと。</p>'
+ +'<p>(2) 派遣労働者が第7条(2)に定める許可を受けようとする場合は、事前に派遣元が必要とする書類を速やかに提出し、審査を受けなければならない。派遣元は審査の上、使用基準を満たす者に使用承諾書を発行する。</p>'
+ +'<p>(3) 派遣労働者が通退勤途上、道路交通法規に違反した場合の罰金及び反則金、事故の場合の警察への連絡、事故処理については、本人の自己責任に基づいて負担する。</p>'
+ +'<p style="margin-top:10px">注意①）車は必ず事故がつきまとい加害者になりえます。事故によっては精神的にも金銭的にも大変な苦しみを味わうケースもあり、自己責任での処理は大変な労力となります。一見、公共機関での通勤は大変でも公共機関の利用を検討するのも必要です。</p>'
+ +'<p>注意②）事故の内容によっては規則により懲戒解雇となります。事故時、警察へ勤務先を伝える場合は当社です。また、事故の相手方へ勤務先を伝える場合でも自己責任処理ですのでご自分の連絡先だけとなります。</p>';
+var CAR_APP_INSURANCE_NOTE='<p style="margin-top:10px;font-weight:700">※必要な保険</p><p style="padding-left:1em">① 対人賠償保険：無制限<br>② 対物賠償保険：無制限<br>③ 搭乗者傷害保険：1,000万円以上 或は 人身傷害保険：3,000万円以上</p>';
+
+function buildCarAppNoticeHtml(staffName){
+  var h='<div style="text-align:right;font-size:11.5px;color:#666">平成21年4月1日策定<br>'+fmtDateJp(new Date())+'<br>フレックスビジネスサービス株式会社</div>';
+  h+='<p style="margin:6px 0">'+(staffName||'')+'　様</p>';
+  h+='<div style="font-weight:700;font-size:14px;text-align:center;margin:8px 0">車通勤を申請する方へ</div>';
+  CAR_APP_LETTER_PARAS.forEach(function(t){h+='<p style="margin:6px 0">'+t+'</p>';});
+  h+=CAR_APP_INSURANCE_NOTE;
+  h+='<hr style="border:none;border-top:1px dashed #ccc;margin:14px 0">';
+  h+='<div style="font-weight:700;font-size:14px;text-align:center;margin:8px 0">車通退勤に関する注意</div>';
+  h+='<div style="font-size:12px">'+CAR_APP_RULES_HTML.replace(/<p>/g,'<p style="margin:6px 0">')+'</div>';
+  return h;
+}
+
+async function loadMyCarApp(){
+  if(!supabaseClient||!myStaffData)return;
+  var st=document.getElementById('car-app-status'),btn=document.getElementById('car-app-open-btn');
+  if(!st)return;
+  var {data}=await supabaseClient.from('car_commute_applications').select('*').eq('staff_id',myStaffData.id).is('cancelled_at',null).order('created_at',{ascending:false}).limit(1);
+  var a=data&&data[0];
+  if(!a){
+    st.innerHTML='車で通勤される方は、こちらから申請してください。<br><span style="color:#991b1b">許可（使用承諾書の送付）までは、車での通勤はできません。</span>';
+    btn.style.display='';btn.textContent='🚗 車通勤を申請する';
+  } else if(a.approved_at){
+    st.innerHTML='<span class="bdg bg">審査済み</span>　'+(a.car_model||'')+'（'+(a.car_number||'')+'）<br>保険証券の確認後、使用承諾書をお送りします（届いた書類は下の「会社からのお知らせ・承諾書」に表示されます）。';
+    btn.style.display='none';
+  } else {
+    st.innerHTML='<span class="bdg bo">審査中</span>　'+fmtDateJp(a.created_at)+'に申請しました。<br>審査期間中は車での通勤はできません。保険証券がまだの方は、下の「自動車保険証券」からアップロードしてください。';
+    btn.style.display='none';
+  }
+}
+
+function openCarAppModal(){
+  document.getElementById('car-app-notice').innerHTML=buildCarAppNoticeHtml(myStaffData?myStaffData.name:'');
+  ['car-app-reason','car-app-model','car-app-number','car-app-license-no','car-app-license-exp','car-app-license-file'].forEach(function(id){var el=document.getElementById(id);if(el)el.value='';});
+  document.getElementById('car-app-read').checked=false;
+  var m=document.getElementById('car-app-msg');if(m)m.style.display='none';
+  openModal('car-app');
+}
+
+async function submitCarApp(){
+  if(!supabaseClient||!myStaffData)return;
+  var msg=document.getElementById('car-app-msg');
+  var showErr=function(t){msg.style.display='block';msg.style.background='#fee2e2';msg.style.color='#991b1b';msg.textContent=t;};
+  if(!document.getElementById('car-app-read').checked){showErr('案内・注意事項を読み、「読み、理解しました」にチェックしてください');return;}
+  var v=function(id){return (document.getElementById(id).value||'').trim();};
+  var reason=v('car-app-reason'),model=v('car-app-model'),number=v('car-app-number'),lno=v('car-app-license-no'),lexp=v('car-app-license-exp');
+  var fileEl=document.getElementById('car-app-license-file');
+  if(!reason||!model||!number||!lno||!lexp){showErr('必須項目をすべてご記入ください');return;}
+  if(!fileEl.files||fileEl.files.length===0){showErr('免許証の写しを選んでください');return;}
+  var file=fileEl.files[0];
+  if(file.size>5*1024*1024){showErr('5MB以下のファイルを選んでください');return;}
+  msg.style.display='block';msg.style.background='#f0f0f0';msg.style.color='#666';msg.textContent='送信中...';
+  var ext=(file.name.split('.').pop()||'jpg').toLowerCase();
+  var path=myStaffData.employee_id+'/license_'+Date.now()+'.'+ext;
+  var up=await supabaseClient.storage.from('car-license').upload(path,file,{upsert:false});
+  if(up.error){showErr('免許証のアップロードに失敗しました：'+up.error.message);return;}
+  var ins=await supabaseClient.from('car_commute_applications').insert({
+    staff_id:myStaffData.id,notice_read_at:new Date().toISOString(),reason:reason,car_model:model,car_number:number,
+    license_number:lno,license_expiry_date:lexp,license_file_path:path
+  });
+  if(ins.error){showErr('申請の登録に失敗しました：'+ins.error.message);return;}
+  msg.style.background='#dcfce7';msg.style.color='#166534';msg.textContent='申請しました！審査結果をお待ちください。';
+  notifyAdmins(
+    '【車通勤の申請】'+myStaffData.name+'さんより申請がありました',
+    '<div style="font-family:sans-serif;padding:16px"><h3 style="color:#5b21b6">車通勤許可申請のお知らせ</h3>'
+    +'<p>'+myStaffData.name+'さん（社員番号：'+myStaffData.employee_id+'）より、車通勤の申請がありました。</p>'
+    +'<table style="border-collapse:collapse;font-size:13px">'
+    +'<tr><td style="padding:4px 10px;border:1px solid #ddd">車種・ナンバー</td><td style="padding:4px 10px;border:1px solid #ddd">'+model+'（'+number+'）</td></tr>'
+    +'<tr><td style="padding:4px 10px;border:1px solid #ddd">免許証の有効期限</td><td style="padding:4px 10px;border:1px solid #ddd">'+lexp.replace(/-/g,'/')+'</td></tr></table>'
+    +'<p style="color:#888;font-size:12px;margin-top:12px">管理画面の「車通勤」タブ →「車通勤の申請」からご確認ください。</p></div>'
+  );
+  setTimeout(function(){closeModal('car-app');loadMyCarApp();},1200);
+}
+
+async function loadAdminCarApps(){
+  if(!supabaseClient)return;
+  var tbody=document.getElementById('admin-car-app-tbody');if(!tbody)return;
+  var {data,error}=await supabaseClient.from('car_commute_applications').select('*').is('cancelled_at',null).order('created_at',{ascending:false});
+  if(error){tbody.innerHTML='<tr><td colspan="6" style="text-align:center;color:#991b1b;padding:20px">読み込みに失敗しました</td></tr>';return;}
+  if(!data||data.length===0){tbody.innerHTML='<tr><td colspan="6" style="text-align:center;color:#888;padding:20px">申請はまだありません</td></tr>';return;}
+  var {data:staffs}=await supabaseClient.from('staffs').select('id,name,employee_id,workplace');
+  var sm={};(staffs||[]).forEach(function(s){sm[s.id]=s;});
+  window._carAppCache={};
+  tbody.innerHTML='';
+  var today=new Date(new Date().toDateString());
+  data.forEach(function(a){
+    var s=sm[a.staff_id]||{name:'(不明)',employee_id:''};
+    a._staff=s;window._carAppCache[a.id]=a;
+    var exp=a.license_expiry_date?a.license_expiry_date.replace(/-/g,'/'):'-';
+    if(a.license_expiry_date){var dl=Math.round((new Date(a.license_expiry_date+'T00:00:00')-today)/86400000);if(dl<0)exp+=' <span style="color:#991b1b;font-weight:700">期限切れ</span>';else if(dl<=30)exp+=' <span style="color:#c2570c;font-weight:700">あと'+dl+'日</span>';}
+    var bdg=a.approved_at?'<span class="bdg bg">審査済</span>':'<span class="bdg bo">審査待ち</span>';
+    var tr=document.createElement('tr');
+    tr.innerHTML='<td>'+s.name+'（'+s.employee_id+'）</td><td style="white-space:nowrap">'+(a.created_at||'').substring(0,10).replace(/-/g,'/')+'</td><td style="font-size:12px">'+(a.car_model||'')+'<br>'+(a.car_number||'')+'</td><td style="white-space:nowrap;font-size:12px">'+exp+'</td><td>'+bdg+'</td><td><button class="btn btn-sm" onclick="openCarAppDetail(\''+a.id+'\')">詳細</button></td>';
+    tbody.appendChild(tr);
+  });
+}
+
+function openCarAppDetail(id){
+  var a=(window._carAppCache||{})[id];if(!a)return;
+  var s=a._staff||{};
+  var row=function(k,v){return '<div class="profile-row"><span class="profile-label">'+k+'</span><span class="profile-val">'+(v||'-')+'</span></div>';};
+  document.getElementById('car-app-detail-title').textContent=(s.name||'')+'さんの車通勤許可申請';
+  document.getElementById('car-app-detail-body').innerHTML=
+    row('申請日',fmtDateJp(a.created_at))
+   +row('所属派遣先',s.workplace)
+   +row('案内・注意の確認',a.notice_read_at?'確認済み（'+fmtDateJp(a.notice_read_at)+'）':'-')
+   +row('申請理由',(a.reason||'').replace(/</g,'&lt;').replace(/\n/g,'<br>'))
+   +row('車種',a.car_model)+row('ナンバー',a.car_number)
+   +row('免許証番号',a.license_number)
+   +row('免許証の有効期限',a.license_expiry_date?a.license_expiry_date.replace(/-/g,'/'):'-')
+   +row('状態',a.approved_at?'審査済（'+fmtDateJp(a.approved_at)+'　'+(a.approved_by||'')+'）':'審査待ち')
+   +'<div style="background:#f7f6f2;border-radius:8px;padding:10px 12px;font-size:12px;color:#666;margin-top:12px;line-height:1.7">通勤距離・経路は、入社時の方は「入社手続き」の詳細、それ以外の方は「書類授受」の「住所・通勤変更届」でご確認ください。保険の内容は下の「スタッフから受け取った自動車保険証券」でご確認ください。保険期限日を入力すると、使用承諾書が自動で送付されます。</div>';
+  var act='<button class="btn btn-sm" onclick="closeModal(\'car-app-detail\')">閉じる</button>'
+    +'<button class="btn btn-sm" onclick="viewCarLicense(\''+a.id+'\')">🪪 免許証の写しを表示</button>'
+    +'<button class="btn btn-sm" style="border-color:#991b1b;color:#991b1b" onclick="cancelCarApp(\''+a.id+'\')">取消</button>';
+  if(!a.approved_at)act+='<button class="btn btn-sm btn-p" onclick="approveCarApp(\''+a.id+'\')">審査OKにする</button>';
+  document.getElementById('car-app-detail-actions').innerHTML=act;
+  openModal('car-app-detail');
+}
+async function viewCarLicense(id){
+  var a=(window._carAppCache||{})[id];if(!a||!a.license_file_path){alert('免許証の写しが登録されていません');return;}
+  var {data,error}=await supabaseClient.storage.from('car-license').createSignedUrl(a.license_file_path,600);
+  if(error||!data){alert('表示に失敗しました');return;}
+  window.open(data.signedUrl,'_blank');
+}
+async function approveCarApp(id){
+  if(!confirm('この申請を「審査OK」にします。よろしいですか？\n（使用承諾書は、保険証券の期限日を入力したときに自動で送付されます）'))return;
+  var by=myStaffData?(myStaffData.name||'管理者'):'管理者';
+  var {error}=await supabaseClient.from('car_commute_applications').update({approved_at:new Date().toISOString(),approved_by:by}).eq('id',id);
+  if(error){alert('更新に失敗しました：'+error.message);return;}
+  closeModal('car-app-detail');loadAdminCarApps();
+}
+async function cancelCarApp(id){
+  if(!confirm('この申請を取消します。よろしいですか？（出し直してもらう場合や、誤登録の削除に使えます）'))return;
+  var {error}=await supabaseClient.from('car_commute_applications').update({cancelled_at:new Date().toISOString()}).eq('id',id);
+  if(error){alert('取消に失敗しました：'+error.message);return;}
+  closeModal('car-app-detail');loadAdminCarApps();
 }
 
 async function changeMyPassword(){
