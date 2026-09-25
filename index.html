@@ -72,7 +72,7 @@ body{font-family:'Hiragino Sans','Meiryo',sans-serif;background:#F5F4F0;color:#1
 .ntc-new .ntc-d{color:#7F77DD}.ntc-read .ntc-d{color:#aaa}.ntc-green .ntc-d{color:#4a8a20}
 .lw{display:flex;align-items:center;justify-content:center;min-height:calc(100vh - 52px);padding:20px}
 .lb{background:#fff;border:1px solid #e8e6e0;border-radius:16px;padding:28px 24px;width:100%;max-width:360px}
-input[type=text],input[type=password],input[type=date],input[type=email],input[type=tel],select,textarea{width:100%;padding:9px 12px;border:1px solid #d8d6d0;border-radius:8px;font-size:14px;background:#fff;color:#1a1a1a;font-family:inherit;-webkit-appearance:none}
+input[type=text],input[type=password],input[type=date],input[type=email],input[type=tel],input[type=number],select,textarea{width:100%;padding:9px 12px;border:1px solid #d8d6d0;border-radius:8px;font-size:14px;background:#fff;color:#1a1a1a;font-family:inherit;-webkit-appearance:none}
 input:focus,select:focus,textarea:focus{outline:none;border-color:#534AB7;box-shadow:0 0 0 3px rgba(83,74,183,0.1)}
 input:disabled{background:#f5f4f0;color:#aaa;border-color:#e8e6e0}
 .fl{font-size:12px;color:#666;margin-bottom:4px;display:block;font-weight:600}
@@ -696,7 +696,8 @@ input:disabled{background:#f5f4f0;color:#aaa;border-color:#e8e6e0}
         <strong>📎 あわせてご提出をお願いします</strong><br>
         ・マイナンバー：上の「マイナンバー」タブからご登録ください（マイナンバーカードの写しも添付できます）<br>
         ・年金番号：下の「年金番号・雇用保険番号の登録」からご入力ください<br>
-        ・雇用保険番号：同上（お持ちでない方は空欄のままで大丈夫です）
+        ・雇用保険番号：同上（お持ちでない方は空欄のままで大丈夫です）<br>
+        ・自動車保険証券：車で通勤される方は、上の「車通勤」タブからアップロードしてください
       </div>
     </div>
   </div>
@@ -1421,10 +1422,14 @@ input:disabled{background:#f5f4f0;color:#aaa;border-color:#e8e6e0}
 
 <div class="mbg" id="modal-address-change">
   <div class="modal">
-    <div class="mt">住所変更届 兼 通勤経路変更届</div>
+    <div class="mt" id="addr-modal-title">住所変更届 兼 通勤経路変更届</div>
     <div style="background:#f0edff;border-radius:8px;padding:10px 12px;font-size:12px;color:#4c1d95;margin-bottom:14px;line-height:1.7">
       通勤経路・通勤距離は、ご登録いただいている自宅住所・勤務先住所をもとにGoogleマップで算出した経路・距離をご記入ください（このあと出てくる「Googleマップで見る」リンクから確認できます）。
     </div>
+    <div id="addr-onboarding-intro" style="display:none;background:#e6f4d7;border-radius:8px;padding:10px 12px;font-size:12px;color:#2d6a10;margin-bottom:14px;line-height:1.7">
+      ご入社にあたり、通勤方法を届け出てください。電車・バスの方は通勤経路と運賃を、車で通勤される方は「自家用車」にチェックして通勤距離・時間をご記入ください（これが交通費申請・自動車通勤の申請になります）。
+    </div>
+    <div id="addr-change-only-top">
     <div style="font-size:12px;font-weight:700;color:#555;margin-bottom:6px">変更内容（あてはまるものすべて）</div>
     <div class="fg" style="display:flex;flex-wrap:wrap;gap:14px 18px">
       <label style="display:flex;align-items:center;gap:6px;font-size:13px;cursor:pointer"><input type="checkbox" id="addr-change-address" style="width:16px;height:16px"> 住所変更</label>
@@ -1432,17 +1437,20 @@ input:disabled{background:#f5f4f0;color:#aaa;border-color:#e8e6e0}
       <label style="display:flex;align-items:center;gap:6px;font-size:13px;cursor:pointer"><input type="checkbox" id="addr-change-commute" style="width:16px;height:16px"> 通勤経路・通勤費変更</label>
     </div>
     <div class="fg"><label class="fl">転居日 <span style="color:#991b1b">*必須</span></label><input type="date" id="addr-relocation-date"></div>
-    <div style="font-size:12px;font-weight:700;color:#555;margin:14px 0 6px">新しい住所</div>
+    </div>
+    <div id="addr-newaddr-heading" style="font-size:12px;font-weight:700;color:#555;margin:14px 0 6px">新しい住所</div>
     <div class="fg"><label class="fl">郵便番号</label><input type="text" id="addr-new-postal" placeholder="例：810-0001"></div>
     <div class="fg"><label class="fl">住所 <span style="color:#991b1b">*必須</span></label><input type="text" id="addr-new-address" placeholder="市区町村・番地・建物名など"></div>
     <div style="margin:-8px 0 14px;text-align:right"><a href="#" onclick="return openAddressOnMap()" style="font-size:12px;color:#5b21b6;text-decoration:underline">📍 入力した住所をGoogleマップで確認する</a></div>
     <div style="margin:-8px 0 14px;text-align:right"><a href="#" onclick="return openCommuteRouteOnMap()" style="font-size:12px;color:#5b21b6;text-decoration:underline">🚗 自宅から会社までの経路をGoogleマップで見る</a></div>
+    <div id="addr-change-only-mid">
     <div style="font-size:12px;font-weight:700;color:#555;margin:14px 0 6px">旧住所（参考）</div>
     <div class="fg"><label class="fl">郵便番号</label><input type="text" id="addr-old-postal" placeholder="例：810-0001"></div>
     <div class="fg"><label class="fl">住所</label><input type="text" id="addr-old-address"></div>
     <div style="background:#f7f6f2;border-radius:8px;padding:10px 12px;font-size:12px;color:#666;margin:14px 0">結婚などで氏名が変わる方のみご記入ください（任意）</div>
     <div class="fg"><label class="fl">新しい氏名</label><input type="text" id="addr-new-name" placeholder="例：山田 花子"></div>
     <div class="fg"><label class="fl">氏名変更日（入籍日など）</label><input type="date" id="addr-name-change-date"></div>
+    </div>
     <div style="font-size:12px;font-weight:700;color:#555;margin:14px 0 6px">通勤手段（あてはまるものすべて）</div>
     <div class="fg" style="display:flex;flex-wrap:wrap;gap:10px 16px">
       <label style="display:flex;align-items:center;gap:6px;font-size:13px;cursor:pointer"><input type="checkbox" id="addr-cm-train" style="width:16px;height:16px"> 電車</label>
@@ -1502,6 +1510,9 @@ input:disabled{background:#f5f4f0;color:#aaa;border-color:#e8e6e0}
     <div style="display:flex;gap:8px">
       <div class="fg" style="flex:1"><label class="fl">通勤距離（片道）</label><input type="number" step="0.1" id="addr-distance" placeholder="km"></div>
       <div class="fg" style="flex:1"><label class="fl">通勤時間（片道）</label><input type="number" id="addr-time" placeholder="分"></div>
+    </div>
+    <div id="addr-onboarding-car-note" style="display:none;background:#fff3cd;border-radius:8px;padding:10px 12px;font-size:12px;color:#8a5a00;margin:6px 0;line-height:1.7">
+      🚗 車で通勤される方は、届出のあと「車通勤」タブから自動車保険証券（任意保険）をアップロードしてください。担当者が確認後、自動車通勤の使用承諾書をお送りします。
     </div>
     <div id="addr-status" style="display:none;font-size:12px;margin-top:8px;padding:10px;border-radius:8px"></div>
     <div class="ma"><button class="btn btn-sm" onclick="closeModal('address-change')">キャンセル</button><button class="btn btn-sm btn-p" onclick="submitAddressChange()">提出する →</button></div>
@@ -1653,7 +1664,7 @@ input:disabled{background:#f5f4f0;color:#aaa;border-color:#e8e6e0}
       <label class="fl">対象スタッフ <span style="color:#991b1b">*必須</span></label>
       <select id="onboarding-target"><option value="">選択してください</option></select>
     </div>
-    <div style="font-weight:700;color:#1a1a1a;margin:14px 0 8px">送付する書類（6点）</div>
+    <div style="font-weight:700;color:#1a1a1a;margin:14px 0 8px">送付する書類（8点）</div>
     <div style="background:#f5f4f0;border-radius:10px;padding:12px 14px;margin-bottom:14px;font-size:13px;color:#555;line-height:2">
       📄 就業規則（抜粋）（読むだけ）<br>
       📄 個人情報の取り扱いについて（署名）<br>
@@ -1661,7 +1672,8 @@ input:disabled{background:#f5f4f0;color:#aaa;border-color:#e8e6e0}
       📄 出勤初日の注意点（読むだけ）<br>
       📄 お給料振込口座の登録（入力）<br>
       📄 緊急連絡先届出書（入力）<br>
-      📄 年金番号・雇用保険番号の登録（入力）
+      📄 年金番号・雇用保険番号の登録（入力）<br>
+      📄 通勤経路・交通費の届出（入力／車通勤の方もこちら）
     </div>
     <div class="section-divider">出勤初日の入り方（担当者記入欄）</div>
     <div class="fg"><label class="fl">同行</label>
@@ -3257,7 +3269,36 @@ function openAddressChangeModal(){
   ['addr-change-address','addr-change-name','addr-change-commute',
    'addr-cm-train','addr-cm-bus','addr-cm-car','addr-cm-bicycle','addr-cm-walk','addr-cm-other'].forEach(function(id){var el=document.getElementById(id);if(el)el.checked=false;});
   var s=document.getElementById('addr-status');if(s)s.style.display='none';
+  setAddressModalOnboardingMode(false);
   openModal('address-change');
+}
+
+// 入社手続きの「通勤経路・交通費の届出」用に、住所変更届のフォームを入社時モードで開く
+window._addrOnboardingDocId=null;
+function setAddressModalOnboardingMode(on){
+  window._addrOnboardingDocId=on?window._addrOnboardingDocId:null;
+  var show=function(id,v){var el=document.getElementById(id);if(el)el.style.display=v?'':'none';};
+  show('addr-change-only-top',!on);
+  show('addr-change-only-mid',!on);
+  show('addr-onboarding-intro',on);
+  show('addr-onboarding-car-note',on);
+  var t=document.getElementById('addr-modal-title');if(t)t.textContent=on?'通勤経路・交通費の届出（入社時）':'住所変更届 兼 通勤経路変更届';
+  var h=document.getElementById('addr-newaddr-heading');if(h)h.textContent=on?'現住所（自宅）':'新しい住所';
+}
+async function openOnboardingCommuteModal(docId){
+  openAddressChangeModal();
+  window._addrOnboardingDocId=docId;
+  setAddressModalOnboardingMode(true);
+  // 緊急連絡先届出書で入力済みの現住所があれば、先に入れておく
+  try{
+    var docs=window._myOnboardingDocs||{};
+    Object.keys(docs).forEach(function(k){
+      var d=docs[k];
+      if(d.doc_key==='emergency'&&d.form_data&&d.form_data.my_address){
+        var el=document.getElementById('addr-new-address');if(el&&!el.value)el.value=d.form_data.my_address;
+      }
+    });
+  }catch(e){}
 }
 
 function buildRouteSection(fromId,toId){
@@ -3268,10 +3309,16 @@ function buildRouteSection(fromId,toId){
 }
 async function submitAddressChange(){
   if(!supabaseClient||!myStaffData){alert('データ取得中です。少し待ってもう一度お試しください');return;}
-  var relocationDate=document.getElementById('addr-relocation-date').value;
+  var onboardingDocId=window._addrOnboardingDocId||null;
+  var relocationDate=onboardingDocId?'':document.getElementById('addr-relocation-date').value;
   var newAddress=document.getElementById('addr-new-address').value.trim();
   var status=document.getElementById('addr-status');
-  if(!relocationDate||!newAddress){
+  if(onboardingDocId){
+    if(!newAddress){
+      status.style.display='block';status.style.background='#fee2e2';status.style.color='#991b1b';status.textContent='現住所をご記入ください';
+      return;
+    }
+  } else if(!relocationDate||!newAddress){
     status.style.display='block';status.style.background='#fee2e2';status.style.color='#991b1b';status.textContent='転居日と新住所は必須です';
     return;
   }
@@ -3290,9 +3337,20 @@ async function submitAddressChange(){
   if(isChecked('addr-cm-bicycle'))commuteMethods.push('自転車');
   if(isChecked('addr-cm-walk'))commuteMethods.push('徒歩');
   if(isChecked('addr-cm-other'))commuteMethods.push('その他');
+  if(onboardingDocId){
+    changeTypes=['入社時の通勤届'];
+    if(commuteMethods.length===0){
+      status.style.display='block';status.style.background='#fee2e2';status.style.color='#991b1b';status.textContent='通勤手段を1つ以上選んでください';
+      return;
+    }
+    if(commuteMethods.indexOf('自家用車')>=0&&!val('addr-distance')){
+      status.style.display='block';status.style.background='#fee2e2';status.style.color='#991b1b';status.textContent='自家用車の方は、通勤距離（片道）をご記入ください';
+      return;
+    }
+  }
   var payload={
     staff_id: myStaffData.id,
-    relocation_date: relocationDate,
+    relocation_date: relocationDate||null,
     change_types: changeTypes.length?changeTypes.join('、'):null,
     commute_methods: commuteMethods.length?commuteMethods.join('、'):null,
     new_name: val('addr-new-name'),
@@ -3324,6 +3382,27 @@ async function submitAddressChange(){
   var ins=await supabaseClient.from('address_change_requests').insert(payload);
   if(ins.error){status.style.background='#fee2e2';status.style.color='#991b1b';status.textContent='送信に失敗しました：'+ins.error.message;return;}
   status.style.background='#dcfce7';status.style.color='#166534';status.textContent='届出が完了しました！';
+  if(onboardingDocId){
+    var hasCar=commuteMethods.indexOf('自家用車')>=0;
+    await supabaseClient.from('onboarding_documents').update({submitted_at:new Date().toISOString(),form_data:{commute_methods:payload.commute_methods,has_car:hasCar,distance_km:payload.commute_distance_km}}).eq('id',onboardingDocId);
+    notifyAdmins(
+      '【入社時の通勤届】'+myStaffData.name+'さんより届出がありました',
+      '<div style="font-family:sans-serif;padding:16px"><h3 style="color:#5b21b6">入社時の通勤経路・交通費の届出</h3>'
+      +'<p>'+myStaffData.name+'さん（社員番号：'+myStaffData.employee_id+'）より、入社手続きの通勤届が提出されました。</p>'
+      +'<table style="border-collapse:collapse;font-size:13px">'
+      +'<tr><td style="padding:4px 10px;border:1px solid #ddd">通勤手段</td><td style="padding:4px 10px;border:1px solid #ddd">'+(payload.commute_methods||'-')+'</td></tr>'
+      +'<tr><td style="padding:4px 10px;border:1px solid #ddd">現住所</td><td style="padding:4px 10px;border:1px solid #ddd">'+(newAddress||'-')+'</td></tr></table>'
+      +(hasCar?'<p style="color:#8a5a00">※自家用車通勤です。自動車保険証券の提出をご確認ください。</p>':'')
+      +'<p style="color:#888;font-size:12px;margin-top:12px">管理画面の「書類授受」→「スタッフからの提出書類」→「住所・通勤変更届」タブからご確認ください。</p></div>'
+    );
+    setTimeout(function(){
+      closeModal('address-change');
+      setAddressModalOnboardingMode(false);
+      loadMyOnboarding();
+      if(hasCar)alert('届出が完了しました。\n\n車で通勤される方は、「車通勤」タブから自動車保険証券をアップロードしてください。');
+    },1200);
+    return;
+  }
   notifyAdmins(
     '【住所変更届】'+myStaffData.name+'さんより届出がありました',
     '<div style="font-family:sans-serif;padding:16px"><h3 style="color:#5b21b6">住所変更届・通勤経路変更届のお知らせ</h3>'
@@ -6482,7 +6561,8 @@ async function sendOnboardingDocs(){
     {staff_id:staffId,doc_key:'firstday',doc_name:'出勤初日の注意点',needs_sign:false,needs_input:false,content_html:firstdayHtml},
     {staff_id:staffId,doc_key:'bank',doc_name:'お給料振込口座の登録',needs_sign:false,needs_input:true},
     {staff_id:staffId,doc_key:'emergency',doc_name:'緊急連絡先届出書',needs_sign:false,needs_input:true},
-    {staff_id:staffId,doc_key:'insurance_numbers',doc_name:'年金番号・雇用保険番号の登録',needs_sign:false,needs_input:true}
+    {staff_id:staffId,doc_key:'insurance_numbers',doc_name:'年金番号・雇用保険番号の登録',needs_sign:false,needs_input:true},
+    {staff_id:staffId,doc_key:'commute',doc_name:'通勤経路・交通費の届出',needs_sign:false,needs_input:true}
   ];
   var {error}=await supabaseClient.from('onboarding_documents').insert(rows);
   if(error){statusEl.style.background='#fee2e2';statusEl.style.color='#991b1b';statusEl.textContent='送付に失敗しました：'+error.message;return;}
@@ -6568,6 +6648,12 @@ async function viewAdminOnboardingDoc(docId){
     alert('【年金番号・雇用保険番号】\n年金番号：'+(f.pension_number||'（未入力）')+'\n雇用保険番号：'+(f.insurance_number||'（未入力）')+'\n\n※プロフィールの該当欄にも反映済みです');
     return;
   }
+  if(d.doc_key==='commute'){
+    var f=d.form_data||{};
+    if(!d.submitted_at){alert('まだ提出されていません');return;}
+    alert('【通勤経路・交通費の届出】\n通勤手段：'+(f.commute_methods||'-')+(f.has_car?'\n通勤距離（片道）：'+(f.distance_km!=null?f.distance_km+'km':'-')+'\n\n※自家用車通勤です。自動車保険証券の提出をご確認ください。':'')+'\n\n経路・運賃などの詳細は「書類授受」→「住所・通勤変更届」タブでご確認ください。');
+    return;
+  }
   openFilledDocInNewTab(d.content_html,d.doc_name);
 }
 
@@ -6608,6 +6694,8 @@ async function loadMyOnboarding(){
       actionBtn = done? '<span style="color:#888;font-size:12px">入力済み</span>' : '<button class="btn btn-sm btn-p" onclick="openOnboardingEmergencyModal(\''+d.id+'\')">入力する</button>';
     } else if(d.doc_key==='insurance_numbers'){
       actionBtn = done? '<span style="color:#888;font-size:12px">入力済み</span>' : '<button class="btn btn-sm btn-p" onclick="openOnboardingInsuranceModal(\''+d.id+'\')">入力する</button>';
+    } else if(d.doc_key==='commute'){
+      actionBtn = done? '<span style="color:#888;font-size:12px">入力済み</span>' : '<button class="btn btn-sm btn-p" onclick="openOnboardingCommuteModal(\''+d.id+'\')">入力する</button>';
     }
     html+='<div style="display:flex;align-items:center;justify-content:space-between;padding:12px 0;border-bottom:1px solid #f0efe9;gap:8px;flex-wrap:wrap">'
       +'<div><div style="font-size:14px;font-weight:600">'+d.doc_name+'</div><div style="margin-top:4px">'+statusBdg+'</div></div>'
